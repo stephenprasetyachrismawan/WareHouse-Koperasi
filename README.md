@@ -219,3 +219,9 @@ PR harus menyertakan:
 10. API service Python untuk prediksi pembelian, sebagai fitur terakhir.
 
 Baca `PRD.md`, `SECURITY-RULES.md`, dan `ARCHITECTURE.md` sebelum menulis kode.
+
+## License
+
+This repository is proprietary software. Use, modification, access, and
+distribution are restricted to parties authorised by the SaaS owner. See
+[`LICENSE`](LICENSE) for the complete terms.

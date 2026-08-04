@@ -1,0 +1,145 @@
+PROPRIETARY SOFTWARE LICENSE
+
+Copyright (c) 2026 Stephen Prasetya Chrismawan.
+All rights reserved.
+
+1. Ownership
+
+The Warehouse-Koperasi software, including its source code, object code,
+documentation, database designs, user-interface designs, workflows,
+configuration, specifications, and related materials (collectively, the
+"Software"), is proprietary to Stephen Prasetya Chrismawan ("Owner"), except
+for third-party components that remain subject to their respective licences.
+
+No ownership right, copyright, patent right, trademark right, trade-secret
+right, or other intellectual-property right is transferred under this licence.
+
+2. Permitted Use
+
+The Software may be accessed, installed, copied, modified, tested, or deployed
+only:
+
+a. by the Owner;
+b. by employees, contractors, or authorised developers acting on behalf of the
+   Owner;
+c. for development, testing, operation, maintenance, security review, or
+   delivery of the Owner's Warehouse-Koperasi software-as-a-service product;
+   and
+d. within environments, repositories, infrastructure, and customer deployments
+   expressly authorised by the Owner.
+
+Any authorised person must protect the Software as confidential information and
+use it only for the authorised purpose.
+
+3. Prohibited Use
+
+Without prior written permission from the Owner, no person or organisation may:
+
+a. publish, disclose, distribute, sublicense, sell, lease, assign, transfer, or
+   otherwise make the Software available to any third party;
+b. use the Software, or a substantial part of it, to create or operate a
+   competing product or service;
+c. remove, conceal, or alter copyright, ownership, attribution, security, or
+   licence notices;
+d. copy the Software to an unauthorised repository, device, cloud service, or
+   environment;
+e. disclose credentials, secrets, personal data, warehouse data, security
+   controls, architecture details, or other confidential information contained
+   in or related to the Software;
+f. reverse engineer, decompile, disassemble, or attempt to derive non-provided
+   source code from distributed object code, except where applicable law
+   expressly prohibits this restriction; or
+g. bypass access controls, tenant isolation, audit logging, licensing controls,
+   or security mechanisms.
+
+4. SaaS and Customer Access
+
+Access granted to a customer, warehouse, cooperative, or end user is a limited,
+revocable right to use the hosted service through its authorised interfaces.
+Such access does not grant any right to obtain, copy, modify, redistribute, or
+self-host the Software unless a separate written agreement expressly permits it.
+
+Customer and tenant data remain subject to the applicable service agreement,
+privacy notice, data-processing terms, and applicable law.
+
+5. Contributions and Contractor Work
+
+Unless a separate written agreement states otherwise, any code, documentation,
+design, configuration, test, migration, prompt, agent instruction, or other
+work product created specifically for this Software by an employee, contractor,
+or authorised contributor must be assigned or licensed to the Owner to the
+maximum extent permitted by law.
+
+Contributors must not include third-party material unless its licence is
+compatible with the intended proprietary and SaaS use and the required notices,
+source-availability obligations, and other conditions are documented.
+
+6. Third-Party Software
+
+The Software may depend on open-source or commercial third-party components.
+Those components are governed by their own licences. This licence does not
+replace, restrict, or expand rights granted under a third-party licence.
+
+All required third-party notices, attribution, source-disclosure obligations,
+and licence texts must be retained and complied with. A software bill of
+materials and dependency-licence review should be maintained for production
+releases.
+
+7. Confidentiality and Security
+
+Authorised users must apply reasonable technical and organisational safeguards
+to prevent unauthorised access, copying, disclosure, alteration, or loss of the
+Software and related information.
+
+Suspected credential exposure, source-code disclosure, tenant-data leakage,
+security vulnerability, or other incident must be reported to the Owner without
+undue delay. Credentials and secrets must never be committed to source control.
+
+8. Termination
+
+Permission under this licence terminates automatically when authorisation is
+withdrawn, an engagement ends, or any term of this licence is breached.
+
+Upon termination, the person or organisation must stop using the Software and,
+subject to legal retention duties and written instructions from the Owner,
+return or securely delete all copies and confidential materials in its
+possession or control.
+
+Provisions concerning ownership, confidentiality, restrictions, disclaimers,
+liability, and third-party obligations survive termination.
+
+9. No Warranty
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE SOFTWARE IS PROVIDED
+"AS IS" AND "AS AVAILABLE", WITHOUT WARRANTIES OF ANY KIND, EXPRESS, IMPLIED,
+STATUTORY, OR OTHERWISE, INCLUDING WARRANTIES OF MERCHANTABILITY, FITNESS FOR
+A PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT, SECURITY, AVAILABILITY, OR
+ERROR-FREE OPERATION.
+
+10. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE OWNER SHALL NOT BE
+LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, PUNITIVE, OR
+CONSEQUENTIAL LOSS, OR FOR LOSS OF DATA, REVENUE, PROFITS, BUSINESS,
+GOODWILL, OR SERVICE AVAILABILITY, ARISING FROM OR RELATED TO THE SOFTWARE.
+
+Nothing in this licence excludes liability that cannot lawfully be excluded.
+
+11. Written Agreements and Applicable Law
+
+A signed written agreement between the Owner and an authorised party may grant
+additional rights or impose additional obligations. Where such an agreement
+conflicts with this licence, the signed written agreement controls to the extent
+of the conflict.
+
+This licence is governed by applicable law and must be interpreted consistently
+with any binding written agreement concerning the Software.
+
+12. Permission Requests
+
+Any use not expressly permitted by this licence requires prior written
+permission from the Owner.
+
+This licence is intended for a proprietary SaaS codebase. It should be reviewed
+by qualified legal counsel before commercial production use or external
+distribution.
