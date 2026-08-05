@@ -6,6 +6,16 @@
                 "artisan",
                 "boost:mcp"
             ]
+        },
+        "chrome-devtools": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "chrome-devtools-mcp@latest",
+                "--isolated",
+                "--headless",
+                "--executablePath=/usr/bin/chromium"
+            ]
         }
     }
 }
