@@ -96,6 +96,25 @@ Menyediakan sistem SaaS pengelolaan gudang yang aman, mudah digunakan, dapat dia
 - side effect asynchronous yang idempotent;
 - ML terisolasi di API Python.
 
+### 5.4 Baseline Teknologi
+
+Baseline target pada saat dokumen ini dibuat:
+
+- PHP `8.3–8.5`.
+- Laravel `13.x`.
+- Laravel Livewire starter kit: Livewire 4, Tailwind CSS, dan Flux UI.
+- PostgreSQL sebagai basis data relasional utama.
+- Redis untuk cache, rate limiter, queue, lock teknis, dan broadcast state.
+- Laravel Fortify dari starter kit untuk autentikasi, MFA, passkey/TOTP, email verification, dan recovery flow.
+- Laravel Socialite untuk Google Sign-In.
+- `spatie/laravel-permission` untuk penyimpanan role/permission; seluruh keputusan akses tetap diselesaikan melalui Laravel Policies/Gates dan pemeriksaan tenant.
+- Laravel Reverb/Echo untuk pembaruan real-time pada web.
+- Firebase Cloud Messaging atau provider push setara untuk push notification Kepala Gudang.
+- Object storage kompatibel S3 untuk foto QC dan retur.
+- Service Python terpisah untuk prediksi pembelian; fitur ini diimplementasikan paling akhir.
+
+Versi final harus dikunci melalui `composer.lock` dan lockfile frontend. Jangan mengandalkan versi global mesin developer. Langkah instalasi ada di `README.md`.
+
 ## 6. Non-Goals
 
 Non-goals utama:
@@ -1604,3 +1623,35 @@ Sebelum production:
 - incident runbook siap;
 - monitoring/alerting aktif;
 - ML tetap disabled sampai Phase 7 review.
+
+## 31. Prinsip Implementasi Inti
+
+1. Seluruh data operasional wajib memiliki `warehouse_id`, kecuali data platform yang secara eksplisit global.
+2. Menyembunyikan tombol di UI bukan authorization. Setiap route, controller/action, policy, query, job, broadcast channel, export, dan file download harus memverifikasi akses.
+3. Controller tipis; validasi di Form Request; authorization di Policy/Gate; aturan bisnis di Action/Service; query kompleks di Query Object/Repository terarah.
+4. Transisi status hanya melalui service/action yang tervalidasi dan ditulis dalam transaksi database.
+5. Semua approval, penolakan, pembatalan, perubahan role/permission, login berisiko, impersonation, export, dan akses lintas tenant dicatat di audit log.
+6. Implementasi ML tidak boleh dimulai sebelum seluruh fase inti stabil, dites, dan diterima.
+7. Tidak ada fitur dianggap selesai tanpa test sukses, authorization test, tenant isolation test, audit evidence, error handling, dan dokumentasi.
+
+## 32. Kontribusi: Branch dan Pull Request
+
+Gunakan branch kecil berbasis ticket, misalnya:
+
+```text
+feat/auth-google-mfa
+feat/tenant-user-management
+feat/stock-ledger
+fix/return-tenant-leak
+```
+
+PR harus menyertakan:
+
+- referensi requirement/ticket;
+- ringkasan perubahan;
+- migration/data impact;
+- screenshot atau rekaman untuk perubahan UI;
+- test yang ditambahkan;
+- security dan tenant-isolation impact;
+- rollback plan bila mengubah schema atau workflow;
+- bukti quality gate.

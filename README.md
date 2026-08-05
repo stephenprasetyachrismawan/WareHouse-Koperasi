@@ -1,14 +1,12 @@
-# Warehouse Koperasi SaaS
+# Warehouse Koperasi SaaS — Panduan Instalasi
 
-Warehouse Koperasi SaaS adalah aplikasi pengelolaan gudang berbasis web untuk mendigitalkan stok, approval, request pembelian, pengambilan barang oleh koperasi, penerimaan supplier, retur, notifikasi, dan—pada fase terakhir—prediksi pembelian melalui API layanan Python.
-
-Dokumen di repositori ini merupakan spesifikasi implementasi Laravel yang diturunkan dari `PRD_Sistem_Pengelolaan_Gudang.pdf`, dengan perluasan penting untuk arsitektur SaaS multi-warehouse, manajemen akun bertingkat, Google Sign-In, MFA, ACL sampai tingkat model, dan pemisahan layanan machine learning.
+Dokumen ini adalah panduan instalasi dan menjalankan **Warehouse Koperasi SaaS** secara lokal untuk pengembangan. Untuk kebutuhan produk, arsitektur, aturan keamanan, dan aturan UI, baca dokumen terkait di bawah — bukan file ini.
 
 ## Dokumen Utama
 
 | Dokumen | Fungsi |
 |---|---|
-| `PRD.md` | Kebutuhan produk lengkap, alur bisnis, kebutuhan fungsional/non-fungsional, model-view-controller, acceptance criteria, dan roadmap. |
+| `PRD.md` | Kebutuhan produk lengkap, alur bisnis, kebutuhan fungsional/non-fungsional, model-view-controller, baseline teknologi, prinsip implementasi, konvensi branch/PR, acceptance criteria, dan roadmap. |
 | `ARCHITECTURE.md` | Keputusan arsitektur, modul, struktur kode, tenancy, transaksi, queue, notifikasi real-time, integrasi Python, deployment, dan observability. |
 | `SECURITY-RULES.md` | Aturan keamanan wajib dari autentikasi sampai model-level authorization, tenant isolation, audit, upload, API, CI/CD, backup, dan incident response. |
 | `UI-RULES.md` | Aturan antarmuka, responsivitas, aksesibilitas, pola layar, komponen, status, formulir, pemindaian barcode, dan UX per role. |
@@ -18,30 +16,13 @@ Dokumen di repositori ini merupakan spesifikasi implementasi Laravel yang dituru
 | `.agent/WORKFLOW.md` | Workflow implementasi, TDD, review, dan quality gate. |
 | `.ai/guidelines/warehouse-project.md` | Custom guideline yang dapat digabungkan oleh Laravel Boost. |
 
-## Target Teknologi
-
-Baseline target pada saat dokumen ini dibuat:
-
-- PHP `8.3–8.5`.
-- Laravel `13.x`.
-- Laravel Livewire starter kit: Livewire 4, Tailwind CSS, dan Flux UI.
-- PostgreSQL sebagai basis data relasional utama.
-- Redis untuk cache, rate limiter, queue, lock teknis, dan broadcast state.
-- Laravel Fortify dari starter kit untuk autentikasi, MFA, passkey/TOTP, email verification, dan recovery flow.
-- Laravel Socialite untuk Google Sign-In.
-- `spatie/laravel-permission` untuk penyimpanan role/permission; seluruh keputusan akses tetap diselesaikan melalui Laravel Policies/Gates dan pemeriksaan tenant.
-- Laravel Reverb/Echo untuk pembaruan real-time pada web.
-- Firebase Cloud Messaging atau provider push setara untuk push notification Kepala Gudang.
-- Object storage kompatibel S3 untuk foto QC dan retur.
-- Service Python terpisah untuk prediksi pembelian; fitur ini diimplementasikan paling akhir.
-
-Versi final harus dikunci melalui `composer.lock` dan lockfile frontend. Jangan mengandalkan versi global mesin developer.
-
 ## Bootstrap Proyek
 
 ### 1. Prasyarat
 
-Siapkan PHP, Composer, Node.js versi LTS aktif, npm, PostgreSQL, dan Redis. Docker/Sail dapat dipakai agar lingkungan konsisten.
+Siapkan PHP `8.3–8.5`, Composer, Node.js versi LTS aktif, npm, PostgreSQL, dan Redis. Docker/Sail dapat dipakai agar lingkungan konsisten.
+
+Daftar lengkap dependency baseline (Laravel, Livewire, Fortify, Socialite, Reverb, dll.) beserta rasionalnya ada di `PRD.md` bagian "Baseline Teknologi". Versi final harus dikunci melalui `composer.lock` dan lockfile frontend — jangan mengandalkan versi global mesin developer.
 
 ### 2. Buat aplikasi Laravel
 
@@ -148,16 +129,7 @@ php artisan migrate
 php artisan db:seed
 ```
 
-Seeder development harus menyediakan:
-
-- satu akun `super_admin` platform;
-- beberapa warehouse/tenant;
-- satu `app_admin` per warehouse;
-- user Kepala Gudang, Staff Admin, Purchasing, dan Koperasi per warehouse;
-- katalog barang, barcode, stok minimum, stok positif/negatif, supplier, transaksi stok, request, approval, PO, penerimaan/QC, retur, inbox, dan audit log;
-- skenario edge case: duplikasi request, pembatalan, backorder, retur disetujui/ditolak, foto hilang, barang tanpa histori, dan user lintas tenant.
-
-Seeder production hanya boleh membuat role, permission, parameter sistem, dan bootstrap `super_admin` melalui secret/command aman. Seeder production tidak boleh membuat password default yang diketahui umum.
+Spesifikasi lengkap factory, state wajib, skenario demo, dan batasan seeder production ada di `PRD.md` bagian "Dummy Data Generator".
 
 ## Perintah Kualitas
 
@@ -173,52 +145,7 @@ npm run lint
 
 Tambahkan PHPStan/Larastan, test coverage, browser test, dependency audit, dan migration smoke test dalam CI sebelum release production.
 
-## Prinsip Implementasi
-
-1. Seluruh data operasional wajib memiliki `warehouse_id`, kecuali data platform yang secara eksplisit global.
-2. Menyembunyikan tombol di UI bukan authorization. Setiap route, controller/action, policy, query, job, broadcast channel, export, dan file download harus memverifikasi akses.
-3. Controller tipis; validasi di Form Request; authorization di Policy/Gate; aturan bisnis di Action/Service; query kompleks di Query Object/Repository terarah.
-4. Transisi status hanya melalui service/action yang tervalidasi dan ditulis dalam transaksi database.
-5. Semua approval, penolakan, pembatalan, perubahan role/permission, login berisiko, impersonation, export, dan akses lintas tenant dicatat di audit log.
-6. Implementasi ML tidak boleh dimulai sebelum seluruh fase inti stabil, dites, dan diterima.
-7. Tidak ada fitur dianggap selesai tanpa test sukses, authorization test, tenant isolation test, audit evidence, error handling, dan dokumentasi.
-
-## Branch dan Pull Request
-
-Gunakan branch kecil berbasis ticket, misalnya:
-
-```text
-feat/auth-google-mfa
-feat/tenant-user-management
-feat/stock-ledger
-fix/return-tenant-leak
-```
-
-PR harus menyertakan:
-
-- referensi requirement/ticket;
-- ringkasan perubahan;
-- migration/data impact;
-- screenshot atau rekaman untuk perubahan UI;
-- test yang ditambahkan;
-- security dan tenant-isolation impact;
-- rollback plan bila mengubah schema atau workflow;
-- bukti quality gate.
-
-## Urutan Implementasi
-
-1. Foundation, CI, tenancy, bootstrap `super_admin`, role/permission, audit.
-2. Google Sign-In, invitation, MFA, session/device management.
-3. User management dan warehouse administration.
-4. Master data barang, supplier, lokasi, barcode, stok minimum.
-5. Stock ledger, penerimaan, QC, dan real-time stock.
-6. Request pengambilan dan approval pengeluaran.
-7. Request pembelian, duplicate warning, batching/grouping, PO, penerimaan.
-8. Retur, fault attribution, replacement, dan pickup ulang.
-9. Inbox, push notification, dashboard, reporting, hardening, observability.
-10. API service Python untuk prediksi pembelian, sebagai fitur terakhir.
-
-Baca `PRD.md`, `SECURITY-RULES.md`, dan `ARCHITECTURE.md` sebelum menulis kode.
+Prinsip implementasi inti, konvensi branch/pull request, dan urutan roadmap fase ada di `PRD.md`. Baca `PRD.md`, `SECURITY-RULES.md`, dan `ARCHITECTURE.md` sebelum menulis kode.
 
 ## License
 
