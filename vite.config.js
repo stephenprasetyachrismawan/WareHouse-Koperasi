@@ -24,7 +24,13 @@ export default defineConfig({
     ],
     server: {
         host: '127.0.0.1',
+        origin: 'https://vite-warehouse.stevewithcode.net',
         cors: true,
+        hmr: {
+            host: 'vite-warehouse.stevewithcode.net',
+            protocol: 'wss',
+            clientPort: 443,
+        },
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },
