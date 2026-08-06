@@ -62,8 +62,9 @@ export class AntigravityRunner {
 
     return new Promise((resolve, reject) => {
       const args = [
-        '-p', prompt,
+        '--prompt', prompt,
         '--model', cfg.model,
+        '--mode', 'accept-edits',
         '--output-format', 'stream-json',
         '--dangerously-skip-permissions'
       ];
