@@ -72,6 +72,10 @@ fi
 if [ -d "${CONTROL_REPO}/node_modules" ] && [ ! -d "${WORKTREE_PATH}/node_modules" ]; then
   cp -r "${CONTROL_REPO}/node_modules" "${WORKTREE_PATH}/node_modules"
 fi
+if [ -d "${CONTROL_REPO}/public/build" ] && [ ! -d "${WORKTREE_PATH}/public/build" ]; then
+  mkdir -p "${WORKTREE_PATH}/public"
+  cp -r "${CONTROL_REPO}/public/build" "${WORKTREE_PATH}/public/build"
+fi
 
 echo "Worktree preparation complete."
 exit 0
