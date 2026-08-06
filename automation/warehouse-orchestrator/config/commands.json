@@ -1,0 +1,50 @@
+{
+  "allowedWrappers": [
+    "agent-preflight",
+    "agent-baseline",
+    "agent-tdd-red",
+    "agent-tdd-green",
+    "agent-test-focused",
+    "agent-test-unit",
+    "agent-test-php",
+    "agent-test-database",
+    "agent-format",
+    "agent-static-analysis",
+    "agent-final-test",
+    "agent-dev-health",
+    "agent-git-status",
+    "agent-diff-summary"
+  ],
+  "allowedReadOnlyGit": [
+    "git status",
+    "git diff",
+    "git log",
+    "git show",
+    "git branch --show-current",
+    "git rev-parse"
+  ],
+  "deniedCommands": [
+    "sudo",
+    "su",
+    "rm -rf",
+    "git push",
+    "git force-push",
+    "git reset --hard",
+    "git clean -fd",
+    "gh pr create",
+    "gh pr merge",
+    "gh issue edit",
+    "systemctl",
+    "service",
+    "docker",
+    "podman",
+    "kubectl",
+    "mount",
+    "umount",
+    "iptables",
+    "nft",
+    "composer run dev",
+    "php artisan serve",
+    "npm run dev"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "action": "validate_command_policy"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "run_command",
+        "action": "record_command_telemetry"
+      }
+    ]
+  }
+}
