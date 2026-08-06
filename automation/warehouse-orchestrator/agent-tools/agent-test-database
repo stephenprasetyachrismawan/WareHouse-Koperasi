@@ -11,9 +11,9 @@ echo "=== ISOLATED DATABASE INTEGRATION TESTS ===" > "${LOG_FILE}"
 
 EXIT_CODE=0
 php artisan config:clear >> "${LOG_FILE}" 2>&1 || true
-php artisan migrate:fresh --force >> "${LOG_FILE}" 2>&1 || EXIT_CODE=$?
+APP_ENV=testing php artisan migrate:fresh --force >> "${LOG_FILE}" 2>&1 || EXIT_CODE=$?
 if [ ${EXIT_CODE} -eq 0 ]; then
-  php artisan test --compact >> "${LOG_FILE}" 2>&1 || EXIT_CODE=$?
+  APP_ENV=testing php artisan test --compact >> "${LOG_FILE}" 2>&1 || EXIT_CODE=$?
 fi
 
 END_TIME=$(date +%s)
