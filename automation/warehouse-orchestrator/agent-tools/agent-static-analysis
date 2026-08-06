@@ -10,7 +10,7 @@ START_TIME=$(date +%s)
 echo "=== PHPSTAN STATIC ANALYSIS ===" > "${LOG_FILE}"
 
 EXIT_CODE=0
-vendor/bin/phpstan analyse --no-progress >> "${LOG_FILE}" 2>&1 || EXIT_CODE=$?
+php -d memory_limit=512M vendor/bin/phpstan analyse --no-progress >> "${LOG_FILE}" 2>&1 || EXIT_CODE=$?
 
 END_TIME=$(date +%s)
 DURATION=$((END_TIME - START_TIME))

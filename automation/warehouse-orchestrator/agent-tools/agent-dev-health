@@ -15,7 +15,7 @@ HEALTH_OUTPUT=""
 # Query dev-supervisor health via helper script or file check
 if [ -f "/srv/warehouse-koperasi/state/dev-health.json" ]; then
   HEALTH_OUTPUT=$(cat /srv/warehouse-koperasi/state/dev-health.json)
-  STATUS_VAL=$(echo "${HEALTH_OUTPUT}" | grep -o '"status":"[^"]*"' | cut -d'"' -f4 || echo "unknown")
+  STATUS_VAL=$(echo "${HEALTH_OUTPUT}" | grep -o '"status"[[:space:]]*:[[:space:]]*"[^"]*"' | sed 's/.*"[[:space:]]*:[[:space:]]*"//; s/"//g' || echo "unknown")
   if [ "${STATUS_VAL}" != "HEALTHY" ]; then
     EXIT_CODE=1
   fi
