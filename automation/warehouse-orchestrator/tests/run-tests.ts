@@ -59,6 +59,7 @@ async function runTests() {
   DevSessionManager.setActiveTarget('/tmp');
   const targetContent = fs.readFileSync('/srv/warehouse-koperasi/state/active-dev-worktree', 'utf-8');
   assert(targetContent === '/tmp', 'DevSession target file updated correctly');
+  DevSessionManager.setActiveTarget(cfg.controlRepository);
 
   console.log('\n=====================================================');
   console.log(' ALL 6 ORCHESTRATOR UNIT & INTEGRATION TESTS PASSED!');
