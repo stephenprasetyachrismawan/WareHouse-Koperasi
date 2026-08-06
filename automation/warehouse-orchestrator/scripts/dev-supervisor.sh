@@ -43,9 +43,10 @@ EOF
 cleanup_child_processes() {
   echo "[dev-supervisor] Cleaning up child processes..." >> "${SUPERVISOR_LOG}"
   pkill -P $$ 2>/dev/null || true
-  pkill -f "composer dev" 2>/dev/null || true
-  pkill -f "php artisan serve" 2>/dev/null || true
-  sleep 1
+  pkill -9 -f "composer dev" 2>/dev/null || true
+  pkill -9 -f "php artisan serve" 2>/dev/null || true
+  fuser -k 8000/tcp 2>/dev/null || true
+  sleep 2
 }
 
 count_fatal_errors() {
@@ -128,10 +129,7 @@ run_supervisor_loop() {
       target_check=$(cat "${TARGET_FILE}" 2>/dev/null || echo "${current_target}")
       if [ "${target_check}" != "${current_target}" ]; then
         echo "[dev-supervisor] Target worktree changed. Switching to ${target_check}..." >> "${SUPERVISOR_LOG}"
-        kill -15 "${COMPOSER_PID}" 2>/dev/null || true
-        sleep 1
-        kill -9 "${COMPOSER_PID}" 2>/dev/null || true
-        wait "${COMPOSER_PID}" 2>/dev/null || true
+        cleanup_child_processes
         break
       fi
 
