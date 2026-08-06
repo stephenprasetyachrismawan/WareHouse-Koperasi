@@ -32,7 +32,21 @@ jobs:
           node-version: '22'
 
       - name: Setup Application
-        run: composer setup
+        # composer setup runs `php artisan migrate --force` against the
+        # app's real .env, which defaults to Postgres — not available on
+        # this runner. The actual test suite (composer ci:check) never
+        # touches this migration: phpunit.xml already overrides
+        # DB_CONNECTION to an isolated sqlite :memory: database for every
+        # test run. Point the setup step's migration at a throwaway sqlite
+        # file instead of standing up a Postgres service just to satisfy a
+        # migration whose result nothing downstream depends on.
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+          composer setup
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
 
       - name: Run CI Checks
         run: composer ci:check
