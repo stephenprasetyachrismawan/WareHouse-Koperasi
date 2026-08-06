@@ -17,13 +17,22 @@ async function promptToken(username: string): Promise<string> {
   });
 }
 
+function parseTokenArg(): string {
+  for (let i = 0; i < process.argv.length; i++) {
+    if (process.argv[i] === '--token' && process.argv[i + 1]) {
+      return process.argv[i + 1];
+    }
+  }
+  return '';
+}
+
 async function main() {
   const cmd = process.argv[2];
   const targetUser = process.argv[3];
 
   if (cmd === 'user') {
     if (!targetUser) {
-      console.error('Usage: npm run auth:user -- <github-username>');
+      console.error('Usage: npm run auth:user -- <github-username> [--token <token>]');
       process.exit(1);
     }
 
@@ -33,9 +42,9 @@ async function main() {
     }
 
     console.log(`=== GitHub User Authorization for @${targetUser} ===`);
-    let token = process.env.GITHUB_TOKEN || '';
+    let token = parseTokenArg() || process.env.GITHUB_TOKEN || '';
 
-    if (!token || process.stdin.isTTY) {
+    if (!token && process.stdin.isTTY) {
       token = await promptToken(targetUser);
     }
 
@@ -68,7 +77,7 @@ async function main() {
       console.log(`- @${username} (${member.gitName} <${member.gitEmail}>): ${hasAuth ? 'AUTHORIZED' : 'NOT AUTHORIZED'}`);
     }
   } else {
-    console.log('Usage: npm run auth:user -- <username> | npm run auth:status');
+    console.log('Usage: npm run auth:user -- <username> [--token <token>] | npm run auth:status');
   }
 }
 

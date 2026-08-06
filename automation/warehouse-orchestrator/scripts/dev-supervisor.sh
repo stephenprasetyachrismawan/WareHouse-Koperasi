@@ -45,14 +45,18 @@ cleanup_child_processes() {
   pkill -P $$ 2>/dev/null || true
   pkill -f "composer dev" 2>/dev/null || true
   pkill -f "php artisan serve" 2>/dev/null || true
-  sleep 2
+  sleep 1
+}
+
+count_fatal_errors() {
+  local count
+  count=$(grep -E -c "Fatal error|Uncaught|npm ERR!|Vite error|Build failed|Address already in use" "${SUPERVISOR_LOG}" 2>/dev/null | awk '{s+=$1} END {print s+0}')
+  echo "${count}"
 }
 
 run_supervisor_loop() {
   local current_target=""
   local restart_count=0
-
-  echo "[dev-supervisor] Supervisor started at $(date)" >> "${SUPERVISOR_LOG}"
 
   trap cleanup_child_processes EXIT INT TERM
 
@@ -64,13 +68,16 @@ run_supervisor_loop() {
       new_target="${DEFAULT_TARGET}"
     fi
 
-    echo "[dev-supervisor] Target worktree: ${new_target}" >> "${SUPERVISOR_LOG}"
+    echo "[dev-supervisor] Supervisor started at $(date) for ${new_target}" > "${SUPERVISOR_LOG}"
     current_target="${new_target}"
 
-    # Record startup marker timestamp
     date +%s > "${MARKER_FILE}"
 
     cd "${current_target}"
+
+    # Ensure SQLite database file exists in target worktree
+    mkdir -p "${current_target}/database"
+    touch "${current_target}/database/database.sqlite"
 
     export APP_ENV=local
     export DB_CONNECTION=sqlite
@@ -78,17 +85,16 @@ run_supervisor_loop() {
 
     write_health "STARTING" $$ "${current_target}" "${restart_count}" 0
 
-    # Start composer dev in background
+    # Start composer dev
     composer dev >> "${SUPERVISOR_LOG}" 2>&1 &
     COMPOSER_PID=$!
 
-    # Give warm-up period
-    local warmup_remaining=45
+    # 10 second warm-up check
+    local warmup_remaining=10
     while [ ${warmup_remaining} -gt 0 ]; do
       sleep 1
       warmup_remaining=$((warmup_remaining - 1))
       
-      # Check target file change
       local target_check
       target_check=$(cat "${TARGET_FILE}" 2>/dev/null || echo "${current_target}")
       if [ "${target_check}" != "${current_target}" ]; then
@@ -99,26 +105,23 @@ run_supervisor_loop() {
       fi
     done
 
-    # Check process health and log errors after marker
     if kill -0 "${COMPOSER_PID}" 2>/dev/null; then
-      local fatal_count=0
-      if [ -f "${MARKER_FILE}" ]; then
-        fatal_count=$(grep -E -c "Fatal error|Uncaught|SQLSTATE|npm ERR!|Vite error|Build failed|Address already in use" "${SUPERVISOR_LOG}" || echo "0")
-      fi
+      local fatal_count
+      fatal_count=$(count_fatal_errors)
 
       if [ "${fatal_count}" -eq 0 ]; then
-        write_health "HEALTHY" "${COMPOSER_PID}" "${current_target}" "${restart_count}" "${fatal_count}"
+        write_health "HEALTHY" "${COMPOSER_PID}" "${current_target}" "${restart_count}" 0
       else
         write_health "UNHEALTHY" "${COMPOSER_PID}" "${current_target}" "${restart_count}" "${fatal_count}"
       fi
     else
       restart_count=$((restart_count + 1))
       write_health "FAILED" 0 "${current_target}" "${restart_count}" 1
-      echo "[dev-supervisor] Process exited unexpectedly. Restarting in 5s..." >> "${SUPERVISOR_LOG}"
-      sleep 5
+      echo "[dev-supervisor] Process exited. Restarting in 3s..." >> "${SUPERVISOR_LOG}"
+      sleep 3
     fi
 
-    # Monitor loop while process is running
+    # Monitor loop
     while kill -0 "${COMPOSER_PID}" 2>/dev/null; do
       sleep 5
       local target_check
@@ -126,16 +129,16 @@ run_supervisor_loop() {
       if [ "${target_check}" != "${current_target}" ]; then
         echo "[dev-supervisor] Target worktree changed. Switching to ${target_check}..." >> "${SUPERVISOR_LOG}"
         kill -15 "${COMPOSER_PID}" 2>/dev/null || true
-        sleep 2
+        sleep 1
         kill -9 "${COMPOSER_PID}" 2>/dev/null || true
         wait "${COMPOSER_PID}" 2>/dev/null || true
         break
       fi
 
-      local fatal_count=0
-      fatal_count=$(grep -E -c "Fatal error|Uncaught|SQLSTATE|npm ERR!|Vite error|Build failed|Address already in use" "${SUPERVISOR_LOG}" || echo "0")
+      local fatal_count
+      fatal_count=$(count_fatal_errors)
       if [ "${fatal_count}" -eq 0 ]; then
-        write_health "HEALTHY" "${COMPOSER_PID}" "${current_target}" "${restart_count}" "${fatal_count}"
+        write_health "HEALTHY" "${COMPOSER_PID}" "${current_target}" "${restart_count}" 0
       else
         write_health "UNHEALTHY" "${COMPOSER_PID}" "${current_target}" "${restart_count}" "${fatal_count}"
       fi
