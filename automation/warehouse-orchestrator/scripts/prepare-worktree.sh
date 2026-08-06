@@ -32,6 +32,7 @@ if [ -d "${WORKTREE_PATH}" ]; then
   rm -rf "${WORKTREE_PATH}"
 fi
 
+git -C "${CONTROL_REPO}" branch -D "${BRANCH}" 2>/dev/null || true
 git -C "${CONTROL_REPO}" worktree add -b "${BRANCH}" "${WORKTREE_PATH}" "${BASE_REF}"
 
 # 3. Configure worktree-specific Git identity

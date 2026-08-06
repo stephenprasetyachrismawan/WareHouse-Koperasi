@@ -28,7 +28,7 @@ async function main() {
       process.exit(1);
     }
     console.log(`Resetting state for issue #${targetId} to retry...`);
-    db.run(`UPDATE jobs SET state = 'agent:retry' WHERE issue_number = ?`, [targetId], (err) => {
+    db.run(`UPDATE jobs SET state = 'agent:failed', failure_reason = 'Retried by maintainer' WHERE issue_number = ?`, [targetId], (err) => {
       if (err) throw err;
       console.log(`Issue #${targetId} marked for retry.`);
     });
