@@ -10,7 +10,6 @@ export interface RuntimeConfig {
   model: string;
   effort: string;
   outputFormat: string;
-  executionMode: string;
   timeoutSeconds: number;
   maxAttempts: number;
   subagents: boolean;
@@ -41,14 +40,13 @@ export class ConfigManager {
     }
 
     const config: RuntimeConfig = {
-      binary: process.env.AGY_BIN || baseConfig.binary || 'agy',
-      agent: process.env.AGY_AGENT || baseConfig.agent || 'warehouse-laravel',
-      model: process.env.AGY_MODEL || baseConfig.model || 'gemini-3.6-flash-low',
-      effort: process.env.AGY_EFFORT || baseConfig.effort || 'low',
-      outputFormat: process.env.AGY_OUTPUT_FORMAT || baseConfig.outputFormat || 'stream-json',
-      executionMode: process.env.AGY_EXECUTION_MODE || baseConfig.executionMode || 'accept-edits',
-      timeoutSeconds: Number(process.env.AGY_TIMEOUT_SECONDS) || baseConfig.timeoutSeconds || 1800,
-      maxAttempts: Number(process.env.AGY_MAX_ATTEMPTS) || baseConfig.maxAttempts || 2,
+      binary: process.env.AGENT_BIN || baseConfig.binary || 'claude',
+      agent: process.env.AGENT_LABEL || baseConfig.agent || 'claude-code',
+      model: process.env.AGENT_MODEL || baseConfig.model || 'claude-sonnet-5',
+      effort: process.env.AGENT_EFFORT || baseConfig.effort || 'low',
+      outputFormat: process.env.AGENT_OUTPUT_FORMAT || baseConfig.outputFormat || 'stream-json',
+      timeoutSeconds: Number(process.env.AGENT_TIMEOUT_SECONDS) || baseConfig.timeoutSeconds || 1800,
+      maxAttempts: Number(process.env.AGENT_MAX_ATTEMPTS) || baseConfig.maxAttempts || 2,
       subagents: false,
       enabled: process.env.ORCHESTRATOR_ENABLED === 'true' || baseConfig.enabled || false,
       pollIntervalSeconds: Number(process.env.POLL_INTERVAL_SECONDS) || baseConfig.pollIntervalSeconds || 30,

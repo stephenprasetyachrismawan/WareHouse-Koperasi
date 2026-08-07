@@ -3,6 +3,13 @@ includes:
     - vendor/nesbot/carbon/extension.neon
 
 parameters:
+    # Defaults to the system temp dir, which every git worktree on this box
+    # shares — a stale cache entry from an already-deleted worktree (e.g. a
+    # dangling reference to its copy of phpstan.phar) then breaks analysis
+    # in every other worktree with an unrelated "not a file" internal error.
+    # Keep the cache local to whichever checkout is actually running.
+    tmpDir: %currentWorkingDirectory%/.agent-runtime/phpstan-cache
+
     paths:
         - app/
         - bootstrap/app.php

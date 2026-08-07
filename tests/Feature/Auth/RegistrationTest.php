@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
@@ -14,6 +15,7 @@ class RegistrationTest extends TestCase
     {
         parent::setUp();
 
+        $this->seed(RoleAndPermissionSeeder::class);
         $this->skipUnlessFortifyHas(Features::registration());
     }
 
@@ -31,6 +33,7 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'company_name' => 'John Doe Company',
         ]);
 
         $response->assertSessionHasNoErrors()

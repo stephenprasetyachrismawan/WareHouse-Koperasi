@@ -13,6 +13,11 @@
                 <flux:navbar.item icon="layout-grid" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Dashboard') }}
                 </flux:navbar.item>
+                @if(auth()->check() && (auth()->user()->isSuperAdmin() || auth()->user()->isAppAdmin() || auth()->user()->can('users.view')))
+                    <flux:navbar.item icon="users" :href="route('company.users.index')" :current="request()->routeIs('company.users.*')" wire:navigate>
+                        {{ __('Manajemen Pengguna') }}
+                    </flux:navbar.item>
+                @endif
             </flux:navbar>
 
             <flux:spacer />
@@ -57,6 +62,14 @@
                         {{ __('Dashboard')  }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                @if(auth()->check() && (auth()->user()->isSuperAdmin() || auth()->user()->isAppAdmin() || auth()->user()->can('users.view')))
+                    <flux:sidebar.group :heading="__('Administrasi Tenant')">
+                        <flux:sidebar.item icon="users" :href="route('company.users.index')" :current="request()->routeIs('company.users.*')" wire:navigate>
+                            {{ __('Manajemen Pengguna') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />

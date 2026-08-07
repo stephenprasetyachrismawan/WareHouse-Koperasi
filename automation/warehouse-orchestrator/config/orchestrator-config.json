@@ -1,10 +1,9 @@
 {
-  "binary": "agy",
-  "agent": "warehouse-laravel",
-  "model": "gemini-3.6-flash-low",
+  "binary": "claude",
+  "agent": "claude-code",
+  "model": "claude-sonnet-5",
   "effort": "low",
   "outputFormat": "stream-json",
-  "executionMode": "accept-edits",
   "timeoutSeconds": 1800,
   "maxAttempts": 2,
   "subagents": false,

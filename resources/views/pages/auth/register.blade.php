@@ -1,62 +1,96 @@
-<x-layouts::auth :title="__('Register')">
+<x-layouts::auth :title="__('Register SaaS Company')">
     <div class="flex flex-col gap-6">
-        <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
+        <x-auth-header :title="__('Register Your Company')" :description="__('Enter your user details and company info below to create your SaaS tenant account.')" />
 
         <!-- Session Status -->
         <x-auth-session-status class="text-center" :status="session('status')" />
 
         <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
             @csrf
-            <!-- Name -->
-            <flux:input
-                name="name"
-                :label="__('Name')"
-                :value="old('name')"
-                type="text"
-                required
-                autofocus
-                autocomplete="name"
-                :placeholder="__('Full name')"
-            />
 
-            <!-- Email Address -->
-            <flux:input
-                name="email"
-                :label="__('Email address')"
-                :value="old('email')"
-                type="email"
-                required
-                autocomplete="email"
-                placeholder="email@example.com"
-            />
+            <!-- User Information Section -->
+            <div class="space-y-4">
+                <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 border-b pb-1 border-zinc-200 dark:border-zinc-800">
+                    {{ __('Administrator Account') }}
+                </div>
 
-            <!-- Password -->
-            <flux:input
-                name="password"
-                :label="__('Password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                :placeholder="__('Password')"
-                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable
-            />
+                <!-- Name -->
+                <flux:input
+                    name="name"
+                    :label="__('Full Name')"
+                    :value="old('name')"
+                    type="text"
+                    required
+                    autofocus
+                    autocomplete="name"
+                    :placeholder="__('Full name')"
+                />
 
-            <!-- Confirm Password -->
-            <flux:input
-                name="password_confirmation"
-                :label="__('Confirm password')"
-                type="password"
-                required
-                autocomplete="new-password"
-                :placeholder="__('Confirm password')"
-                passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
-                viewable
-            />
+                <!-- Email Address -->
+                <flux:input
+                    name="email"
+                    :label="__('Email Address')"
+                    :value="old('email')"
+                    type="email"
+                    required
+                    autocomplete="email"
+                    placeholder="admin@company.com"
+                />
+
+                <!-- Password -->
+                <flux:input
+                    name="password"
+                    :label="__('Password')"
+                    type="password"
+                    required
+                    autocomplete="new-password"
+                    :placeholder="__('Password')"
+                    passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
+                    viewable
+                />
+
+                <!-- Confirm Password -->
+                <flux:input
+                    name="password_confirmation"
+                    :label="__('Confirm Password')"
+                    type="password"
+                    required
+                    autocomplete="new-password"
+                    :placeholder="__('Confirm password')"
+                    passwordrules="{{ \Illuminate\Validation\Rules\Password::defaults()->toPasswordRulesString() }}"
+                    viewable
+                />
+            </div>
+
+            <!-- Company / SaaS Tenant Section -->
+            <div class="space-y-4">
+                <div class="text-sm font-semibold text-zinc-900 dark:text-zinc-100 border-b pb-1 border-zinc-200 dark:border-zinc-800">
+                    {{ __('Company Information') }}
+                </div>
+
+                <!-- Company Name -->
+                <flux:input
+                    name="company_name"
+                    :label="__('Company / Koperasi Name')"
+                    :value="old('company_name')"
+                    type="text"
+                    required
+                    :placeholder="__('e.g. Koperasi Mandiri Sejahtera')"
+                />
+
+                <!-- Company Code -->
+                <flux:input
+                    name="company_code"
+                    :label="__('Company Code (Optional)')"
+                    :value="old('company_code')"
+                    type="text"
+                    :placeholder="__('e.g. KOP-MANDIRI')"
+                />
+            </div>
 
             <div class="flex items-center justify-end">
                 <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
-                    {{ __('Create account') }}
+                    {{ __('Register Company & Account') }}
                 </flux:button>
             </div>
         </form>

@@ -16,6 +16,14 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                @if(auth()->check() && (auth()->user()->isSuperAdmin() || auth()->user()->isAppAdmin() || auth()->user()->can('users.view')))
+                    <flux:sidebar.group :heading="__('Administrasi Tenant')" class="grid">
+                        <flux:sidebar.item icon="users" :href="route('company.users.index')" :current="request()->routeIs('company.users.*')" wire:navigate>
+                            {{ __('Manajemen Pengguna') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />

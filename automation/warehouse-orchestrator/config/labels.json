@@ -6,11 +6,11 @@
     },
     "agent:planning": {
       "color": "1D76DB",
-      "description": "Antigravity is forming implementation plan"
+      "description": "Claude Code is forming implementation plan"
     },
     "agent:coding": {
       "color": "5319E7",
-      "description": "Antigravity is implementing code changes"
+      "description": "Claude Code is implementing code changes"
     },
     "agent:testing": {
       "color": "FBCA04",
