@@ -86,6 +86,10 @@ run_supervisor_loop() {
 
     write_health "STARTING" $$ "${current_target}" "${restart_count}" 0
 
+    # Apply pending migrations so a freshly created/switched sqlite file always
+    # matches the current schema before the app starts serving requests.
+    php artisan migrate --force >> "${SUPERVISOR_LOG}" 2>&1 || true
+
     # Start composer dev
     composer dev >> "${SUPERVISOR_LOG}" 2>&1 &
     COMPOSER_PID=$!

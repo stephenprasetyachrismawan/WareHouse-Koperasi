@@ -77,5 +77,10 @@ if [ -d "${CONTROL_REPO}/public/build" ] && [ ! -d "${WORKTREE_PATH}/public/buil
   cp -r "${CONTROL_REPO}/public/build" "${WORKTREE_PATH}/public/build"
 fi
 
+# Apply migrations so the worktree's dev server starts with an up-to-date schema
+if [ -f "${WORKTREE_PATH}/artisan" ] && [ -d "${WORKTREE_PATH}/vendor" ]; then
+  (cd "${WORKTREE_PATH}" && DB_CONNECTION=sqlite DB_DATABASE="${WORKTREE_PATH}/database/database.sqlite" php artisan migrate --force) || true
+fi
+
 echo "Worktree preparation complete."
 exit 0
