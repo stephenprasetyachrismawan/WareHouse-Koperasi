@@ -7,6 +7,17 @@
 
         <form method="POST" action="{{ route('register.store') }}" class="flex flex-col gap-6">
             @csrf
+            <!-- Company Name -->
+            <flux:input
+                name="company_name"
+                :label="__('Company name')"
+                :value="old('company_name')"
+                type="text"
+                required
+                autocomplete="organization"
+                :placeholder="__('Your company / koperasi network name')"
+            />
+
             <!-- Name -->
             <flux:input
                 name="name"
