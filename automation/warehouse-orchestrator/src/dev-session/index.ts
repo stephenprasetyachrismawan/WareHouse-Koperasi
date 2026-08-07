@@ -36,19 +36,30 @@ export class DevSessionManager {
   public static async waitForWarmupAndVerify(targetWorktree: string, warmupSeconds: number = 45): Promise<DevHealthStatus> {
     this.setActiveTarget(targetWorktree);
 
-    console.log(`[DevSession] Pointed supervisor to ${targetWorktree}. Waiting ${warmupSeconds}s for warm-up...`);
+    console.log(`[DevSession] Pointed supervisor to ${targetWorktree}. Waiting up to ${warmupSeconds}s for HEALTHY...`);
 
-    // Poll health status during warm-up
-    for (let i = 0; i < warmupSeconds; i++) {
-      await new Promise((r) => setTimeout(r, 1000));
+    // The supervisor script only checks for a target change every 5s, then
+    // needs ~3s to tear down the previous process group and ~10s of its own
+    // internal warm-up before it reports HEALTHY — a fixed sleep-then-check-
+    // once here raced that and failed on a target still reporting STARTING.
+    // Poll instead: succeed the moment HEALTHY appears, only give up once
+    // the full budget elapses.
+    let health: DevHealthStatus | null = null;
+    const deadline = Date.now() + warmupSeconds * 1000;
+    while (Date.now() < deadline) {
+      health = this.getHealth();
+      if (health?.status === 'HEALTHY' && health.targetWorktree === targetWorktree) {
+        return health;
+      }
+      await new Promise((r) => setTimeout(r, 2000));
     }
 
-    const health = this.getHealth();
+    health = this.getHealth();
     if (!health) {
       throw new Error('Composer development supervisor health state file not found');
     }
 
-    if (health.status !== 'HEALTHY') {
+    if (health.status !== 'HEALTHY' || health.targetWorktree !== targetWorktree) {
       throw new Error(`Composer development supervisor check failed with status: ${health.status}`);
     }
 

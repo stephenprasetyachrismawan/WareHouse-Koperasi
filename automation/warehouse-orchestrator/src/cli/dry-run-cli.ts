@@ -2,7 +2,7 @@ import path from 'path';
 import { ConfigManager } from '../config';
 import { IdentityManager } from '../identity';
 import { GitManager } from '../git';
-import { AntigravityRunner } from '../antigravity';
+import { ClaudeCodeRunner } from '../claude-code';
 import { DevSessionManager } from '../dev-session';
 import { execSync } from 'child_process';
 
@@ -31,9 +31,12 @@ async function runDryRun() {
   GitManager.prepareWorktree(branch, worktreePath, member.gitName, member.gitEmail);
 
   try {
-    console.log('[DryRun 3/7] Testing Antigravity CLI invocation (headless no-edit smoke test)...');
-    const smokeResult = await AntigravityRunner.runPrompt(worktreePath, 'Return exactly AGY_READY without editing files.');
-    console.log(`Antigravity Smoke Result: ${smokeResult.rawResponse.trim()}`);
+    console.log('[DryRun 3/7] Testing Claude Code invocation (headless no-edit smoke test)...');
+    const smokeReady = await ClaudeCodeRunner.smokeTest(worktreePath);
+    console.log(`Claude Code Smoke Result: ${smokeReady ? 'CLAUDE_READY' : 'FAILED'}`);
+    if (!smokeReady) {
+      throw new Error('Claude Code smoke test failed');
+    }
 
     console.log('[DryRun 4/7] Testing fixed wrapper tools in worktree...');
     const preflightRes = execSync(`bash "${worktreePath}/automation/warehouse-orchestrator/agent-tools/agent-preflight"`, {

@@ -2,11 +2,7 @@
 
 namespace App\Models;
 
-use App\Enums\MembershipStatus;
-use App\Enums\Permission;
-use App\Enums\WarehouseRole;
 use Database\Factories\WarehouseMembershipFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,35 +10,36 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $user_id
+ * @property int $company_id
  * @property int $warehouse_id
- * @property WarehouseRole $role
- * @property MembershipStatus $status
- * @property list<string>|null $permissions
+ * @property int $user_id
+ * @property string $role
+ * @property string $status
+ * @property Company|null $company
+ * @property Warehouse|null $warehouse
+ * @property User|null $user
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['user_id', 'warehouse_id', 'role', 'status', 'permissions'])]
 class WarehouseMembership extends Model
 {
     /** @use HasFactory<WarehouseMembershipFactory> */
     use HasFactory;
 
-    protected function casts(): array
-    {
-        return [
-            'role' => WarehouseRole::class,
-            'status' => MembershipStatus::class,
-            'permissions' => 'array',
-        ];
-    }
+    protected $fillable = [
+        'company_id',
+        'warehouse_id',
+        'user_id',
+        'role',
+        'status',
+    ];
 
     /**
-     * @return BelongsTo<User, $this>
+     * @return BelongsTo<Company, $this>
      */
-    public function user(): BelongsTo
+    public function company(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Company::class);
     }
 
     /**
@@ -53,29 +50,16 @@ class WarehouseMembership extends Model
         return $this->belongsTo(Warehouse::class);
     }
 
-    public function isActive(): bool
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function user(): BelongsTo
     {
-        return $this->status === MembershipStatus::Active;
+        return $this->belongsTo(User::class);
     }
 
-    /**
-     * Membership-level ACL narrows the role's default permission template;
-     * a null `permissions` column means "use the full role template".
-     */
-    public function hasPermission(Permission $permission): bool
+    public function isActive(): bool
     {
-        if (! $this->isActive()) {
-            return false;
-        }
-
-        if (! in_array($permission, $this->role->defaultPermissions(), true)) {
-            return false;
-        }
-
-        if ($this->permissions === null) {
-            return true;
-        }
-
-        return in_array($permission->value, $this->permissions, true);
+        return $this->status === 'active';
     }
 }

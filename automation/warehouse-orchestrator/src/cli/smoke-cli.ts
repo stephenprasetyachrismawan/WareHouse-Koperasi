@@ -1,6 +1,6 @@
 import { execSync } from 'child_process';
 import { ConfigManager } from '../config';
-import { AntigravityRunner } from '../antigravity';
+import { ClaudeCodeRunner } from '../claude-code';
 import { DevSessionManager } from '../dev-session';
 import { GitHubClient } from '../github';
 
@@ -9,12 +9,15 @@ async function main() {
   const cfg = ConfigManager.get();
 
   switch (target) {
-    case 'agy': {
-      console.log('=== Smoke Test: Antigravity CLI ===');
+    case 'claude': {
+      console.log('=== Smoke Test: Claude Code CLI ===');
       console.log(`Binary: ${cfg.binary}, Model: ${cfg.model}`);
-      const res = await AntigravityRunner.runPrompt(cfg.controlRepository, 'Return exactly AGY_READY without editing files.');
-      console.log(`Response: ${res.rawResponse.trim()}`);
-      console.log('Antigravity smoke test: PASS');
+      const ready = await ClaudeCodeRunner.smokeTest(cfg.controlRepository);
+      if (!ready) {
+        console.error('Claude Code smoke test: FAIL');
+        process.exit(1);
+      }
+      console.log('Claude Code smoke test: PASS');
       break;
     }
     case 'tmux': {
@@ -44,7 +47,7 @@ async function main() {
       break;
     }
     default:
-      console.log('Usage: npm run smoke:agy | tmux | composer-dev | github');
+      console.log('Usage: npm run smoke:claude | tmux | composer-dev | github');
       break;
   }
 }

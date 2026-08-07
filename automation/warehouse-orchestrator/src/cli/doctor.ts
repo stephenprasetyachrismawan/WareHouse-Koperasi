@@ -2,7 +2,7 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { ConfigManager } from '../config';
-import { AntigravityRunner } from '../antigravity';
+import { ClaudeCodeRunner } from '../claude-code';
 import { IdentityManager } from '../identity';
 
 async function runDoctor() {
@@ -34,26 +34,25 @@ async function runDoctor() {
   check('PHP installed', () => execSync('php -v', { encoding: 'utf-8' }).split('\n')[0]);
   check('Composer installed', () => execSync('composer --version', { encoding: 'utf-8' }).split('\n')[0]);
   check('Node.js installed', () => process.version);
-  check('Antigravity CLI (agy) installed', () => execSync(`${cfg.binary} --version`, { encoding: 'utf-8' }).trim());
+  check('Claude Code CLI installed', () => execSync(`${cfg.binary} --version`, { encoding: 'utf-8' }).trim());
 
-  check('Antigravity Model available', () => {
-    const isAvailable = AntigravityRunner.isModelAvailable(cfg.model);
-    if (!isAvailable) {
-      const models = AntigravityRunner.listAvailableModels();
-      throw new Error(`Model '${cfg.model}' not listed. Available: ${models.join(', ')}`);
+  const agentReady = await ClaudeCodeRunner.smokeTest(cfg.controlRepository);
+  check('Coding agent smoke test', () => {
+    if (!agentReady) {
+      throw new Error(`No-edit smoke prompt against model '${cfg.model}' did not return the expected response`);
     }
     return cfg.model;
   });
 
-  check('Custom Agent file exists', () => {
-    const agentPath = path.join(repoRoot, '.agents/agents/warehouse-laravel/agent.md');
-    if (!fs.existsSync(agentPath)) throw new Error(`Agent file missing at ${agentPath}`);
-    return agentPath;
+  check('CLAUDE.md project instructions exist', () => {
+    const claudeMdPath = path.join(repoRoot, 'CLAUDE.md');
+    if (!fs.existsSync(claudeMdPath)) throw new Error(`CLAUDE.md missing at ${claudeMdPath}`);
+    return claudeMdPath;
   });
 
-  check('Mandatory Skills exist', () => {
-    const base = path.join(repoRoot, '.agents/skills');
-    const skills = ['laravel-boost', 'test-driven-development', 'code-simplification'];
+  check('Project skills available to Claude Code', () => {
+    const base = path.join(repoRoot, '.claude/skills');
+    const skills = ['laravel-best-practices', 'pest-testing'];
     for (const s of skills) {
       if (!fs.existsSync(path.join(base, s, 'SKILL.md'))) {
         throw new Error(`Skill ${s} missing SKILL.md`);

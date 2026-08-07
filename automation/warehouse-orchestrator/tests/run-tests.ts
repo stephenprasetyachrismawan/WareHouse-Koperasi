@@ -1,6 +1,6 @@
 import { ConfigManager } from '../src/config';
 import { IdentityManager } from '../src/identity';
-import { AntigravityRunner } from '../src/antigravity';
+import { ClaudeCodeRunner } from '../src/claude-code';
 import { LabelStateMachine } from '../src/labels';
 import { DevSessionManager } from '../src/dev-session';
 import path from 'path';
@@ -22,9 +22,10 @@ async function runTests() {
 
   console.log('[Test 1] Runtime Configuration');
   const cfg = ConfigManager.get();
-  assert(cfg.binary === 'agy', 'Binary defaults to agy');
-  assert(cfg.agent === 'warehouse-laravel', 'Agent defaults to warehouse-laravel');
-  assert(cfg.model === 'gemini-3.6-flash-low', 'Model defaults to gemini-3.6-flash-low');
+  assert(cfg.binary === 'claude', 'Binary defaults to claude');
+  assert(cfg.agent === 'claude-code', 'Agent label defaults to claude-code');
+  assert(cfg.model === 'claude-sonnet-5', 'Model defaults to claude-sonnet-5');
+  assert(cfg.effort === 'low', 'Effort defaults to low');
 
   console.log('\n[Test 2] Contributor Identity Resolution');
   const reg = IdentityManager.getRegistry();
@@ -44,9 +45,9 @@ async function runTests() {
   assert(LabelStateMachine.ALL_WORKFLOW_LABELS.includes('agent:done'), 'Includes agent:done');
   assert(LabelStateMachine.ALL_WORKFLOW_LABELS.includes('agent:post-merge-failed'), 'Includes agent:post-merge-failed');
 
-  console.log('\n[Test 4] Antigravity Model Listing & Validation');
-  const isAvail = AntigravityRunner.isModelAvailable(cfg.model);
-  assert(isAvail === true, `Configured model ${cfg.model} is available in CLI listing`);
+  console.log('\n[Test 4] Claude Code Smoke Test');
+  const isReady = await ClaudeCodeRunner.smokeTest(cfg.controlRepository);
+  assert(isReady === true, `Configured model ${cfg.model} responds to a no-edit smoke prompt`);
 
   console.log('\n[Test 5] Fixed Command Wrappers');
   const wrapperDir = path.resolve(__dirname, '../agent-tools');

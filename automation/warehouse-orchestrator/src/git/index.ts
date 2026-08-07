@@ -13,7 +13,14 @@ export class GitManager {
   public static cleanupWorktree(worktreePath: string, branch: string): void {
     const cfg = ConfigManager.get();
     const scriptPath = path.resolve(__dirname, '../../scripts/cleanup-worktree.sh');
-    execSync(`bash "${scriptPath}" "${branch}" "${worktreePath}" "${cfg.controlRepository}"`, {
+    // cleanup-worktree.sh takes (worktree_path, branch_name, control_repo) —
+    // this call had branch and worktreePath swapped, so its `[ -d
+    // "$WORKTREE_PATH" ]` check received a branch name (never a real
+    // directory) and silently skipped the actual `git worktree remove` on
+    // every single successful job. "Worktree cleanup complete" was printing
+    // having done nothing; every worktree in this session was left behind
+    // and had to be removed by hand.
+    execSync(`bash "${scriptPath}" "${worktreePath}" "${branch}" "${cfg.controlRepository}"`, {
       stdio: 'inherit'
     });
   }
@@ -49,8 +56,32 @@ export class GitManager {
   public static syncControlMain(): void {
     const cfg = ConfigManager.get();
     console.log(`[GitManager] Syncing control main repository...`);
+    // The control clone only ever mirrors origin/main; a plain `pull` breaks the
+    // moment local main diverges from a squash-merged remote history (two
+    // branches from a common ancestor). Force it to match origin exactly instead.
+    execSync(`git -C "${cfg.controlRepository}" fetch --prune origin`, { stdio: 'inherit' });
     execSync(`git -C "${cfg.controlRepository}" checkout main`, { stdio: 'inherit' });
-    execSync(`git -C "${cfg.controlRepository}" pull origin main`, { stdio: 'inherit' });
+    execSync(`git -C "${cfg.controlRepository}" reset --hard origin/main`, { stdio: 'inherit' });
+    execSync(`git -C "${cfg.controlRepository}" clean -fd`, { stdio: 'inherit' });
+  }
+
+  /**
+   * A merge can land new migration files, but nothing else ever applies them
+   * to control's running database — composer-dev boots "healthy" off a
+   * server that 500s the moment a route touches the new table (this is
+   * exactly what issue #12 reported). Run explicitly with the same sqlite
+   * env override dev-supervisor.sh uses, since control's .env is not
+   * guaranteed to match how the live server is actually being run.
+   */
+  public static runControlMigrations(): void {
+    const cfg = ConfigManager.get();
+    console.log(`[GitManager] Running pending migrations on control database...`);
+    const dbPath = `${cfg.controlRepository}/database/database.sqlite`;
+    execSync(`php artisan migrate --force`, {
+      cwd: cfg.controlRepository,
+      stdio: 'inherit',
+      env: { ...process.env, DB_CONNECTION: 'sqlite', DB_DATABASE: dbPath }
+    });
   }
 }
 

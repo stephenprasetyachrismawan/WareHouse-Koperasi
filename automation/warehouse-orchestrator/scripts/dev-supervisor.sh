@@ -42,6 +42,16 @@ EOF
 
 cleanup_child_processes() {
   echo "[dev-supervisor] Cleaning up child processes..." >> "${SUPERVISOR_LOG}"
+  # composer dev (via concurrently) spawns serve/queue/pail/vite as
+  # grandchildren, not direct children of this script — pkill -P $$ alone
+  # never reaches them, which is why ports stayed stuck across restarts.
+  # COMPOSER_PID is started via setsid, so it's also its process-group
+  # leader: killing the negative PID takes the whole tree down in one shot.
+  if [ -n "${COMPOSER_PID:-}" ]; then
+    kill -TERM -- "-${COMPOSER_PID}" 2>/dev/null || true
+    sleep 1
+    kill -9 -- "-${COMPOSER_PID}" 2>/dev/null || true
+  fi
   pkill -P $$ 2>/dev/null || true
   pkill -9 -f "composer dev" 2>/dev/null || true
   pkill -9 -f "php artisan serve" 2>/dev/null || true
@@ -51,7 +61,11 @@ cleanup_child_processes() {
 
 count_fatal_errors() {
   local count
-  count=$(grep -E -c "Fatal error|Uncaught|npm ERR!|Vite error|Build failed|Address already in use" "${SUPERVISOR_LOG}" 2>/dev/null | awk '{s+=$1} END {print s+0}')
+  # "Address already in use" is excluded: php artisan serve retries on the
+  # next port automatically and does come up healthy, so that line is a
+  # transient retry notice, not a fatal condition — treating it as fatal
+  # was permanently flagging otherwise-healthy cycles as UNHEALTHY/FAILED.
+  count=$(grep -E -c "Fatal error|Uncaught|npm ERR!|Vite error|Build failed" "${SUPERVISOR_LOG}" 2>/dev/null | awk '{s+=$1} END {print s+0}')
   echo "${count}"
 }
 
@@ -74,11 +88,47 @@ run_supervisor_loop() {
 
     date +%s > "${MARKER_FILE}"
 
-    cd "${current_target}"
+    # Same race class as the .env bootstrap below: current_target can vanish
+    # between the directory check above and here if a worktree is being
+    # deleted/recreated concurrently. Skip this cycle instead of exiting.
+    if ! cd "${current_target}" 2>>"${SUPERVISOR_LOG}"; then
+      echo "[dev-supervisor] ${current_target} disappeared before startup; retrying shortly..." >> "${SUPERVISOR_LOG}"
+      sleep 2
+      continue
+    fi
 
     # Ensure SQLite database file exists in target worktree
-    mkdir -p "${current_target}/database"
-    touch "${current_target}/database/database.sqlite"
+    mkdir -p "${current_target}/database" 2>>"${SUPERVISOR_LOG}" || true
+    touch "${current_target}/database/database.sqlite" 2>>"${SUPERVISOR_LOG}" || true
+
+    # .env is gitignored, so it never comes from git reset/clean or from
+    # prepare-worktree.sh's file copies — a target missing it boots far
+    # enough to look alive, then fatals on the first real request
+    # (MissingAppKeyException), which is invisible until agent-dev-health
+    # actually gets hit. Bootstrap it unconditionally so this can't recur.
+    # This whole script runs under `set -e`; a target caught mid git-worktree
+    # recreation (its .env.example briefly absent) previously took the
+    # *entire* supervisor process down on a single failed `cp`, taking the
+    # tmux session with it — the opposite of "always stays on". Every step
+    # in this block is now independently guarded so a transient miss here
+    # just skips bootstrapping this cycle instead of killing the supervisor.
+    if [ ! -f "${current_target}/.env" ] && [ -f "${current_target}/.env.example" ]; then
+      echo "[dev-supervisor] No .env in ${current_target}; bootstrapping from .env.example..." >> "${SUPERVISOR_LOG}"
+      if cp "${current_target}/.env.example" "${current_target}/.env" 2>>"${SUPERVISOR_LOG}"; then
+        # .env.example's stock DB_CONNECTION is pgsql, but this project runs
+        # on sqlite everywhere (no Postgres server exists on this box). Plain
+        # `php artisan <command>` calls (migrate:fresh in agent-test-database,
+        # for instance) read .env directly and aren't covered by phpunit.xml's
+        # test-runner env overrides, so a wrong file here breaks them even
+        # though `php artisan test` itself stays fine. Without any .env at all
+        # Laravel's own config/database.php default (sqlite) silently wins —
+        # match that explicitly now that a file exists to override it.
+        sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' "${current_target}/.env" 2>>"${SUPERVISOR_LOG}" || true
+        sed -i '/^DB_HOST=/d; /^DB_PORT=/d; /^DB_USERNAME=/d; /^DB_PASSWORD=/d' "${current_target}/.env" 2>>"${SUPERVISOR_LOG}" || true
+        sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${current_target}/database/database.sqlite|" "${current_target}/.env" 2>>"${SUPERVISOR_LOG}" || true
+        php "${current_target}/artisan" key:generate --force >> "${SUPERVISOR_LOG}" 2>&1 || true
+      fi
+    fi
 
     export APP_ENV=local
     export DB_CONNECTION=sqlite
@@ -86,12 +136,9 @@ run_supervisor_loop() {
 
     write_health "STARTING" $$ "${current_target}" "${restart_count}" 0
 
-    # Apply pending migrations so a freshly created/switched sqlite file always
-    # matches the current schema before the app starts serving requests.
-    php artisan migrate --force >> "${SUPERVISOR_LOG}" 2>&1 || true
-
-    # Start composer dev
-    composer dev >> "${SUPERVISOR_LOG}" 2>&1 &
+    # Start composer dev in its own process group (setsid) so the whole
+    # tree — serve/queue/pail/vite — can be killed together on cleanup.
+    setsid composer dev >> "${SUPERVISOR_LOG}" 2>&1 &
     COMPOSER_PID=$!
 
     # 10 second warm-up check

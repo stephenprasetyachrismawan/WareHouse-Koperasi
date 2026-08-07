@@ -2,8 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Enums\MembershipStatus;
-use App\Enums\WarehouseRole;
+use App\Models\Company;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseMembership;
@@ -14,24 +13,21 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class WarehouseMembershipFactory extends Factory
 {
+    protected $model = WarehouseMembership::class;
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
     public function definition(): array
     {
         return [
-            'user_id' => User::factory(),
+            'company_id' => Company::factory(),
             'warehouse_id' => Warehouse::factory(),
-            'role' => WarehouseRole::StaffAdmin,
-            'status' => MembershipStatus::Active,
-            'permissions' => null,
+            'user_id' => User::factory(),
+            'role' => 'staff_admin',
+            'status' => 'active',
         ];
-    }
-
-    public function role(WarehouseRole $role): static
-    {
-        return $this->state(fn () => ['role' => $role]);
-    }
-
-    public function suspended(): static
-    {
-        return $this->state(fn () => ['status' => MembershipStatus::Suspended]);
     }
 }

@@ -1,7 +1,7 @@
 {
   "name": "warehouse-orchestrator",
   "version": "1.0.0",
-  "description": "Autonomous GitHub-Issue Orchestrator using Google Antigravity CLI for WareHouse-Koperasi",
+  "description": "Autonomous GitHub-Issue Orchestrator using Claude Code for WareHouse-Koperasi",
   "main": "src/cli/index.ts",
   "type": "commonjs",
   "scripts": {
@@ -34,7 +34,7 @@
     "jobs:retry": "npx ts-node src/cli/jobs-cli.ts retry",
     "jobs:cancel": "npx ts-node src/cli/jobs-cli.ts cancel",
     "dry-run:local": "npx ts-node src/cli/dry-run-cli.ts",
-    "smoke:agy": "npx ts-node src/cli/smoke-cli.ts agy",
+    "smoke:claude": "npx ts-node src/cli/smoke-cli.ts claude",
     "smoke:tmux": "npx ts-node src/cli/smoke-cli.ts tmux",
     "smoke:composer-dev": "npx ts-node src/cli/smoke-cli.ts composer-dev",
     "smoke:github": "npx ts-node src/cli/smoke-cli.ts github",
