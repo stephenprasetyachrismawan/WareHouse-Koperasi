@@ -1,0 +1,13 @@
+[Unit]
+Description=WareHouse Koperasi Autonomous Orchestrator Tmux Supervisor
+After=network.target
+
+[Service]
+Type=oneshot
+User=ec2-user
+RemainAfterExit=yes
+ExecStart=/usr/bin/npm run --prefix /opt/project/WareHouse-Koperasi/automation/warehouse-orchestrator tmux:start
+ExecStop=/usr/bin/npm run --prefix /opt/project/WareHouse-Koperasi/automation/warehouse-orchestrator tmux:stop
+
+[Install]
+WantedBy=multi-user.target

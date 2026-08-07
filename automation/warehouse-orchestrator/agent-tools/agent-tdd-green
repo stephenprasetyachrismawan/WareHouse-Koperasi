@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+FILTER=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --filter)
+      FILTER="$2"
+      shift 2
+      ;;
+    *)
+      FILTER="$1"
+      shift
+      ;;
+  esac
+done
+
+WORKTREE_DIR="$(pwd)"
+LOG_DIR="${WORKTREE_DIR}/.agent-runtime/logs"
+mkdir -p "${LOG_DIR}"
+LOG_FILE="${LOG_DIR}/tdd-green.log"
+START_TIME=$(date +%s)
+
+echo "=== TDD GREEN PHASE: ${FILTER} ===" > "${LOG_FILE}"
+
+EXIT_CODE=0
+if [ -n "${FILTER}" ]; then
+  php artisan test --filter="${FILTER}" --compact >> "${LOG_FILE}" 2>&1 || EXIT_CODE=$?
+else
+  php artisan test --compact >> "${LOG_FILE}" 2>&1 || EXIT_CODE=$?
+fi
+
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+
+if [ ${EXIT_CODE} -eq 0 ]; then
+  echo "TOOL: agent-tdd-green"
+  echo "STATUS: PASS"
+  echo "EXIT_CODE: 0"
+  echo "DURATION_SECONDS: ${DURATION}"
+  echo "LOG: .agent-runtime/logs/tdd-green.log"
+  exit 0
+else
+  PRIMARY_ERR=$(tail -n 15 "${LOG_FILE}" | grep -E "FAILED|Failed|Error" | head -n 1 || echo "Test failed during GREEN phase.")
+  echo "TOOL: agent-tdd-green"
+  echo "STATUS: FAIL"
+  echo "EXIT_CODE: ${EXIT_CODE}"
+  echo "DURATION_SECONDS: ${DURATION}"
+  echo "PRIMARY_ERROR: ${PRIMARY_ERR}"
+  echo "LOG: .agent-runtime/logs/tdd-green.log"
+  echo "TAIL:"
+  tail -n 15 "${LOG_FILE}"
+  exit ${EXIT_CODE}
+fi

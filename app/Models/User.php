@@ -3,10 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\Permission;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -58,5 +60,23 @@ class User extends Authenticatable implements PasskeyUser
         return Str::length($initials) > 1
             ? Str::substr($initials, 0, 1).Str::substr($initials, -1)
             : $initials;
+    }
+
+    /**
+     * @return HasMany<WarehouseMembership, $this>
+     */
+    public function memberships(): HasMany
+    {
+        return $this->hasMany(WarehouseMembership::class);
+    }
+
+    public function membershipFor(Warehouse $warehouse): ?WarehouseMembership
+    {
+        return $this->memberships->firstWhere('warehouse_id', $warehouse->id);
+    }
+
+    public function hasPermission(Warehouse $warehouse, Permission $permission): bool
+    {
+        return $this->membershipFor($warehouse)?->hasPermission($permission) ?? false;
     }
 }

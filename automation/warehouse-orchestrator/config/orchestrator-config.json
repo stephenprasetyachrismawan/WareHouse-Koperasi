@@ -1,0 +1,19 @@
+{
+  "binary": "agy",
+  "agent": "warehouse-laravel",
+  "model": "gemini-3.6-flash-low",
+  "effort": "low",
+  "outputFormat": "stream-json",
+  "executionMode": "accept-edits",
+  "timeoutSeconds": 1800,
+  "maxAttempts": 2,
+  "subagents": false,
+  "enabled": true,
+  "pollIntervalSeconds": 30,
+  "controlRepository": "/srv/warehouse-koperasi/control",
+  "worktreesDirectory": "/srv/warehouse-koperasi/worktrees",
+  "stateDirectory": "/srv/warehouse-koperasi/state",
+  "logsDirectory": "/srv/warehouse-koperasi/logs",
+  "credentialsDirectory": "/srv/warehouse-koperasi/credentials",
+  "githubRepository": "stephenprasetyachrismawan/WareHouse-Koperasi"
+}

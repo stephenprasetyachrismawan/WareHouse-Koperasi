@@ -1,0 +1,10 @@
+{
+  "maxAdditionalSkills": 2,
+  "allowedSkills": [
+    "fortify-development",
+    "livewire-development",
+    "passkeys-development",
+    "pest-testing",
+    "tenant-security-audit"
+  ]
+}
