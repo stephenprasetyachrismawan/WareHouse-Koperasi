@@ -2,8 +2,8 @@
 
 namespace App\Actions\Fortify;
 
+use App\Concerns\CompanyValidationRules;
 use App\Concerns\PasswordValidationRules;
-use App\Concerns\ProfileValidationRules;
 use App\Models\Company;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -13,57 +13,54 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
-use Spatie\Permission\Models\Role;
 
 class CreateNewUser implements CreatesNewUsers
 {
-    use PasswordValidationRules, ProfileValidationRules;
+    use CompanyValidationRules, PasswordValidationRules;
 
     /**
-     * Validate and create a newly registered user with their company/tenant context.
+     * Create a new SaaS company, primary warehouse, user, and membership atomically.
      *
      * @param  array<string, string>  $input
      */
     public function create(array $input): User
     {
         Validator::make($input, [
-            ...$this->profileRules(),
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique(User::class),
+            ],
+            'company_name' => $this->companyNameRules(),
+            'company_code' => ['nullable', 'string', 'max:50'],
             'password' => $this->passwordRules(),
-            'company_name' => ['required', 'string', 'max:255'],
-            'company_code' => ['nullable', 'string', 'max:50', 'alpha_dash', Rule::unique('companies', 'code')],
-            'company_address' => ['nullable', 'string', 'max:500'],
-            'company_phone' => ['nullable', 'string', 'max:30'],
         ])->validate();
 
         return DB::transaction(function () use ($input) {
             $companyCode = ! empty($input['company_code'])
-                ? Str::upper($input['company_code'])
-                : Str::upper(Str::slug($input['company_name']).'-'.Str::random(4));
+                ? Str::upper(Str::slug($input['company_code']))
+                : Str::upper(Str::slug($input['company_name']).'-'.rand(100, 999));
 
-            $originalCode = $companyCode;
-            $counter = 1;
-            while (Company::where('code', $companyCode)->exists()) {
-                $companyCode = $originalCode.'-'.$counter++;
-            }
-
-            // 1. Create Company
+            /** @var Company $company */
             $company = Company::create([
                 'name' => $input['company_name'],
                 'code' => $companyCode,
-                'address' => $input['company_address'] ?? null,
-                'phone' => $input['company_phone'] ?? null,
                 'status' => 'active',
             ]);
 
-            // 2. Create Default Warehouse
+            /** @var Warehouse $warehouse */
             $warehouse = Warehouse::create([
                 'company_id' => $company->id,
-                'name' => 'Gudang Utama '.$company->name,
-                'code' => 'WH-MAIN',
+                'name' => 'Gudang '.$input['company_name'],
+                'code' => 'WH-MAIN-'.rand(100, 999),
+                'timezone' => 'Asia/Jakarta',
                 'status' => 'active',
             ]);
 
-            // 3. Create User
+            /** @var User $user */
             $user = User::create([
                 'name' => $input['name'],
                 'email' => $input['email'],
@@ -72,7 +69,6 @@ class CreateNewUser implements CreatesNewUsers
                 'is_super_admin' => false,
             ]);
 
-            // 4. Create WarehouseMembership (Role: app_admin)
             WarehouseMembership::create([
                 'company_id' => $company->id,
                 'warehouse_id' => $warehouse->id,
@@ -81,10 +77,8 @@ class CreateNewUser implements CreatesNewUsers
                 'status' => 'active',
             ]);
 
-            // 5. Assign Spatie Team-scoped Role
             setPermissionsTeamId($company->id);
-            $role = Role::findOrCreate('app_admin', 'web');
-            $user->assignRole($role);
+            $user->assignRole('app_admin');
 
             return $user;
         });

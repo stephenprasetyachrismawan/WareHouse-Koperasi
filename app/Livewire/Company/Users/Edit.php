@@ -3,19 +3,16 @@
 namespace App\Livewire\Company\Users;
 
 use App\Actions\UserManagement\UpdateCompanyUserAction;
+use App\Enums\WarehouseRole;
 use App\Models\User;
 use App\Models\WarehouseMembership;
 use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 class Edit extends Component
 {
-    use AuthorizesRequests;
-
     public User $user;
 
     public string $name = '';
@@ -26,59 +23,57 @@ class Edit extends Component
 
     public function mount(User $user): void
     {
+        /** @var User $actor */
+        $actor = Auth::user();
+        Gate::forUser($actor)->authorize('update', $user);
+
         $this->user = $user;
         $this->name = $user->name;
         $this->email = $user->email;
 
-        /** @var User $actor */
-        $actor = Auth::user();
+        $company = $actor->activeCompany();
 
-        $membership = WarehouseMembership::where('user_id', $user->id)
-            ->where('company_id', $actor->activeCompany()?->id)
-            ->first();
+        if ($company) {
+            $membership = WarehouseMembership::where('user_id', $user->id)
+                ->where('company_id', $company->id)
+                ->first();
 
-        if ($membership) {
-            $this->role = $membership->role;
+            if ($membership) {
+                $roleVal = $membership->role;
+                $this->role = $roleVal instanceof WarehouseRole ? $roleVal->value : (string) $roleVal;
+            }
         }
     }
 
-    public function save(UpdateCompanyUserAction $action): mixed
+    public function save(UpdateCompanyUserAction $action): void
     {
         $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($this->user->id)],
-            'role' => ['required', 'string', Rule::in(UpdateCompanyUserAction::ALLOWED_ROLES)],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'role' => ['required', 'string'],
         ]);
 
         /** @var User $actor */
         $actor = Auth::user();
 
-        try {
-            $action->execute($actor, $this->user, [
-                'name' => $this->name,
-                'email' => $this->email,
-                'role' => $this->role,
-            ]);
-        } catch (ValidationException $e) {
-            $this->setErrorBag($e->validator->getMessageBag());
+        $action->execute($actor, $this->user, [
+            'name' => $this->name,
+            'email' => $this->email,
+            'role' => $this->role,
+        ]);
 
-            return null;
-        }
+        session()->flash('status', 'Pengguna berhasil diperbarui.');
 
-        session()->flash('status', __('User details updated successfully.'));
-
-        return $this->redirect(route('company.users.index'), navigate: true);
+        $this->redirect(route('company.users.index'), navigate: true);
     }
 
     public function render(): View
     {
-        $this->authorize('update', $this->user);
-
         return view('livewire.company.users.edit', [
             'roles' => [
-                'app_admin' => 'Administrator (App Admin)',
+                'app_admin' => 'App Admin',
                 'kepala_gudang' => 'Kepala Gudang',
-                'staff_admin' => 'Staff Admin Gudang',
+                'staff_admin' => 'Staff Admin',
                 'purchasing' => 'Purchasing',
                 'koperasi' => 'Koperasi',
             ],

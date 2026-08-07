@@ -2,6 +2,7 @@
 
 namespace App\Actions\UserManagement;
 
+use App\Concerns\ProfileValidationRules;
 use App\Models\User;
 use App\Models\WarehouseMembership;
 use Illuminate\Support\Facades\DB;
@@ -11,8 +12,10 @@ use Illuminate\Validation\Rule;
 
 class UpdateCompanyUserAction
 {
+    use ProfileValidationRules;
+
     /**
-     * Allowed internal roles.
+     * Allowed internal roles for company user management.
      */
     public const ALLOWED_ROLES = [
         'app_admin',
@@ -23,13 +26,13 @@ class UpdateCompanyUserAction
     ];
 
     /**
-     * Update an internal user within the actor's company.
+     * Update an internal user's details and role within the actor's company.
      *
      * @param  array<string, mixed>  $data
      */
-    public function execute(User $actor, User $target, array $data): User
+    public function execute(User $actor, User $targetUser, array $data): User
     {
-        Gate::forUser($actor)->authorize('update', $target);
+        Gate::forUser($actor)->authorize('update', $targetUser);
 
         $company = $actor->activeCompany();
 
@@ -38,44 +41,35 @@ class UpdateCompanyUserAction
         }
 
         Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($target->id)],
+            'name' => $this->nameRules(),
+            'email' => $this->emailRules($targetUser->id),
             'role' => ['required', 'string', Rule::in(self::ALLOWED_ROLES)],
-            'warehouse_id' => ['nullable', Rule::exists('warehouses', 'id')->where('company_id', $company->id)],
         ])->validate();
 
-        $membership = WarehouseMembership::where('user_id', $target->id)
-            ->where('company_id', $company->id)
-            ->first();
-
-        if (! $membership) {
-            abort(403, 'Target user does not belong to actor company.');
-        }
-
-        return DB::transaction(function () use ($company, $target, $membership, $data) {
-            $target->update([
+        return DB::transaction(function () use ($company, $targetUser, $data) {
+            $targetUser->update([
                 'name' => $data['name'],
                 'email' => $data['email'],
             ]);
 
-            $warehouseId = $data['warehouse_id'] ?? $membership->warehouse_id;
+            $membership = WarehouseMembership::where('user_id', $targetUser->id)
+                ->where('company_id', $company->id)
+                ->first();
 
-            $oldRole = $membership->role;
-            $newRole = $data['role'];
+            if ($membership) {
+                $oldRole = $membership->role;
+                $membership->update([
+                    'role' => $data['role'],
+                ]);
 
-            $membership->update([
-                'role' => $newRole,
-                'warehouse_id' => $warehouseId,
-            ]);
-
-            setPermissionsTeamId($company->id);
-
-            if ($oldRole !== $newRole) {
-                $target->removeRole($oldRole);
-                $target->assignRole($newRole);
+                setPermissionsTeamId($company->id);
+                if ($oldRole) {
+                    $targetUser->removeRole($oldRole);
+                }
+                $targetUser->assignRole($data['role']);
             }
 
-            return $target;
+            return $targetUser;
         });
     }
 }

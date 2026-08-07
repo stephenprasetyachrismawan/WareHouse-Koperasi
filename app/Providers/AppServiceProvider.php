@@ -2,9 +2,14 @@
 
 namespace App\Providers;
 
+use App\Enums\WarehouseRole;
+use App\Models\User;
+use App\Models\Warehouse;
+use App\Models\WarehouseMembership;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -29,6 +34,27 @@ class AppServiceProvider extends ServiceProvider
         if (str_starts_with(config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
+
+        Gate::define('manage-warehouse-users', function (User $user, Warehouse $warehouse) {
+            if (! $user->isActive()) {
+                return false;
+            }
+
+            if ($user->isSuperAdmin()) {
+                return true;
+            }
+
+            $membership = WarehouseMembership::where('user_id', $user->id)
+                ->where('warehouse_id', $warehouse->id)
+                ->where('status', 'active')
+                ->first();
+
+            if (! $membership) {
+                return false;
+            }
+
+            return $membership->role === 'app_admin' || $membership->role === WarehouseRole::AppAdmin->value;
+        });
     }
 
     /**

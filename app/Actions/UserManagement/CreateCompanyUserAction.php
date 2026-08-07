@@ -2,6 +2,7 @@
 
 namespace App\Actions\UserManagement;
 
+use App\Concerns\ProfileValidationRules;
 use App\Models\User;
 use App\Models\WarehouseMembership;
 use Illuminate\Support\Facades\DB;
@@ -11,6 +12,8 @@ use Illuminate\Validation\Rule;
 
 class CreateCompanyUserAction
 {
+    use ProfileValidationRules;
+
     /**
      * Allowed internal roles for company user creation.
      */
@@ -38,8 +41,8 @@ class CreateCompanyUserAction
         }
 
         Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
+            'name' => $this->nameRules(),
+            'email' => $this->emailRules(),
             'password' => ['required', 'string', 'min:8'],
             'role' => ['required', 'string', Rule::in(self::ALLOWED_ROLES)],
             'warehouse_id' => ['nullable', Rule::exists('warehouses', 'id')->where('company_id', $company->id)],
