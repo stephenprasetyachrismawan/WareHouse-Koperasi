@@ -38,6 +38,19 @@ enum Permission: string
     case PredictionRun = 'prediction.run';
     case ReportsView = 'reports.view';
 
+    case ItemViewAny = 'item.viewAny';
+    case ItemCreate = 'item.create';
+    case ItemUpdate = 'item.update';
+    case ItemArchive = 'item.archive';
+    case LocationViewAny = 'location.viewAny';
+    case LocationManage = 'location.manage';
+    case SupplierViewAny = 'supplier.viewAny';
+    case SupplierManage = 'supplier.manage';
+    case StockAdjust = 'stock.adjust';
+    case StockScanIn = 'stock.scanIn';
+    case StockScanOut = 'stock.scanOut';
+    case StockLedgerView = 'stock.ledger.view';
+
     case KoperasiRequestCreate = 'koperasi.request.create';
     case KoperasiReturnSubmit = 'koperasi.return.submit';
 

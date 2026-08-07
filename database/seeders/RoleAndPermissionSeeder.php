@@ -19,7 +19,7 @@ class RoleAndPermissionSeeder extends Seeder
         setPermissionsTeamId(null);
 
         // 1. Permissions List
-        $permissions = [
+        $permissions = array_unique(array_merge([
             // Company & Platform
             'company.view',
             'company.update',
@@ -39,58 +39,9 @@ class RoleAndPermissionSeeder extends Seeder
             'warehouses.update',
             'warehouses.manage',
 
-            // Catalog & Suppliers
-            'items.view',
-            'items.create',
-            'items.update',
-            'items.archive',
-            'suppliers.view',
-            'suppliers.create',
-            'suppliers.update',
-
-            // Stock & Inventory
-            'stock.view',
-            'stock.adjust',
-            'stock.scan_in',
-            'stock.scan_out',
-            'stock.reconcile',
-
-            // Purchase Requests
-            'purchase_requests.view',
-            'purchase_requests.create',
-            'purchase_requests.approve',
-            'purchase_requests.reject',
-            'purchase_requests.cancel',
-
-            // Purchase Orders
-            'purchase_orders.view',
-            'purchase_orders.create',
-            'purchase_orders.send',
-
-            // Receipts & QC
-            'receipts.view',
-            'receipts.create',
-            'receipts.qc',
-
-            // Pickup Requests
-            'pickup_requests.view',
-            'pickup_requests.create',
-            'pickup_requests.prepare',
-            'pickup_requests.approve',
-
-            // Returns
-            'returns.view',
-            'returns.create',
-            'returns.verify',
-            'returns.approve',
-
-            // Machine Learning / Predictions
-            'predictions.view',
-            'predictions.run',
-
             // Audit
             'audit.view',
-        ];
+        ], \App\Enums\Permission::values()));
 
         foreach ($permissions as $permissionName) {
             Permission::findOrCreate($permissionName, 'web');

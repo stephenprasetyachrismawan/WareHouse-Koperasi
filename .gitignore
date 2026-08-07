@@ -24,3 +24,5 @@ yarn-error.log
 /.zed
 automation/warehouse-orchestrator/node_modules
 .agent-runtime/
+.gemini/
+graphify-out/

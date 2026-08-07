@@ -24,6 +24,36 @@
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
+
+                @if(auth()->check())
+                    <flux:sidebar.group :heading="__('Inventaris & Gudang')" class="grid">
+                        @can('viewAny', App\Models\Item::class)
+                            <flux:sidebar.item icon="cube" :href="route('inventory.items.index')" :current="request()->routeIs('inventory.items.*')" wire:navigate>
+                                {{ __('Katalog Barang') }}
+                            </flux:sidebar.item>
+                        @endcan
+                        @can('viewAny', App\Models\StockBalance::class)
+                            <flux:sidebar.item icon="circle-stack" :href="route('inventory.stock.overview')" :current="request()->routeIs('inventory.stock.overview') || request()->routeIs('inventory.stock.movement')" wire:navigate>
+                                {{ __('Saldo & Transaksi Stok') }}
+                            </flux:sidebar.item>
+                        @endcan
+                        @can('viewAny', App\Models\StockTransaction::class)
+                            <flux:sidebar.item icon="document-text" :href="route('inventory.stock.ledger')" :current="request()->routeIs('inventory.stock.ledger')" wire:navigate>
+                                {{ __('Ledger Transaksi') }}
+                            </flux:sidebar.item>
+                        @endcan
+                        @can('viewAny', App\Models\Supplier::class)
+                            <flux:sidebar.item icon="truck" :href="route('inventory.suppliers.index')" :current="request()->routeIs('inventory.suppliers.*')" wire:navigate>
+                                {{ __('Master Supplier') }}
+                            </flux:sidebar.item>
+                        @endcan
+                        @can('viewAny', App\Models\WarehouseLocation::class)
+                            <flux:sidebar.item icon="building-office-2" :href="route('inventory.locations.index')" :current="request()->routeIs('inventory.locations.*')" wire:navigate>
+                                {{ __('Lokasi & Rak') }}
+                            </flux:sidebar.item>
+                        @endcan
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />

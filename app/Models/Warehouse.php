@@ -91,4 +91,44 @@ class Warehouse extends Model
     {
         return $this->status === 'suspended';
     }
+
+    /**
+     * @return HasMany<Item, $this>
+     */
+    public function items(): HasMany
+    {
+        return $this->hasMany(Item::class);
+    }
+
+    /**
+     * @return HasMany<WarehouseLocation, $this>
+     */
+    public function locations(): HasMany
+    {
+        return $this->hasMany(WarehouseLocation::class);
+    }
+
+    /**
+     * @return HasMany<Supplier, $this>
+     */
+    public function suppliers(): HasMany
+    {
+        return $this->hasMany(Supplier::class);
+    }
+
+    /**
+     * @return HasMany<StockBalance, $this>
+     */
+    public function stockBalances(): HasMany
+    {
+        return $this->hasMany(StockBalance::class);
+    }
+
+    /**
+     * @return HasMany<StockTransaction, $this>
+     */
+    public function stockTransactions(): HasMany
+    {
+        return $this->hasMany(StockTransaction::class);
+    }
 }

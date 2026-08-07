@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
 /**
  * @property int $id
@@ -109,8 +110,12 @@ class WarehouseMembership extends Model
 
         setPermissionsTeamId($this->company_id);
 
-        if ($this->user->hasPermissionTo($permValue)) {
-            return true;
+        try {
+            if ($this->user->hasPermissionTo($permValue)) {
+                return true;
+            }
+        } catch (PermissionDoesNotExist) {
+            // Fall through to role check if permission string is not registered in Spatie DB
         }
 
         $roleVal = $this->role instanceof WarehouseRole ? $this->role->value : (string) $this->role;

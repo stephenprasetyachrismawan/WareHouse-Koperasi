@@ -45,6 +45,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('role'); // app_admin, kepala_gudang, staff_admin, purchasing, koperasi
             $table->string('status')->default('active'); // active, suspended
+            $table->json('permissions')->nullable();
             $table->timestamps();
 
             $table->unique(['warehouse_id', 'user_id', 'role']);
