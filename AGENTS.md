@@ -71,16 +71,16 @@ Laravel Boost custom project rules live in `.ai/guidelines/warehouse-project.md`
 
 For each change:
 
-1. Identify requirement IDs and acceptance criteria.
-2. Confirm module and security boundary.
-3. Write or update a small implementation plan.
-4. Add a failing test first for the behavior or regression.
-5. Implement the smallest vertical slice.
-6. Run focused tests.
-7. Run formatting/static analysis.
-8. Run authorization and tenant-isolation tests.
-9. Review the diff against standards and the originating requirement.
-10. Update documentation/ADR when necessary.
+1. Create a dedicated feature branch (`git checkout -b feat/...` or `fix/...`). NEVER commit directly to `main`.
+2. Identify requirement IDs and acceptance criteria.
+3. Confirm module and security boundary.
+4. Write or update a small implementation plan.
+5. Add a failing test first for the behavior or regression.
+6. Implement the smallest vertical slice.
+7. Run focused tests, formatting (`vendor/bin/pint --test`), and asset build (`npm run build`).
+8. Push the branch to origin (`git push -u origin <branch>`).
+9. Create a Pull Request (`gh pr create`).
+10. Merge the Pull Request into `main` (`gh pr merge --merge --delete-branch`).
 
 ## 6. Required Test Cases for Tenant Models
 
