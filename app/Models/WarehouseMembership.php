@@ -118,8 +118,21 @@ class WarehouseMembership extends Model
             // Fall through to role check if permission string is not registered in Spatie DB
         }
 
-        $roleVal = $this->role instanceof WarehouseRole ? $this->role->value : (string) $this->role;
+        $roleEnum = $this->role instanceof WarehouseRole ? $this->role : WarehouseRole::tryFrom((string) $this->role);
 
-        return $this->user->hasRole($roleVal);
+        if ($roleEnum) {
+            if ($roleEnum === WarehouseRole::AppAdmin) {
+                return true;
+            }
+
+            $defaultPermValues = array_map(
+                fn (Permission $p) => $p->value,
+                $roleEnum->defaultPermissions()
+            );
+
+            return in_array($permValue, $defaultPermValues, true);
+        }
+
+        return false;
     }
 }
