@@ -61,6 +61,8 @@ enum WarehouseRole: string
                 Permission::LocationViewAny,
                 Permission::SupplierViewAny,
                 Permission::StockLedgerView,
+                Permission::PickupRequestViewAny,
+                Permission::PickupRequestApprove,
             ],
             self::StaffAdmin => [
                 Permission::DashboardView,
@@ -83,6 +85,10 @@ enum WarehouseRole: string
                 Permission::StockScanIn,
                 Permission::StockScanOut,
                 Permission::StockLedgerView,
+                Permission::PickupRequestViewAny,
+                Permission::PickupRequestPrepare,
+                Permission::PickupRequestFulfill,
+                Permission::PickupRequestCancel,
             ],
             self::Purchasing => [
                 Permission::DashboardView,
@@ -98,6 +104,9 @@ enum WarehouseRole: string
             self::Koperasi => [
                 Permission::KoperasiRequestCreate,
                 Permission::KoperasiReturnSubmit,
+                Permission::PickupRequestViewAny,
+                Permission::PickupRequestCreate,
+                Permission::PickupRequestCancel,
             ],
         };
     }

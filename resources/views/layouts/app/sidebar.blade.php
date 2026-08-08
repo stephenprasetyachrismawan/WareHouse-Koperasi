@@ -53,8 +53,27 @@
                             </flux:sidebar.item>
                         @endcan
                     </flux:sidebar.group>
+
+                    <flux:sidebar.group :heading="__('Pengambilan Koperasi')" class="grid">
+                        <flux:sidebar.item icon="shopping-cart" :href="route('pickup.my-requests')" :current="request()->routeIs('pickup.my-requests') || request()->routeIs('pickup.create')" wire:navigate>
+                            {{ __('Request Saya') }}
+                        </flux:sidebar.item>
+                        
+                        @can('approve', App\Models\PickupRequest::class)
+                            <flux:sidebar.item icon="check-badge" :href="route('pickup.approval-inbox')" :current="request()->routeIs('pickup.approval-inbox')" wire:navigate>
+                                {{ __('Approval Pickup') }}
+                            </flux:sidebar.item>
+                        @endcan
+                        
+                        @can('prepare', App\Models\PickupRequest::class)
+                            <flux:sidebar.item icon="inbox-arrow-down" :href="route('pickup.fulfilment')" :current="request()->routeIs('pickup.fulfilment')" wire:navigate>
+                                {{ __('Penyiapan & Pickup') }}
+                            </flux:sidebar.item>
+                        @endcan
+                    </flux:sidebar.group>
                 @endif
             </flux:sidebar.nav>
+
 
             <flux:spacer />
 

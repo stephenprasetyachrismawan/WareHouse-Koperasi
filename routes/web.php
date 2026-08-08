@@ -12,6 +12,11 @@ use App\Livewire\Inventory\Stock\Ledger as InventoryStockLedger;
 use App\Livewire\Inventory\Stock\Movement as InventoryStockMovement;
 use App\Livewire\Inventory\Stock\Overview as InventoryStockOverview;
 use App\Livewire\Inventory\Suppliers\Index as InventorySuppliersIndex;
+use App\Livewire\Pickup\ApprovalInbox;
+use App\Livewire\Pickup\Create;
+use App\Livewire\Pickup\Fulfilment;
+use App\Livewire\Pickup\MyRequests;
+use App\Livewire\Pickup\Show;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -38,6 +43,15 @@ Route::middleware(['auth', 'verified', EnsureTenantContext::class])->group(funct
 
         Route::get('suppliers', InventorySuppliersIndex::class)->name('suppliers.index');
         Route::get('locations', InventoryLocationsIndex::class)->name('locations.index');
+    });
+
+    // Pickup Request Routes
+    Route::prefix('pickup')->name('pickup.')->group(function () {
+        Route::get('create', Create::class)->name('create');
+        Route::get('my-requests', MyRequests::class)->name('my-requests');
+        Route::get('approval-inbox', ApprovalInbox::class)->name('approval-inbox');
+        Route::get('fulfilment', Fulfilment::class)->name('fulfilment');
+        Route::get('{pickupRequest:uuid}', Show::class)->name('show');
     });
 });
 

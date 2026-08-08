@@ -54,6 +54,13 @@ enum Permission: string
     case KoperasiRequestCreate = 'koperasi.request.create';
     case KoperasiReturnSubmit = 'koperasi.return.submit';
 
+    case PickupRequestViewAny = 'pickup_request.viewAny';
+    case PickupRequestCreate = 'pickup_request.create';
+    case PickupRequestPrepare = 'pickup_request.prepare';
+    case PickupRequestApprove = 'pickup_request.approve';
+    case PickupRequestFulfill = 'pickup_request.fulfill';
+    case PickupRequestCancel = 'pickup_request.cancel';
+
     /**
      * @return list<string>
      */
