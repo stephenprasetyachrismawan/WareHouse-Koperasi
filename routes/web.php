@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Middleware\EnsureTenantContext;
 use App\Livewire\Company\Users\Create as CompanyUsersCreate;
 use App\Livewire\Company\Users\Edit as CompanyUsersEdit;
@@ -15,6 +16,13 @@ use App\Livewire\Inventory\Suppliers\Index as InventorySuppliersIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+
+Route::name('auth.google.')->middleware('guest')->group(function () {
+    Route::get('auth/google', [SocialiteController::class, 'redirectToGoogle'])->name('redirect');
+    Route::get('auth/google/callback', [SocialiteController::class, 'handleGoogleCallback'])->name('callback');
+    Route::get('auth/google/complete', [SocialiteController::class, 'showCompleteForm'])->name('complete');
+    Route::post('auth/google/complete', [SocialiteController::class, 'completeCompany'])->name('complete.store');
+});
 
 Route::middleware(['auth', 'verified', EnsureTenantContext::class])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');

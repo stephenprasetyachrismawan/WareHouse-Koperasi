@@ -19,6 +19,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string|null $google_id
  * @property string $status
  * @property bool $is_super_admin
  * @property Carbon|null $email_verified_at
@@ -38,6 +39,7 @@ class User extends Authenticatable implements PasskeyUser
     protected $fillable = [
         'name',
         'email',
+        'google_id',
         'password',
         'status',
         'is_super_admin',
