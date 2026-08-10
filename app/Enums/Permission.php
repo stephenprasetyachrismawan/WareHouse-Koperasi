@@ -20,12 +20,23 @@ enum Permission: string
     case StockManage = 'stock.manage';
     case StockMinimumManage = 'stock.minimum.manage';
 
+    case PurchaseRequestViewAny = 'purchase_request.viewAny';
+    case PurchaseRequestView = 'purchase_request.view';
     case PurchaseRequestCreate = 'purchase_request.create';
     case PurchaseRequestApprove = 'purchase_request.approve';
+    case PurchaseRequestReject = 'purchase_request.reject';
     case PurchaseRequestCancel = 'purchase_request.cancel';
+    case PurchaseRequestRequestCancellation = 'purchase_request.requestCancellation';
 
+    case PurchaseOrderViewAny = 'purchase_order.viewAny';
+    case PurchaseOrderView = 'purchase_order.view';
     case PurchaseOrderCreate = 'purchase_order.create';
+    case PurchaseOrderSend = 'purchase_order.send';
     case PurchaseOrderManage = 'purchase_order.manage';
+
+    case PurchaseGroupViewAny = 'purchase_group.viewAny';
+    case PurchaseGroupCreate = 'purchase_group.create';
+    case PurchaseGroupUpdate = 'purchase_group.update';
 
     case ReceivingQcManage = 'receiving_qc.manage';
 
@@ -53,6 +64,13 @@ enum Permission: string
 
     case KoperasiRequestCreate = 'koperasi.request.create';
     case KoperasiReturnSubmit = 'koperasi.return.submit';
+
+    case PickupRequestViewAny = 'pickup_request.viewAny';
+    case PickupRequestCreate = 'pickup_request.create';
+    case PickupRequestPrepare = 'pickup_request.prepare';
+    case PickupRequestApprove = 'pickup_request.approve';
+    case PickupRequestFulfill = 'pickup_request.fulfill';
+    case PickupRequestCancel = 'pickup_request.cancel';
 
     /**
      * @return list<string>

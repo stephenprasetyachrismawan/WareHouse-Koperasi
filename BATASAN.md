@@ -233,6 +233,7 @@ Tidak ada partial receipt pada versi awal. Bila bisnis memerlukan partial receip
 - Setiap action mutasi penting menggunakan idempotency key atau guard terhadap double-submit.
 - Websocket/push hanya kanal pemberitahuan; database tetap source of truth.
 - Nilai stok harus diturunkan dari ledger dan/atau materialized balance yang di-update atomik. Rekonsiliasi periodik wajib tersedia.
+- **Preservasi Data Database**: Modifikasi kode, patching, dan deployment biasa TIDAK BOLEH menghapus atau mereset database utama (`database/database.sqlite` / DB produksi). Perintah `php artisan migrate:fresh` hanya dijalankan pada automated testing atau verifikasi awal lingkungan dev; perubahan skema biasa wajib menggunakan `php artisan migrate` agar data pengguna tetap utuh. Data penting/demo yang wajib bertahan dalam environment diisikan melalui Seeder (`DatabaseSeeder.php`).
 
 ## 9. Batas UI
 

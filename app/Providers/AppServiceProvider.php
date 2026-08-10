@@ -2,13 +2,16 @@
 
 namespace App\Providers;
 
+use App\Domain\Pickup\Events\StockShortageDetected;
 use App\Enums\WarehouseRole;
+use App\Listeners\Procurement\CreatePurchaseRequestForStockShortage;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseMembership;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
@@ -55,6 +58,11 @@ class AppServiceProvider extends ServiceProvider
 
             return $membership->role === 'app_admin' || $membership->role === WarehouseRole::AppAdmin->value;
         });
+
+        Event::listen(
+            StockShortageDetected::class,
+            CreatePurchaseRequestForStockShortage::class
+        );
     }
 
     /**

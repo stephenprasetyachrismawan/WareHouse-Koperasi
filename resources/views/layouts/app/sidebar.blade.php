@@ -53,8 +53,59 @@
                             </flux:sidebar.item>
                         @endcan
                     </flux:sidebar.group>
+
+                    <flux:sidebar.group :heading="__('Pengambilan Koperasi')" class="grid">
+                        <flux:sidebar.item icon="shopping-cart" :href="route('pickup.my-requests')" :current="request()->routeIs('pickup.my-requests') || request()->routeIs('pickup.create')" wire:navigate>
+                            {{ __('Request Saya') }}
+                        </flux:sidebar.item>
+                        
+                        @can('approve', App\Models\PickupRequest::class)
+                            <flux:sidebar.item icon="check-badge" :href="route('pickup.approval-inbox')" :current="request()->routeIs('pickup.approval-inbox')" wire:navigate>
+                                {{ __('Approval Pickup') }}
+                            </flux:sidebar.item>
+                        @endcan
+                        
+                        @can('prepare', App\Models\PickupRequest::class)
+                            <flux:sidebar.item icon="inbox-arrow-down" :href="route('pickup.fulfilment')" :current="request()->routeIs('pickup.fulfilment')" wire:navigate>
+                                {{ __('Penyiapan & Pickup') }}
+                            </flux:sidebar.item>
+                        @endcan
+                    </flux:sidebar.group>
+
+                    <flux:sidebar.group :heading="__('Pengadaan & Purchase')" class="grid">
+                        @can('viewAny', App\Models\PurchaseRequest::class)
+                            <flux:sidebar.item icon="document-duplicate" :href="route('procurement.index')" :current="request()->routeIs('procurement.index') || request()->routeIs('procurement.create')" wire:navigate>
+                                {{ __('Purchase Request') }}
+                            </flux:sidebar.item>
+                        @endcan
+
+                        @can('approve', App\Models\PurchaseRequest::class)
+                            <flux:sidebar.item icon="check-badge" :href="route('procurement.approval-inbox')" :current="request()->routeIs('procurement.approval-inbox')" wire:navigate>
+                                {{ __('Approval Procurement') }}
+                            </flux:sidebar.item>
+                        @endcan
+
+                        @can('viewAny', App\Models\PurchaseRequest::class)
+                            <flux:sidebar.item icon="queue-list" :href="route('procurement.approved-queue')" :current="request()->routeIs('procurement.approved-queue')" wire:navigate>
+                                {{ __('Approved Queue') }}
+                            </flux:sidebar.item>
+                        @endcan
+
+                        @can('create', App\Models\PurchaseRequestGroup::class)
+                            <flux:sidebar.item icon="squares-plus" :href="route('procurement.grouping')" :current="request()->routeIs('procurement.grouping')" wire:navigate>
+                                {{ __('Grouping & PO') }}
+                            </flux:sidebar.item>
+                        @endcan
+
+                        @can('viewAny', App\Models\PurchaseOrder::class)
+                            <flux:sidebar.item icon="clipboard-document-list" :href="route('procurement.purchase-orders.index')" :current="request()->routeIs('procurement.purchase-orders.*')" wire:navigate>
+                                {{ __('Purchase Orders') }}
+                            </flux:sidebar.item>
+                        @endcan
+                    </flux:sidebar.group>
                 @endif
             </flux:sidebar.nav>
+
 
             <flux:spacer />
 
