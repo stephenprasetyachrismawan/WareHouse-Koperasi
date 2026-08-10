@@ -20,9 +20,13 @@ enum Permission: string
     case StockManage = 'stock.manage';
     case StockMinimumManage = 'stock.minimum.manage';
 
+    case PurchaseRequestViewAny = 'purchase_request.viewAny';
+    case PurchaseRequestView = 'purchase_request.view';
     case PurchaseRequestCreate = 'purchase_request.create';
     case PurchaseRequestApprove = 'purchase_request.approve';
+    case PurchaseRequestReject = 'purchase_request.reject';
     case PurchaseRequestCancel = 'purchase_request.cancel';
+    case PurchaseRequestRequestCancellation = 'purchase_request.requestCancellation';
 
     case PurchaseOrderCreate = 'purchase_order.create';
     case PurchaseOrderManage = 'purchase_order.manage';

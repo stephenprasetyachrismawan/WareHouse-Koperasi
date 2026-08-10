@@ -48,6 +48,13 @@ enum WarehouseRole: string
         return match ($this) {
             self::AppAdmin => Permission::cases(),
             self::KepalaGudang => [
+                Permission::PurchaseRequestViewAny,
+                Permission::PurchaseRequestView,
+                Permission::PurchaseRequestCreate,
+                Permission::PurchaseRequestApprove,
+                Permission::PurchaseRequestReject,
+                Permission::PurchaseRequestCancel,
+                Permission::PurchaseRequestRequestCancellation,
                 Permission::DashboardView,
                 Permission::StockView,
                 Permission::StockMinimumManage,
@@ -65,6 +72,10 @@ enum WarehouseRole: string
                 Permission::PickupRequestApprove,
             ],
             self::StaffAdmin => [
+                Permission::PurchaseRequestViewAny,
+                Permission::PurchaseRequestView,
+                Permission::PurchaseRequestCreate,
+                Permission::PurchaseRequestRequestCancellation,
                 Permission::DashboardView,
                 Permission::StockView,
                 Permission::StockManage,
@@ -91,6 +102,11 @@ enum WarehouseRole: string
                 Permission::PickupRequestCancel,
             ],
             self::Purchasing => [
+                Permission::PurchaseRequestViewAny,
+                Permission::PurchaseRequestView,
+                Permission::PurchaseRequestApprove,
+                Permission::PurchaseRequestReject,
+                Permission::PurchaseRequestCancel,
                 Permission::DashboardView,
                 Permission::PurchaseOrderCreate,
                 Permission::PurchaseOrderManage,
