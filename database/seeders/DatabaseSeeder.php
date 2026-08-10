@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             StockFoundationSeeder::class,
             DemoPickupSeeder::class,
             DemoProcurementSeeder::class,
+            DemoPurchaseOrderSeeder::class,
         ]);
     }
 }

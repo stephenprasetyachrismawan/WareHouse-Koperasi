@@ -17,7 +17,10 @@ use App\Livewire\Pickup\Create;
 use App\Livewire\Pickup\Fulfilment;
 use App\Livewire\Pickup\MyRequests;
 use App\Livewire\Pickup\Show;
+use App\Livewire\Procurement\GroupingWorkspace;
 use App\Livewire\Procurement\Index;
+use App\Livewire\Procurement\PurchaseOrderIndex;
+use App\Livewire\Procurement\PurchaseOrderShow;
 use App\Livewire\Procurement\PurchasingQueue;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +66,9 @@ Route::middleware(['auth', 'verified', EnsureTenantContext::class])->group(funct
         Route::get('approval-inbox', App\Livewire\Procurement\ApprovalInbox::class)->name('approval-inbox');
         Route::get('approved-queue', PurchasingQueue::class)->name('approved-queue');
         Route::get('requests/{purchaseRequest:uuid}', App\Livewire\Procurement\Show::class)->name('show');
+        Route::get('grouping', GroupingWorkspace::class)->name('grouping');
+        Route::get('purchase-orders', PurchaseOrderIndex::class)->name('purchase-orders.index');
+        Route::get('purchase-orders/{purchaseOrder:uuid}', PurchaseOrderShow::class)->name('purchase-orders.show');
     });
 });
 

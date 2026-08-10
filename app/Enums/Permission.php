@@ -28,8 +28,15 @@ enum Permission: string
     case PurchaseRequestCancel = 'purchase_request.cancel';
     case PurchaseRequestRequestCancellation = 'purchase_request.requestCancellation';
 
+    case PurchaseOrderViewAny = 'purchase_order.viewAny';
+    case PurchaseOrderView = 'purchase_order.view';
     case PurchaseOrderCreate = 'purchase_order.create';
+    case PurchaseOrderSend = 'purchase_order.send';
     case PurchaseOrderManage = 'purchase_order.manage';
+
+    case PurchaseGroupViewAny = 'purchase_group.viewAny';
+    case PurchaseGroupCreate = 'purchase_group.create';
+    case PurchaseGroupUpdate = 'purchase_group.update';
 
     case ReceivingQcManage = 'receiving_qc.manage';
 
