@@ -7,20 +7,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class PurchaseRequestItem extends Model
+class PurchaseOrderItem extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'purchase_request_id',
+        'purchase_order_id',
         'item_id',
-        'requested_quantity',
+        'ordered_quantity',
+        'unit_cost',
         'notes',
     ];
 
-    public function purchaseRequest(): BelongsTo
+    public function purchaseOrder(): BelongsTo
     {
-        return $this->belongsTo(PurchaseRequest::class);
+        return $this->belongsTo(PurchaseOrder::class);
     }
 
     public function item(): BelongsTo
@@ -30,6 +31,6 @@ class PurchaseRequestItem extends Model
 
     public function allocations(): HasMany
     {
-        return $this->hasMany(PurchaseRequestAllocation::class);
+        return $this->hasMany(PurchaseRequestAllocation::class, 'purchase_order_item_id');
     }
 }

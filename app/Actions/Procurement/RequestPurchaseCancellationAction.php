@@ -4,8 +4,10 @@ namespace App\Actions\Procurement;
 
 use App\Domain\Procurement\Events\CancellationRequested;
 use App\Enums\CancellationRequestStatus;
+use App\Enums\PurchaseOrderStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Models\CancellationRequest;
+use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\User;
 use Exception;
@@ -33,6 +35,10 @@ class RequestPurchaseCancellationAction
             throw new Exception('Purchase request cannot be cancelled at this stage.');
         }
 
+        if ($this->hasLinkedSentPurchaseOrder($purchaseRequest)) {
+            throw new Exception('Cannot cancel Purchase Request after Purchase Order has been sent to supplier.');
+        }
+
         $cancellationRequest = CancellationRequest::create([
             'warehouse_id' => $purchaseRequest->warehouse_id,
             'purchase_request_id' => $purchaseRequest->id,
@@ -44,5 +50,16 @@ class RequestPurchaseCancellationAction
         CancellationRequested::dispatch($cancellationRequest);
 
         return $cancellationRequest;
+    }
+
+    private function hasLinkedSentPurchaseOrder(PurchaseRequest $purchaseRequest): bool
+    {
+        return PurchaseOrder::whereIn('status', [
+            PurchaseOrderStatus::SentToSupplier->value,
+            PurchaseOrderStatus::GoodsReceived->value,
+            PurchaseOrderStatus::Completed->value,
+        ])->whereHas('items.allocations.purchaseRequestItem', function ($query) use ($purchaseRequest) {
+            $query->where('purchase_request_id', $purchaseRequest->id);
+        })->exists();
     }
 }

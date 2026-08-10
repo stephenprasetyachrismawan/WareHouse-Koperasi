@@ -90,6 +90,18 @@
                                 {{ __('Approved Queue') }}
                             </flux:sidebar.item>
                         @endcan
+
+                        @can('create', App\Models\PurchaseRequestGroup::class)
+                            <flux:sidebar.item icon="squares-plus" :href="route('procurement.grouping')" :current="request()->routeIs('procurement.grouping')" wire:navigate>
+                                {{ __('Grouping & PO') }}
+                            </flux:sidebar.item>
+                        @endcan
+
+                        @can('viewAny', App\Models\PurchaseOrder::class)
+                            <flux:sidebar.item icon="clipboard-document-list" :href="route('procurement.purchase-orders.index')" :current="request()->routeIs('procurement.purchase-orders.*')" wire:navigate>
+                                {{ __('Purchase Orders') }}
+                            </flux:sidebar.item>
+                        @endcan
                     </flux:sidebar.group>
                 @endif
             </flux:sidebar.nav>
