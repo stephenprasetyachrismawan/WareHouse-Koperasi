@@ -71,6 +71,26 @@
                             </flux:sidebar.item>
                         @endcan
                     </flux:sidebar.group>
+
+                    <flux:sidebar.group :heading="__('Pengadaan & Purchase')" class="grid">
+                        @can('viewAny', App\Models\PurchaseRequest::class)
+                            <flux:sidebar.item icon="document-duplicate" :href="route('procurement.index')" :current="request()->routeIs('procurement.index') || request()->routeIs('procurement.create')" wire:navigate>
+                                {{ __('Purchase Request') }}
+                            </flux:sidebar.item>
+                        @endcan
+
+                        @can('approve', App\Models\PurchaseRequest::class)
+                            <flux:sidebar.item icon="check-badge" :href="route('procurement.approval-inbox')" :current="request()->routeIs('procurement.approval-inbox')" wire:navigate>
+                                {{ __('Approval Procurement') }}
+                            </flux:sidebar.item>
+                        @endcan
+
+                        @can('viewAny', App\Models\PurchaseRequest::class)
+                            <flux:sidebar.item icon="queue-list" :href="route('procurement.approved-queue')" :current="request()->routeIs('procurement.approved-queue')" wire:navigate>
+                                {{ __('Approved Queue') }}
+                            </flux:sidebar.item>
+                        @endcan
+                    </flux:sidebar.group>
                 @endif
             </flux:sidebar.nav>
 

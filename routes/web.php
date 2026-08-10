@@ -17,6 +17,8 @@ use App\Livewire\Pickup\Create;
 use App\Livewire\Pickup\Fulfilment;
 use App\Livewire\Pickup\MyRequests;
 use App\Livewire\Pickup\Show;
+use App\Livewire\Procurement\Index;
+use App\Livewire\Procurement\PurchasingQueue;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -52,6 +54,15 @@ Route::middleware(['auth', 'verified', EnsureTenantContext::class])->group(funct
         Route::get('approval-inbox', ApprovalInbox::class)->name('approval-inbox');
         Route::get('fulfilment', Fulfilment::class)->name('fulfilment');
         Route::get('{pickupRequest:uuid}', Show::class)->name('show');
+    });
+
+    // Procurement Routes
+    Route::prefix('procurement')->name('procurement.')->group(function () {
+        Route::get('requests', Index::class)->name('index');
+        Route::get('create', App\Livewire\Procurement\Create::class)->name('create');
+        Route::get('approval-inbox', App\Livewire\Procurement\ApprovalInbox::class)->name('approval-inbox');
+        Route::get('approved-queue', PurchasingQueue::class)->name('approved-queue');
+        Route::get('requests/{purchaseRequest:uuid}', App\Livewire\Procurement\Show::class)->name('show');
     });
 });
 

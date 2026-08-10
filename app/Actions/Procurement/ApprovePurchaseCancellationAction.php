@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Actions\Procurement;
+
+use App\Domain\Procurement\Events\CancellationApproved;
+use App\Domain\Procurement\Events\PurchaseRequestCancelled;
+use App\Enums\CancellationRequestStatus;
+use App\Enums\PurchaseRequestStatus;
+use App\Models\CancellationRequest;
+use App\Models\PurchaseRequest;
+use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+
+class ApprovePurchaseCancellationAction
+{
+    /**
+     * @throws AuthorizationException
+     * @throws \Exception
+     */
+    public function execute(User $actor, CancellationRequest $cancellationRequest, ?string $reason = null): PurchaseRequest
+    {
+        Gate::forUser($actor)->authorize('cancel', $cancellationRequest->purchaseRequest);
+
+        return DB::transaction(function () use ($actor, $cancellationRequest, $reason) {
+            $cancellationRequest = CancellationRequest::where('id', $cancellationRequest->id)->lockForUpdate()->firstOrFail();
+
+            if ($cancellationRequest->status !== CancellationRequestStatus::Pending) {
+                throw new \Exception('Cancellation request is not pending.');
+            }
+
+            $purchaseRequest = PurchaseRequest::where('id', $cancellationRequest->purchase_request_id)->lockForUpdate()->firstOrFail();
+
+            if ($purchaseRequest->status->isTerminal() || $purchaseRequest->status === PurchaseRequestStatus::PoSent) {
+                throw new \Exception('Purchase request cannot be cancelled at this stage.');
+            }
+
+            $cancellationRequest->update([
+                'status' => CancellationRequestStatus::Approved,
+                'decided_by' => $actor->id,
+                'decision_reason' => $reason,
+                'decided_at' => now(),
+            ]);
+
+            $purchaseRequest->update([
+                'status' => PurchaseRequestStatus::Cancelled,
+                'cancelled_at' => now(),
+                'cancellation_reason' => $cancellationRequest->reason,
+            ]);
+
+            CancellationApproved::dispatch($cancellationRequest);
+            PurchaseRequestCancelled::dispatch($purchaseRequest, $cancellationRequest->reason);
+
+            return $purchaseRequest;
+        });
+    }
+}

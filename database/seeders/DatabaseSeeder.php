@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             MasterDataSeeder::class,
             StockFoundationSeeder::class,
             DemoPickupSeeder::class,
+            DemoProcurementSeeder::class,
         ]);
     }
 }
