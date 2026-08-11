@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             DemoProcurementSeeder::class,
             DemoPurchaseOrderSeeder::class,
             DemoGoodsReceiptSeeder::class,
+            DemoReturnSeeder::class,
         ]);
     }
 }
