@@ -38,7 +38,10 @@ enum Permission: string
     case PurchaseGroupCreate = 'purchase_group.create';
     case PurchaseGroupUpdate = 'purchase_group.update';
 
-    case ReceivingQcManage = 'receiving_qc.manage';
+    case ReceiptViewAny = 'receipts.viewAny';
+    case ReceiptView = 'receipts.view';
+    case ReceiptCreate = 'receipts.create';
+    case ReceiptQc = 'receipts.qc';
 
     case ExpenseRecord = 'expense.record';
     case ExpenseApprove = 'expense.approve';

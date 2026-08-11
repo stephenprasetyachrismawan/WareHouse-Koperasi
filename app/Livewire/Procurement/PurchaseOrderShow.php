@@ -3,6 +3,7 @@
 namespace App\Livewire\Procurement;
 
 use App\Actions\Procurement\SendPurchaseOrderAction;
+use App\Domain\Procurement\Queries\PurchaseOrderReceivingProgressQuery;
 use App\Domain\Procurement\Queries\PurchaseOrderTraceabilityQuery;
 use App\Models\PurchaseOrder;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,7 @@ class PurchaseOrderShow extends Component
     {
         $this->authorize('view', $purchaseOrder);
 
-        $this->purchaseOrder = $purchaseOrder->load(['supplier', 'creator', 'sentBy', 'group', 'items.item']);
+        $this->purchaseOrder = $purchaseOrder->load(['supplier', 'creator', 'sentBy', 'group', 'items.item', 'goodsReceipt']);
     }
 
     public function send(SendPurchaseOrderAction $action): void
@@ -28,10 +29,11 @@ class PurchaseOrderShow extends Component
         $this->purchaseOrder->refresh();
     }
 
-    public function render(PurchaseOrderTraceabilityQuery $traceabilityQuery)
+    public function render(PurchaseOrderTraceabilityQuery $traceabilityQuery, PurchaseOrderReceivingProgressQuery $progressQuery)
     {
         return view('livewire.procurement.purchase-order-show', [
             'traceability' => $traceabilityQuery->execute($this->purchaseOrder),
+            'receivingProgress' => $progressQuery->execute($this->purchaseOrder),
         ]);
     }
 }

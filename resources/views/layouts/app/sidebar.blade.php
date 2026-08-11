@@ -102,6 +102,20 @@
                                 {{ __('Purchase Orders') }}
                             </flux:sidebar.item>
                         @endcan
+
+                        @can('viewAny', App\Models\GoodsReceipt::class)
+                            <flux:sidebar.item icon="truck" :href="route('procurement.receipts.index')" :current="request()->routeIs('procurement.receipts.*')" wire:navigate>
+                                {{ __('Receipts') }}
+                            </flux:sidebar.item>
+                        @endcan
+
+                        @can('viewAny', App\Models\GoodsReceipt::class)
+                            @if(auth()->user()->can('receipts.qc'))
+                                <flux:sidebar.item icon="magnifying-glass-circle" :href="route('procurement.qc-queue')" :current="request()->routeIs('procurement.qc-queue')" wire:navigate>
+                                    {{ __('Antrean QC') }}
+                                </flux:sidebar.item>
+                            @endif
+                        @endcan
                     </flux:sidebar.group>
                 @endif
             </flux:sidebar.nav>
