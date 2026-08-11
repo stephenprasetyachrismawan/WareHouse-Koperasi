@@ -10,6 +10,7 @@ use App\Domain\Procurement\ValueObjects\CreateGroupInput;
 use App\Domain\Procurement\ValueObjects\CreatePurchaseOrderInput;
 use App\Enums\PurchaseRequestStatus;
 use App\Models\Item;
+use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\Supplier;
 use App\Models\User;
@@ -22,56 +23,112 @@ class DemoPurchaseOrderSeeder extends Seeder
 {
     public function run(): void
     {
-        $warehouse = Warehouse::first();
-        if (! $warehouse) {
-            return;
-        }
-
-        $user = User::first();
-        $supplier = Supplier::forWarehouse($warehouse->id)->active()->first();
-        $items = Item::where('warehouse_id', $warehouse->id)->take(2)->get();
-
-        if (! $user || ! $supplier || $items->isEmpty()) {
-            return;
-        }
-
         Gate::before(fn () => true);
 
-        // Draft PO: still awaiting Purchasing to send it to the supplier.
-        $draftGroup = $this->createApprovedGroup($warehouse, $user, $items, 'PRG demo seeder - draft PO');
-        app(CreatePurchaseOrderAction::class)->execute($user, new CreatePurchaseOrderInput(
-            warehouseId: $warehouse->id,
-            groupId: $draftGroup->id,
-            supplierId: $supplier->id,
-            notes: 'Demo Seeder PO - Draft',
-            items: $items->map(fn (Item $item) => ['item_id' => $item->id, 'unit_cost' => 10000])->all(),
-        ));
+        $whPusat = Warehouse::where('code', 'WH-PUSAT')->first();
+        if ($whPusat) {
+            $this->seedForWarehouse($whPusat, 'purchasing@koperasi.id', 'PUS');
+        }
 
-        // Sent PO: already dispatched to the supplier.
-        $sentGroup = $this->createApprovedGroup($warehouse, $user, $items, 'PRG demo seeder - sent PO');
-        $sentPurchaseOrder = app(CreatePurchaseOrderAction::class)->execute($user, new CreatePurchaseOrderInput(
-            warehouseId: $warehouse->id,
-            groupId: $sentGroup->id,
-            supplierId: $supplier->id,
-            notes: 'Demo Seeder PO - Sent',
-            items: $items->map(fn (Item $item) => ['item_id' => $item->id, 'unit_cost' => 12000])->all(),
-        ));
-        app(SendPurchaseOrderAction::class)->execute($user, $sentPurchaseOrder);
+        $whBarat = Warehouse::where('code', 'WH-BARAT')->first();
+        if ($whBarat) {
+            $this->seedForWarehouse($whBarat, 'purchasing.barat@koperasi.id', 'BAR');
+        }
+    }
+
+    private function seedForWarehouse(Warehouse $warehouse, string $purchasingEmail, string $prefix): void
+    {
+        $user = User::where('email', $purchasingEmail)->first();
+        $suppliers = Supplier::forWarehouse($warehouse->id)->active()->take(2)->get();
+        $items = Item::where('warehouse_id', $warehouse->id)->take(3)->get();
+
+        if (! $user || $suppliers->isEmpty() || $items->count() < 3) {
+            return;
+        }
+
+        [$supplierA, $supplierB] = [$suppliers->first(), $suppliers->last()];
+
+        $this->seedPurchaseOrder(
+            $warehouse,
+            $user,
+            $supplierA,
+            $items->take(2),
+            "Demo Seeder PO - Draft ({$prefix})",
+            $prefix.'-DFT',
+            unitCost: 10000,
+            send: false,
+        );
+
+        $this->seedPurchaseOrder(
+            $warehouse,
+            $user,
+            $supplierA,
+            $items->take(2),
+            "Demo Seeder PO - Sent ({$prefix})",
+            $prefix.'-SNT',
+            unitCost: 12000,
+            send: true,
+        );
+
+        // Second Sent PO with a different supplier and the third catalog item,
+        // giving the receiving queue more than one live PO to work through.
+        $this->seedPurchaseOrder(
+            $warehouse,
+            $user,
+            $supplierB,
+            collect([$items->last()]),
+            "Demo Seeder PO - Sent Alt Supplier ({$prefix})",
+            $prefix.'-SN2',
+            unitCost: 9000,
+            send: true,
+        );
     }
 
     /**
      * @param  Collection<int, Item>  $items
      */
-    private function createApprovedGroup(Warehouse $warehouse, User $user, $items, string $notes)
+    private function seedPurchaseOrder(
+        Warehouse $warehouse,
+        User $user,
+        Supplier $supplier,
+        $items,
+        string $notes,
+        string $prNumberPrefix,
+        float $unitCost,
+        bool $send,
+    ): void {
+        if (PurchaseOrder::where('notes', $notes)->exists()) {
+            return;
+        }
+
+        $group = $this->createApprovedGroup($warehouse, $user, $items, $notes, $prNumberPrefix);
+
+        $purchaseOrder = app(CreatePurchaseOrderAction::class)->execute($user, new CreatePurchaseOrderInput(
+            warehouseId: $warehouse->id,
+            groupId: $group->id,
+            supplierId: $supplier->id,
+            notes: $notes,
+            items: $items->map(fn (Item $item) => ['item_id' => $item->id, 'unit_cost' => $unitCost])->all(),
+        ));
+
+        if ($send) {
+            app(SendPurchaseOrderAction::class)->execute($user, $purchaseOrder);
+        }
+    }
+
+    /**
+     * @param  Collection<int, Item>  $items
+     */
+    private function createApprovedGroup(Warehouse $warehouse, User $user, $items, string $notes, string $prNumberPrefix)
     {
         $purchaseRequest = PurchaseRequest::create([
             'warehouse_id' => $warehouse->id,
-            'request_number' => 'PR-'.now()->format('Ymd').'-'.random_int(10000, 99999),
+            'request_number' => $prNumberPrefix.'-'.now()->format('Ymd').'-'.random_int(10000, 99999),
             'source' => 'MANUAL_STAFF',
             'urgency' => 'NORMAL',
             'status' => PurchaseRequestStatus::Approved->value,
             'created_by' => $user->id,
-            'notes' => 'Demo Seeder PR for Purchase Order grouping',
+            'notes' => 'Demo Seeder PR for '.$notes,
             'submitted_at' => now(),
             'approved_at' => now(),
         ]);

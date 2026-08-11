@@ -11,14 +11,16 @@ class UserAndMembershipSeeder extends Seeder
 {
     public function run(): void
     {
-        $warehouse = Warehouse::where('code', 'WH-PUSAT')->first();
-        if (! $warehouse) {
+        $whPusat = Warehouse::where('code', 'WH-PUSAT')->first();
+        $whBarat = Warehouse::where('code', 'WH-BARAT')->first();
+
+        if (! $whPusat) {
             return;
         }
 
-        $company = $warehouse->company;
+        $company = $whPusat->company;
 
-        // 1. Super Admin
+        // Platform-level super admin (no warehouse membership; operates via impersonation).
         $superAdmin = User::firstOrCreate(
             ['email' => 'superadmin@koperasi.id'],
             [
@@ -31,71 +33,57 @@ class UserAndMembershipSeeder extends Seeder
         setPermissionsTeamId($company->id);
         $superAdmin->assignRole('super_admin');
 
-        // 2. App Admin
-        $appAdmin = User::firstOrCreate(
-            ['email' => 'admin.pusat@koperasi.id'],
-            [
-                'name' => 'Budi Santoso (App Admin)',
-                'password' => bcrypt('password'),
-                'status' => 'active',
-            ]
-        );
-        $this->createMembership($appAdmin, $warehouse, WarehouseRole::AppAdmin);
+        // Company-wide App Admin, based at the main warehouse.
+        $appAdmin = $this->makeUser('admin.pusat@koperasi.id', 'Budi Santoso (App Admin)');
+        $this->createMembership($appAdmin, $whPusat, WarehouseRole::AppAdmin);
 
-        // 3. Kepala Gudang
-        $kepalaGudang = User::firstOrCreate(
-            ['email' => 'kepala.gudang@koperasi.id'],
-            [
-                'name' => 'Hendra Setiawan (Kepala Gudang)',
-                'password' => bcrypt('password'),
-                'status' => 'active',
-            ]
-        );
-        $this->createMembership($kepalaGudang, $warehouse, WarehouseRole::KepalaGudang);
+        // --- WH-PUSAT (Gudang Utama Logistik, Jakarta) operational staff ---
+        $kepalaPusat = $this->makeUser('kepala.gudang@koperasi.id', 'Hendra Setiawan (Kepala Gudang Pusat)');
+        $this->createMembership($kepalaPusat, $whPusat, WarehouseRole::KepalaGudang);
 
-        // 4. Staff Admin
-        $staffAdmin = User::firstOrCreate(
-            ['email' => 'staff.admin@koperasi.id'],
-            [
-                'name' => 'Siti Rahma (Staff Admin Gudang)',
-                'password' => bcrypt('password'),
-                'status' => 'active',
-            ]
-        );
-        $this->createMembership($staffAdmin, $warehouse, WarehouseRole::StaffAdmin);
+        $staffPusat = $this->makeUser('staff.admin@koperasi.id', 'Siti Rahma (Staff Admin Gudang Pusat)');
+        $this->createMembership($staffPusat, $whPusat, WarehouseRole::StaffAdmin);
 
-        // 5. Purchasing
-        $purchasing = User::firstOrCreate(
-            ['email' => 'purchasing@koperasi.id'],
-            [
-                'name' => 'Dewi Lestari (Purchasing Staff)',
-                'password' => bcrypt('password'),
-                'status' => 'active',
-            ]
-        );
-        $this->createMembership($purchasing, $warehouse, WarehouseRole::Purchasing);
+        $purchasingPusat = $this->makeUser('purchasing@koperasi.id', 'Dewi Lestari (Purchasing Staff Pusat)');
+        $this->createMembership($purchasingPusat, $whPusat, WarehouseRole::Purchasing);
 
-        // 6. Koperasi Requester 1
-        $koperasi1 = User::firstOrCreate(
-            ['email' => 'koperasi.unit1@koperasi.id'],
-            [
-                'name' => 'Koperasi Unit Produksi A',
-                'password' => bcrypt('password'),
-                'status' => 'active',
-            ]
-        );
-        $this->createMembership($koperasi1, $warehouse, WarehouseRole::Koperasi);
+        $koperasi1 = $this->makeUser('koperasi.unit1@koperasi.id', 'Koperasi Unit Produksi A');
+        $this->createMembership($koperasi1, $whPusat, WarehouseRole::Koperasi);
 
-        // 7. Koperasi Requester 2
-        $koperasi2 = User::firstOrCreate(
-            ['email' => 'koperasi.unit2@koperasi.id'],
+        $koperasi2 = $this->makeUser('koperasi.unit2@koperasi.id', 'Koperasi Unit Jasa B');
+        $this->createMembership($koperasi2, $whPusat, WarehouseRole::Koperasi);
+
+        if (! $whBarat) {
+            return;
+        }
+
+        // --- WH-BARAT (Gudang Cabang Barat, Tangerang) operational staff ---
+        $kepalaBarat = $this->makeUser('kepala.barat@koperasi.id', 'Yusuf Maulana (Kepala Gudang Cabang Barat)');
+        $this->createMembership($kepalaBarat, $whBarat, WarehouseRole::KepalaGudang);
+
+        $staffBarat = $this->makeUser('staff.barat@koperasi.id', 'Rina Anggraini (Staff Admin Gudang Barat)');
+        $this->createMembership($staffBarat, $whBarat, WarehouseRole::StaffAdmin);
+
+        $purchasingBarat = $this->makeUser('purchasing.barat@koperasi.id', 'Agus Wibowo (Purchasing Staff Barat)');
+        $this->createMembership($purchasingBarat, $whBarat, WarehouseRole::Purchasing);
+
+        $koperasi3 = $this->makeUser('koperasi.unit3@koperasi.id', 'Koperasi Unit Simpan Pinjam C');
+        $this->createMembership($koperasi3, $whBarat, WarehouseRole::Koperasi);
+
+        $koperasi4 = $this->makeUser('koperasi.unit4@koperasi.id', 'Koperasi Unit Konsumsi D');
+        $this->createMembership($koperasi4, $whBarat, WarehouseRole::Koperasi);
+    }
+
+    private function makeUser(string $email, string $name): User
+    {
+        return User::firstOrCreate(
+            ['email' => $email],
             [
-                'name' => 'Koperasi Unit Jasa B',
+                'name' => $name,
                 'password' => bcrypt('password'),
                 'status' => 'active',
             ]
         );
-        $this->createMembership($koperasi2, $warehouse, WarehouseRole::Koperasi);
     }
 
     private function createMembership(User $user, Warehouse $warehouse, WarehouseRole $role): void
@@ -106,10 +94,10 @@ class UserAndMembershipSeeder extends Seeder
         $user->warehouseMemberships()->firstOrCreate(
             [
                 'warehouse_id' => $warehouse->id,
+                'role' => $role->value,
             ],
             [
                 'company_id' => $warehouse->company_id,
-                'role' => $role->value,
                 'status' => 'active',
             ]
         );

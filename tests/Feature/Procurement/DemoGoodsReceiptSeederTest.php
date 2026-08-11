@@ -17,7 +17,7 @@ class DemoGoodsReceiptSeederTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_seeder_creates_all_five_scenarios_and_is_idempotent(): void
+    public function test_seeder_creates_all_five_scenarios_for_both_warehouses_and_is_idempotent(): void
     {
         $this->seed([
             RoleAndPermissionSeeder::class,
@@ -29,20 +29,27 @@ class DemoGoodsReceiptSeederTest extends TestCase
 
         $this->seed(DemoGoodsReceiptSeeder::class);
 
-        $this->assertDatabaseHas('purchase_orders', ['notes' => 'Demo Seeder Receipt - Scenario A (Sent, awaiting receipt)']);
-        $this->assertDatabaseHas('purchase_orders', ['notes' => 'Demo Seeder Receipt - Scenario B (Received, QC pending)']);
-        $this->assertDatabaseHas('purchase_orders', ['notes' => 'Demo Seeder Receipt - Scenario C (QC passed, stock accepted)']);
-        $this->assertDatabaseHas('purchase_orders', ['notes' => 'Demo Seeder Receipt - Scenario D (QC failed, stock-in blocked)']);
-        $this->assertDatabaseHas('purchase_orders', ['notes' => 'Demo Seeder Receipt - Scenario E (Multi-item, one line still QC pending)']);
+        foreach (['PUS', 'BAR'] as $tag) {
+            $this->assertDatabaseHas('purchase_orders', ['notes' => "Demo Seeder Receipt - Scenario A (Sent, awaiting receipt) ({$tag})"]);
+            $this->assertDatabaseHas('purchase_orders', ['notes' => "Demo Seeder Receipt - Scenario B (Received, QC pending) ({$tag})"]);
+            $this->assertDatabaseHas('purchase_orders', ['notes' => "Demo Seeder Receipt - Scenario C (QC passed, stock accepted) ({$tag})"]);
+            $this->assertDatabaseHas('purchase_orders', ['notes' => "Demo Seeder Receipt - Scenario D (QC failed, stock-in blocked) ({$tag})"]);
+            $this->assertDatabaseHas('purchase_orders', ['notes' => "Demo Seeder Receipt - Scenario E (Multi-item, one line still QC pending) ({$tag})"]);
 
-        $scenarioC = PurchaseOrder::where('notes', 'Demo Seeder Receipt - Scenario C (QC passed, stock accepted)')->first();
-        $this->assertEquals(PurchaseOrderStatus::Completed, $scenarioC->status);
+            $scenarioC = PurchaseOrder::where('notes', "Demo Seeder Receipt - Scenario C (QC passed, stock accepted) ({$tag})")->first();
+            $this->assertEquals(PurchaseOrderStatus::Completed, $scenarioC->status);
 
-        $scenarioD = PurchaseOrder::where('notes', 'Demo Seeder Receipt - Scenario D (QC failed, stock-in blocked)')->first();
-        $this->assertEquals(PurchaseOrderStatus::GoodsReceived, $scenarioD->status);
+            $scenarioD = PurchaseOrder::where('notes', "Demo Seeder Receipt - Scenario D (QC failed, stock-in blocked) ({$tag})")->first();
+            $this->assertEquals(PurchaseOrderStatus::GoodsReceived, $scenarioD->status);
 
-        $scenarioE = PurchaseOrder::where('notes', 'Demo Seeder Receipt - Scenario E (Multi-item, one line still QC pending)')->first();
-        $this->assertEquals(PurchaseOrderStatus::GoodsReceived, $scenarioE->status);
+            $scenarioE = PurchaseOrder::where('notes', "Demo Seeder Receipt - Scenario E (Multi-item, one line still QC pending) ({$tag})")->first();
+            $this->assertEquals(PurchaseOrderStatus::GoodsReceived, $scenarioE->status);
+        }
+
+        // The two warehouses' scenarios must be fully separate records (tenant isolation in the demo data itself).
+        $pusScenarioA = PurchaseOrder::where('notes', 'Demo Seeder Receipt - Scenario A (Sent, awaiting receipt) (PUS)')->first();
+        $barScenarioA = PurchaseOrder::where('notes', 'Demo Seeder Receipt - Scenario A (Sent, awaiting receipt) (BAR)')->first();
+        $this->assertNotEquals($pusScenarioA->warehouse_id, $barScenarioA->warehouse_id);
 
         $poCountBefore = PurchaseOrder::count();
 
