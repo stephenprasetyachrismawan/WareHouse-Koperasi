@@ -4,6 +4,8 @@ namespace App\Livewire\Pickup;
 
 use App\Actions\Pickup\FulfillPickupAction;
 use App\Actions\Pickup\MarkPickupReadyAction;
+use App\Actions\Returns\CompleteReplacementPickupAction;
+use App\Enums\PickupRequestSource;
 use App\Models\PickupRequest;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -43,7 +45,7 @@ class Fulfilment extends Component
         }
     }
 
-    public function fulfill(FulfillPickupAction $action)
+    public function fulfill(FulfillPickupAction $action, CompleteReplacementPickupAction $completeReplacementAction)
     {
         if (! $this->currentRequest) {
             return;
@@ -52,7 +54,13 @@ class Fulfilment extends Component
         $this->authorize('prepare', $this->currentRequest);
 
         try {
-            $action->execute(Auth::user(), $this->currentRequest);
+            if ($this->currentRequest->source === PickupRequestSource::ReturnReplacement) {
+                $returnRequest = $this->currentRequest->originatingReturn()->firstOrFail();
+                $completeReplacementAction->execute(Auth::user(), $returnRequest);
+            } else {
+                $action->execute(Auth::user(), $this->currentRequest);
+            }
+
             $this->currentRequest->refresh();
             session()->flash('status', 'Request berhasil diselesaikan (Fulfilled).');
         } catch (\Exception $e) {

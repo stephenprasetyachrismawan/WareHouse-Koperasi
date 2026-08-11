@@ -28,6 +28,9 @@
                 <div>
                     <h3 class="text-xl font-bold">Request: {{ $currentRequest->request_number }}</h3>
                     <p class="text-gray-600">Pemohon: {{ $currentRequest->user->name }}</p>
+                    @if ($currentRequest->source === \App\Enums\PickupRequestSource::ReturnReplacement)
+                        <span class="inline-block mt-1 px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800">Penggantian Retur</span>
+                    @endif
                 </div>
                 <div>
                     <span class="px-3 py-1 rounded-full text-sm font-semibold 

@@ -81,6 +81,9 @@
                             <flux:sidebar.item icon="magnifying-glass-circle" :href="route('returns.verification-queue')" :current="request()->routeIs('returns.verification-queue')" wire:navigate>
                                 {{ __('Verifikasi Retur') }}
                             </flux:sidebar.item>
+                            <flux:sidebar.item icon="arrow-path" :href="route('returns.replacement-tasks')" :current="request()->routeIs('returns.replacement-tasks')" wire:navigate>
+                                {{ __('Tugas Penggantian Retur') }}
+                            </flux:sidebar.item>
                         @endif
 
                         @can('approve', App\Models\ReturnRequest::class)

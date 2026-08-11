@@ -78,6 +78,16 @@ class ReturnRequest extends Model
         return $this->belongsTo(PickupRequest::class);
     }
 
+    public function replacementPickup(): BelongsTo
+    {
+        return $this->belongsTo(PickupRequest::class, 'replacement_pickup_request_id');
+    }
+
+    public function replacementPurchaseRequests(): HasMany
+    {
+        return $this->hasMany(PurchaseRequest::class);
+    }
+
     public function submitter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'submitted_by');

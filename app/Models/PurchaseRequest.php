@@ -26,6 +26,7 @@ class PurchaseRequest extends Model
         'created_by',
         'notes',
         'pickup_request_id',
+        'return_request_id',
         'is_duplicate_override',
         'duplicate_override_reason',
         'duplicate_overridden_by',
@@ -72,6 +73,11 @@ class PurchaseRequest extends Model
     public function pickupRequest(): BelongsTo
     {
         return $this->belongsTo(PickupRequest::class);
+    }
+
+    public function returnRequest(): BelongsTo
+    {
+        return $this->belongsTo(ReturnRequest::class);
     }
 
     public function approvals(): MorphMany

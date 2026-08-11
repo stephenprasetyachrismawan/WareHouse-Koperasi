@@ -105,6 +105,20 @@ class ReturnRequestFactory extends Factory
         ]);
     }
 
+    public function readyForRepickup(): self
+    {
+        return $this->replacementPending()->state(fn (array $attributes) => [
+            'status' => ReturnStatus::ReadyForRepickup,
+        ]);
+    }
+
+    public function completed(): self
+    {
+        return $this->replacementPending()->state(fn (array $attributes) => [
+            'status' => ReturnStatus::Completed,
+        ]);
+    }
+
     public function warehouseAttributed(): self
     {
         return $this->state(fn (array $attributes) => [
