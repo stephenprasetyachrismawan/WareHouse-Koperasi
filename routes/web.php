@@ -15,6 +15,7 @@ use App\Livewire\Inventory\Stock\Ledger as InventoryStockLedger;
 use App\Livewire\Inventory\Stock\Movement as InventoryStockMovement;
 use App\Livewire\Inventory\Stock\Overview as InventoryStockOverview;
 use App\Livewire\Inventory\Suppliers\Index as InventorySuppliersIndex;
+use App\Livewire\Notifications\Inbox as NotificationsInbox;
 use App\Livewire\Pickup\ApprovalInbox;
 use App\Livewire\Pickup\Create;
 use App\Livewire\Pickup\Fulfilment;
@@ -48,6 +49,8 @@ Route::name('auth.google.')->middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'verified', EnsureTenantContext::class])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+
+    Route::get('inbox', NotificationsInbox::class)->name('inbox');
 
     // Tenant User Management Routes
     Route::prefix('company')->name('company.')->group(function () {

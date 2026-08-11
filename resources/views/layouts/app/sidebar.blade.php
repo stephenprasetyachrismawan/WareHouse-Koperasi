@@ -15,6 +15,9 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="bell" :href="route('inbox')" :current="request()->routeIs('inbox')" wire:navigate>
+                        {{ __('Kotak Masuk') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
 
                 @if(auth()->check() && (auth()->user()->isSuperAdmin() || auth()->user()->isAppAdmin() || auth()->user()->can('users.view')))
@@ -162,6 +165,8 @@
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <flux:spacer />
+
+            <livewire:notifications.unread-badge />
 
             <flux:dropdown position="top" align="end">
                 <flux:profile
