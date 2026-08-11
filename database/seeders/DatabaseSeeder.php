@@ -20,7 +20,6 @@ class DatabaseSeeder extends Seeder
             UserAndMembershipSeeder::class,
             MasterDataSeeder::class,
             StockFoundationSeeder::class,
-            DemoUserSeeder::class,
             DemoPickupSeeder::class,
             DemoProcurementSeeder::class,
             DemoPurchaseOrderSeeder::class,

@@ -27,73 +27,96 @@ use Illuminate\Support\Facades\Gate;
 
 /**
  * Demonstrates the full Phase 4.3 receiving/QC lifecycle with realistic
- * scenarios A-E from the design brief. Idempotent: skips scenarios whose
- * marker Purchase Order already exists so re-running seeders is safe.
+ * scenarios A-E from the design brief, for BOTH warehouses so tenant
+ * isolation is visible in the demo data itself, not just in tests.
+ * Idempotent: skips scenarios whose marker Purchase Order already exists
+ * so re-running seeders is safe.
  */
 class DemoGoodsReceiptSeeder extends Seeder
 {
     public function run(): void
     {
-        $warehouse = Warehouse::first();
-        $user = User::first();
-        $supplier = Supplier::forWarehouse($warehouse?->id ?? 0)->active()->first();
-        $items = $warehouse ? Item::where('warehouse_id', $warehouse->id)->take(2)->get() : collect();
-
-        if (! $warehouse || ! $user || ! $supplier || $items->count() < 2) {
-            return;
-        }
-
         Gate::before(fn () => true);
 
-        $this->scenarioA_sentAwaitingReceipt($warehouse, $user, $supplier, $items);
-        $this->scenarioB_receivedQcPending($warehouse, $user, $supplier, $items);
-        $this->scenarioC_qcPassedStockAccepted($warehouse, $user, $supplier, $items);
-        $this->scenarioD_qcFailedStockBlocked($warehouse, $user, $supplier, $items);
-        $this->scenarioE_multiItemPartiallyInspected($warehouse, $user, $supplier, $items);
+        $whPusat = Warehouse::where('code', 'WH-PUSAT')->first();
+        if ($whPusat) {
+            $this->seedForWarehouse(
+                $whPusat,
+                receivedBy: User::where('email', 'purchasing@koperasi.id')->first(),
+                inspectedBy: User::where('email', 'staff.admin@koperasi.id')->first(),
+                tag: 'PUS',
+            );
+        }
+
+        $whBarat = Warehouse::where('code', 'WH-BARAT')->first();
+        if ($whBarat) {
+            $this->seedForWarehouse(
+                $whBarat,
+                receivedBy: User::where('email', 'purchasing.barat@koperasi.id')->first(),
+                inspectedBy: User::where('email', 'staff.barat@koperasi.id')->first(),
+                tag: 'BAR',
+            );
+        }
     }
 
-    private function scenarioA_sentAwaitingReceipt(Warehouse $warehouse, User $user, Supplier $supplier, Collection $items): void
+    private function seedForWarehouse(Warehouse $warehouse, ?User $receivedBy, ?User $inspectedBy, string $tag): void
     {
-        $notes = 'Demo Seeder Receipt - Scenario A (Sent, awaiting receipt)';
+        $supplier = Supplier::forWarehouse($warehouse->id)->active()->first();
+        $items = Item::where('warehouse_id', $warehouse->id)->take(2)->get();
+
+        if (! $receivedBy || ! $inspectedBy || ! $supplier || $items->count() < 2) {
+            return;
+        }
+
+        $this->scenarioA_sentAwaitingReceipt($warehouse, $receivedBy, $supplier, $items, $tag);
+        $this->scenarioB_receivedQcPending($warehouse, $receivedBy, $supplier, $items, $tag);
+        $this->scenarioC_qcPassedStockAccepted($warehouse, $receivedBy, $inspectedBy, $supplier, $items, $tag);
+        $this->scenarioD_qcFailedStockBlocked($warehouse, $receivedBy, $inspectedBy, $supplier, $items, $tag);
+        $this->scenarioE_multiItemPartiallyInspected($warehouse, $receivedBy, $inspectedBy, $supplier, $items, $tag);
+    }
+
+    private function scenarioA_sentAwaitingReceipt(Warehouse $warehouse, User $receivedBy, Supplier $supplier, Collection $items, string $tag): void
+    {
+        $notes = "Demo Seeder Receipt - Scenario A (Sent, awaiting receipt) ({$tag})";
         if (PurchaseOrder::where('notes', $notes)->exists()) {
             return;
         }
 
-        $this->sendPurchaseOrder($warehouse, $user, $supplier, $items->take(1), $notes);
+        $this->sendPurchaseOrder($warehouse, $receivedBy, $supplier, $items->take(1), $notes);
     }
 
-    private function scenarioB_receivedQcPending(Warehouse $warehouse, User $user, Supplier $supplier, Collection $items): void
+    private function scenarioB_receivedQcPending(Warehouse $warehouse, User $receivedBy, Supplier $supplier, Collection $items, string $tag): void
     {
-        $notes = 'Demo Seeder Receipt - Scenario B (Received, QC pending)';
+        $notes = "Demo Seeder Receipt - Scenario B (Received, QC pending) ({$tag})";
         if (PurchaseOrder::where('notes', $notes)->exists()) {
             return;
         }
 
-        $po = $this->sendPurchaseOrder($warehouse, $user, $supplier, $items->take(1), $notes);
+        $po = $this->sendPurchaseOrder($warehouse, $receivedBy, $supplier, $items->take(1), $notes);
 
-        app(RecordGoodsReceiptAction::class)->execute($user, new RecordGoodsReceiptInput(
+        app(RecordGoodsReceiptAction::class)->execute($receivedBy, new RecordGoodsReceiptInput(
             warehouseId: $warehouse->id,
             purchaseOrderId: $po->id,
             receivedQuantities: $po->items->pluck('ordered_quantity', 'id')->all(),
         ));
     }
 
-    private function scenarioC_qcPassedStockAccepted(Warehouse $warehouse, User $user, Supplier $supplier, Collection $items): void
+    private function scenarioC_qcPassedStockAccepted(Warehouse $warehouse, User $receivedBy, User $inspectedBy, Supplier $supplier, Collection $items, string $tag): void
     {
-        $notes = 'Demo Seeder Receipt - Scenario C (QC passed, stock accepted)';
+        $notes = "Demo Seeder Receipt - Scenario C (QC passed, stock accepted) ({$tag})";
         if (PurchaseOrder::where('notes', $notes)->exists()) {
             return;
         }
 
-        $po = $this->sendPurchaseOrder($warehouse, $user, $supplier, $items->take(1), $notes);
+        $po = $this->sendPurchaseOrder($warehouse, $receivedBy, $supplier, $items->take(1), $notes);
 
-        $receipt = app(RecordGoodsReceiptAction::class)->execute($user, new RecordGoodsReceiptInput(
+        $receipt = app(RecordGoodsReceiptAction::class)->execute($receivedBy, new RecordGoodsReceiptInput(
             warehouseId: $warehouse->id,
             purchaseOrderId: $po->id,
             receivedQuantities: $po->items->pluck('ordered_quantity', 'id')->all(),
         ));
 
-        app(CompleteQualityInspectionAction::class)->execute($user, $receipt->items->first(), new CompleteQualityInspectionInput(
+        app(CompleteQualityInspectionAction::class)->execute($inspectedBy, $receipt->items->first(), new CompleteQualityInspectionInput(
             warehouseId: $warehouse->id,
             result: QualityInspectionResult::Pass,
             condition: QualityInspectionCondition::Good,
@@ -101,22 +124,22 @@ class DemoGoodsReceiptSeeder extends Seeder
         ));
     }
 
-    private function scenarioD_qcFailedStockBlocked(Warehouse $warehouse, User $user, Supplier $supplier, Collection $items): void
+    private function scenarioD_qcFailedStockBlocked(Warehouse $warehouse, User $receivedBy, User $inspectedBy, Supplier $supplier, Collection $items, string $tag): void
     {
-        $notes = 'Demo Seeder Receipt - Scenario D (QC failed, stock-in blocked)';
+        $notes = "Demo Seeder Receipt - Scenario D (QC failed, stock-in blocked) ({$tag})";
         if (PurchaseOrder::where('notes', $notes)->exists()) {
             return;
         }
 
-        $po = $this->sendPurchaseOrder($warehouse, $user, $supplier, $items->take(1), $notes);
+        $po = $this->sendPurchaseOrder($warehouse, $receivedBy, $supplier, $items->take(1), $notes);
 
-        $receipt = app(RecordGoodsReceiptAction::class)->execute($user, new RecordGoodsReceiptInput(
+        $receipt = app(RecordGoodsReceiptAction::class)->execute($receivedBy, new RecordGoodsReceiptInput(
             warehouseId: $warehouse->id,
             purchaseOrderId: $po->id,
             receivedQuantities: $po->items->pluck('ordered_quantity', 'id')->all(),
         ));
 
-        app(CompleteQualityInspectionAction::class)->execute($user, $receipt->items->first(), new CompleteQualityInspectionInput(
+        app(CompleteQualityInspectionAction::class)->execute($inspectedBy, $receipt->items->first(), new CompleteQualityInspectionInput(
             warehouseId: $warehouse->id,
             result: QualityInspectionResult::Fail,
             condition: QualityInspectionCondition::Damaged,
@@ -124,16 +147,16 @@ class DemoGoodsReceiptSeeder extends Seeder
         ));
     }
 
-    private function scenarioE_multiItemPartiallyInspected(Warehouse $warehouse, User $user, Supplier $supplier, Collection $items): void
+    private function scenarioE_multiItemPartiallyInspected(Warehouse $warehouse, User $receivedBy, User $inspectedBy, Supplier $supplier, Collection $items, string $tag): void
     {
-        $notes = 'Demo Seeder Receipt - Scenario E (Multi-item, one line still QC pending)';
+        $notes = "Demo Seeder Receipt - Scenario E (Multi-item, one line still QC pending) ({$tag})";
         if (PurchaseOrder::where('notes', $notes)->exists()) {
             return;
         }
 
-        $po = $this->sendPurchaseOrder($warehouse, $user, $supplier, $items->take(2), $notes);
+        $po = $this->sendPurchaseOrder($warehouse, $receivedBy, $supplier, $items->take(2), $notes);
 
-        $receipt = app(RecordGoodsReceiptAction::class)->execute($user, new RecordGoodsReceiptInput(
+        $receipt = app(RecordGoodsReceiptAction::class)->execute($receivedBy, new RecordGoodsReceiptInput(
             warehouseId: $warehouse->id,
             purchaseOrderId: $po->id,
             receivedQuantities: $po->items->pluck('ordered_quantity', 'id')->all(),
@@ -141,14 +164,14 @@ class DemoGoodsReceiptSeeder extends Seeder
 
         // Only the first line is inspected; the PO must stay at GOODS_RECEIVED,
         // not COMPLETED, while the second line awaits QC.
-        app(CompleteQualityInspectionAction::class)->execute($user, $receipt->items->first(), new CompleteQualityInspectionInput(
+        app(CompleteQualityInspectionAction::class)->execute($inspectedBy, $receipt->items->first(), new CompleteQualityInspectionInput(
             warehouseId: $warehouse->id,
             result: QualityInspectionResult::Pass,
             condition: QualityInspectionCondition::Good,
         ));
     }
 
-    private function sendPurchaseOrder(Warehouse $warehouse, User $user, Supplier $supplier, Collection $items, string $notes): PurchaseOrder
+    private function sendPurchaseOrder(Warehouse $warehouse, User $actor, Supplier $supplier, Collection $items, string $notes): PurchaseOrder
     {
         $purchaseRequest = PurchaseRequest::create([
             'warehouse_id' => $warehouse->id,
@@ -156,7 +179,7 @@ class DemoGoodsReceiptSeeder extends Seeder
             'source' => 'MANUAL_STAFF',
             'urgency' => 'NORMAL',
             'status' => PurchaseRequestStatus::Approved->value,
-            'created_by' => $user->id,
+            'created_by' => $actor->id,
             'notes' => 'Demo Seeder PR for '.$notes,
             'submitted_at' => now(),
             'approved_at' => now(),
@@ -171,13 +194,13 @@ class DemoGoodsReceiptSeeder extends Seeder
             $allocations[] = new AllocationInput($prItem->id, 15);
         }
 
-        $group = app(CreatePurchaseRequestGroupAction::class)->execute($user, new CreateGroupInput(
+        $group = app(CreatePurchaseRequestGroupAction::class)->execute($actor, new CreateGroupInput(
             warehouseId: $warehouse->id,
             notes: $notes,
             allocations: $allocations,
         ));
 
-        $po = app(CreatePurchaseOrderAction::class)->execute($user, new CreatePurchaseOrderInput(
+        $po = app(CreatePurchaseOrderAction::class)->execute($actor, new CreatePurchaseOrderInput(
             warehouseId: $warehouse->id,
             groupId: $group->id,
             supplierId: $supplier->id,
@@ -185,6 +208,6 @@ class DemoGoodsReceiptSeeder extends Seeder
             items: $items->map(fn (Item $item) => ['item_id' => $item->id, 'unit_cost' => 8000])->all(),
         ));
 
-        return app(SendPurchaseOrderAction::class)->execute($user, $po)->load('items');
+        return app(SendPurchaseOrderAction::class)->execute($actor, $po)->load('items');
     }
 }
