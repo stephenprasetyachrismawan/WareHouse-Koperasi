@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Actions\Returns\DetermineReturnFaultAction;
+use App\Enums\ReturnFaultAttribution;
 use App\Enums\ReturnReasonCode;
 use App\Enums\ReturnStatus;
 use App\Models\PickupRequest;
@@ -61,6 +63,61 @@ class ReturnRequestFactory extends Factory
             'verified_at' => now()->subHour(),
             'verification_notes' => 'Barang sesuai laporan Koperasi.',
             'waiting_approval_at' => now(),
+        ]);
+    }
+
+    public function approved(): self
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => ReturnStatus::Approved,
+            'submitted_at' => now()->subHours(3),
+            'verified_by' => User::factory(),
+            'verified_at' => now()->subHours(2),
+            'verification_notes' => 'Barang sesuai laporan Koperasi.',
+            'waiting_approval_at' => now()->subHour(),
+            'approved_by' => User::factory(),
+            'approved_at' => now(),
+            'fault_attribution' => ReturnFaultAttribution::Supplier,
+            'fault_rule_version' => DetermineReturnFaultAction::RULE_VERSION,
+        ]);
+    }
+
+    public function rejected(): self
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => ReturnStatus::Rejected,
+            'submitted_at' => now()->subHours(3),
+            'verified_by' => User::factory(),
+            'verified_at' => now()->subHours(2),
+            'verification_notes' => 'Barang sesuai laporan Koperasi.',
+            'waiting_approval_at' => now()->subHour(),
+            'rejected_by' => User::factory(),
+            'rejected_at' => now(),
+            'decision_notes' => 'Bukti foto tidak meyakinkan.',
+        ]);
+    }
+
+    public function replacementPending(): self
+    {
+        return $this->approved()->state(fn (array $attributes) => [
+            'status' => ReturnStatus::ReplacementPending,
+            'disposed_at' => now(),
+        ]);
+    }
+
+    public function warehouseAttributed(): self
+    {
+        return $this->state(fn (array $attributes) => [
+            'fault_attribution' => ReturnFaultAttribution::Warehouse,
+            'fault_rule_version' => DetermineReturnFaultAction::RULE_VERSION,
+        ]);
+    }
+
+    public function supplierAttributed(): self
+    {
+        return $this->state(fn (array $attributes) => [
+            'fault_attribution' => ReturnFaultAttribution::Supplier,
+            'fault_rule_version' => DetermineReturnFaultAction::RULE_VERSION,
         ]);
     }
 }

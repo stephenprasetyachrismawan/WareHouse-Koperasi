@@ -6,6 +6,7 @@ use Database\Factories\ReturnRequestItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ReturnRequestItem extends Model
 {
@@ -39,5 +40,10 @@ class ReturnRequestItem extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    public function disposal(): HasOne
+    {
+        return $this->hasOne(ReturnDisposal::class);
     }
 }
