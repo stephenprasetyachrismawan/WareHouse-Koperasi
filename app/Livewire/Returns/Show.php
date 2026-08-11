@@ -3,6 +3,8 @@
 namespace App\Livewire\Returns;
 
 use App\Actions\Returns\ApproveReturnAction;
+use App\Actions\Returns\CompleteReplacementPickupAction;
+use App\Actions\Returns\PrepareReplacementPickupAction;
 use App\Actions\Returns\RejectReturnAction;
 use App\Actions\Returns\SubmitReturnForApprovalAction;
 use App\Actions\Returns\VerifyReturnAction;
@@ -28,6 +30,8 @@ class Show extends Component
         'approver',
         'rejecter',
         'disposals',
+        'replacementPickup.items',
+        'replacementPurchaseRequests',
     ];
 
     public ReturnRequest $returnRequest;
@@ -127,6 +131,29 @@ class Show extends Component
         }
     }
 
+    public function checkAvailability(PrepareReplacementPickupAction $action): void
+    {
+        $this->authorize('verify', $this->returnRequest);
+
+        $updated = $action->execute($this->returnRequest);
+        $this->returnRequest = $updated->load(self::WITH_RELATIONS);
+
+        session()->flash('success', $this->returnRequest->status === ReturnStatus::ReadyForRepickup
+            ? 'Stok penggantian tersedia. Siap diambil.'
+            : 'Stok penggantian belum cukup. Permintaan pembelian penggantian telah disiapkan.');
+    }
+
+    public function completeRepickup(CompleteReplacementPickupAction $action): void
+    {
+        try {
+            $updated = $action->execute(Auth::user(), $this->returnRequest);
+            $this->returnRequest = $updated->load(self::WITH_RELATIONS);
+            session()->flash('success', 'Penggantian retur selesai diserahkan.');
+        } catch (\RuntimeException $e) {
+            $this->addError('decision', $e->getMessage());
+        }
+    }
+
     public function render()
     {
         $canVerify = Gate::forUser(Auth::user())->allows('verify', $this->returnRequest)
@@ -141,11 +168,22 @@ class Show extends Component
         $canSeeAttribution = Gate::forUser(Auth::user())->allows('verify', $this->returnRequest)
             || Gate::forUser(Auth::user())->allows('approve', $this->returnRequest);
 
+        $canManageReplacement = Gate::forUser(Auth::user())->allows('verify', $this->returnRequest);
+
+        $canCheckAvailability = $canManageReplacement
+            && $this->returnRequest->status === ReturnStatus::ReplacementPending;
+
+        $canCompleteRepickup = $canManageReplacement
+            && $this->returnRequest->status === ReturnStatus::ReadyForRepickup;
+
         return view('livewire.returns.show', [
             'canVerify' => $canVerify,
             'canSubmitForApproval' => $canSubmitForApproval,
             'canApprove' => $canApprove,
             'canSeeAttribution' => $canSeeAttribution,
+            'canManageReplacement' => $canManageReplacement,
+            'canCheckAvailability' => $canCheckAvailability,
+            'canCompleteRepickup' => $canCompleteRepickup,
         ]);
     }
 }

@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Domain\Pickup\Events\StockShortageDetected;
+use App\Domain\Procurement\Events\GoodsAcceptedIntoStock;
 use App\Enums\WarehouseRole;
 use App\Http\Middleware\EnsureTenantContext;
 use App\Listeners\Procurement\CreatePurchaseRequestForStockShortage;
+use App\Listeners\Returns\ReEvaluateReturnReplacementOnStockAccepted;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseMembership;
@@ -64,6 +66,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             StockShortageDetected::class,
             CreatePurchaseRequestForStockShortage::class
+        );
+
+        Event::listen(
+            GoodsAcceptedIntoStock::class,
+            ReEvaluateReturnReplacementOnStockAccepted::class
         );
 
         // Without this, EnsureTenantContext (and its setPermissionsTeamId() call)

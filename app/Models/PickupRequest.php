@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\PickupRequestSource;
 use App\Enums\PickupRequestStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
@@ -19,6 +21,7 @@ class PickupRequest extends Model
         'warehouse_id',
         'request_number',
         'user_id',
+        'source',
         'status',
         'notes',
         'submitted_at',
@@ -31,6 +34,7 @@ class PickupRequest extends Model
 
     protected $casts = [
         'status' => PickupRequestStatus::class,
+        'source' => PickupRequestSource::class,
         'submitted_at' => 'datetime',
         'approved_at' => 'datetime',
         'ready_at' => 'datetime',
@@ -65,6 +69,11 @@ class PickupRequest extends Model
     public function approvals(): MorphMany
     {
         return $this->morphMany(Approval::class, 'approvable');
+    }
+
+    public function originatingReturn(): HasOne
+    {
+        return $this->hasOne(ReturnRequest::class, 'replacement_pickup_request_id');
     }
 
     public function isTerminal(): bool

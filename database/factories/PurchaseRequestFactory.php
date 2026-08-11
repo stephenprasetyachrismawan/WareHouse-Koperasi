@@ -80,4 +80,11 @@ class PurchaseRequestFactory extends Factory
             'source' => PurchaseRequestSource::CooperativeBackorder->value,
         ]);
     }
+
+    public function returnReplacement(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'source' => PurchaseRequestSource::ReturnReplacement->value,
+        ]);
+    }
 }

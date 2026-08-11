@@ -22,11 +22,25 @@
             <p class="font-semibold text-red-800">Status: Ditolak</p>
             <p class="text-sm text-red-700 mt-1">Alasan: {{ $returnRequest->decision_notes }}</p>
         </div>
-    @elseif (in_array($returnRequest->status, [\App\Enums\ReturnStatus::Approved, \App\Enums\ReturnStatus::ReplacementPending], true))
+    @elseif ($returnRequest->status === \App\Enums\ReturnStatus::ReplacementPending)
+        <div class="bg-amber-50 border border-amber-200 p-4 rounded mb-6">
+            <p class="font-semibold text-amber-800">Retur disetujui</p>
+            <p class="text-sm text-amber-700 mt-1">Penggantian barang sedang disiapkan.</p>
+        </div>
+    @elseif ($returnRequest->status === \App\Enums\ReturnStatus::ReadyForRepickup)
         <div class="bg-green-50 border border-green-200 p-4 rounded mb-6">
-            <p class="font-semibold text-green-800">
-                Status: {{ $returnRequest->status === \App\Enums\ReturnStatus::ReplacementPending ? 'Disetujui — Menunggu Penggantian' : 'Disetujui' }}
-            </p>
+            <p class="font-semibold text-green-800">Penggantian siap diambil</p>
+            @if ($returnRequest->replacementPickup?->ready_at)
+                <p class="text-sm text-green-700 mt-1">Siap sejak {{ $returnRequest->replacementPickup->ready_at->translatedFormat('d M Y H:i') }}. Silakan ambil di gudang.</p>
+            @endif
+        </div>
+    @elseif ($returnRequest->status === \App\Enums\ReturnStatus::Completed)
+        <div class="bg-green-50 border border-green-200 p-4 rounded mb-6">
+            <p class="font-semibold text-green-800">Penggantian selesai diserahkan</p>
+        </div>
+    @elseif ($returnRequest->status === \App\Enums\ReturnStatus::Approved)
+        <div class="bg-green-50 border border-green-200 p-4 rounded mb-6">
+            <p class="font-semibold text-green-800">Status: Disetujui</p>
         </div>
     @endif
 
@@ -156,6 +170,41 @@
                     <flux:button variant="danger" wire:click="reject" class="w-full sm:w-auto">Konfirmasi Tolak</flux:button>
                     <flux:button wire:click="$set('showRejectForm', false)" class="w-full sm:w-auto">Batal</flux:button>
                 </div>
+            @endif
+        </div>
+    @endif
+
+    @if ($canManageReplacement && in_array($returnRequest->status, [\App\Enums\ReturnStatus::ReplacementPending, \App\Enums\ReturnStatus::ReadyForRepickup, \App\Enums\ReturnStatus::Completed], true))
+        <div class="bg-white p-4 rounded shadow-sm mb-6">
+            <h3 class="font-semibold mb-3">Penggantian Barang</h3>
+
+            @if ($returnRequest->replacementPickup)
+                <dl class="grid grid-cols-2 gap-y-2 text-sm mb-4">
+                    <dt class="text-gray-500">Pickup Penggantian</dt>
+                    <dd>{{ $returnRequest->replacementPickup->request_number }}</dd>
+                    <dt class="text-gray-500">Status Pickup</dt>
+                    <dd>{{ $returnRequest->replacementPickup->status->label() }}</dd>
+                </dl>
+            @elseif ($returnRequest->replacementPurchaseRequests->isNotEmpty())
+                <dl class="grid grid-cols-2 gap-y-2 text-sm mb-4">
+                    <dt class="text-gray-500">PR Penggantian</dt>
+                    <dd>{{ $returnRequest->replacementPurchaseRequests->last()->request_number }}</dd>
+                    <dt class="text-gray-500">Status PR</dt>
+                    <dd>{{ $returnRequest->replacementPurchaseRequests->last()->status->label() }}</dd>
+                </dl>
+                <p class="text-sm text-gray-600 mb-4">Stok belum cukup. Menunggu proses pengadaan selesai.</p>
+            @else
+                <p class="text-sm text-gray-600 mb-4">Belum ada informasi penggantian.</p>
+            @endif
+
+            @if ($canCheckAvailability)
+                <flux:button wire:click="checkAvailability">Cek Ketersediaan Sekarang</flux:button>
+            @endif
+
+            @if ($canCompleteRepickup)
+                <flux:button variant="primary" wire:click="completeRepickup" wire:confirm="Konfirmasi barang penggantian telah diserahkan ke Koperasi?">
+                    Selesaikan Penyerahan
+                </flux:button>
             @endif
         </div>
     @endif
