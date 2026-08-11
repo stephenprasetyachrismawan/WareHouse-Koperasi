@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\Procurement\QualityInspectionEvidenceController;
 use App\Http\Middleware\EnsureTenantContext;
 use App\Livewire\Company\Users\Create as CompanyUsersCreate;
 use App\Livewire\Company\Users\Edit as CompanyUsersEdit;
@@ -18,11 +19,15 @@ use App\Livewire\Pickup\Create;
 use App\Livewire\Pickup\Fulfilment;
 use App\Livewire\Pickup\MyRequests;
 use App\Livewire\Pickup\Show;
+use App\Livewire\Procurement\GoodsReceiptQueue;
+use App\Livewire\Procurement\GoodsReceiptShow;
 use App\Livewire\Procurement\GroupingWorkspace;
 use App\Livewire\Procurement\Index;
 use App\Livewire\Procurement\PurchaseOrderIndex;
 use App\Livewire\Procurement\PurchaseOrderShow;
 use App\Livewire\Procurement\PurchasingQueue;
+use App\Livewire\Procurement\QcQueue;
+use App\Livewire\Procurement\RecordGoodsReceipt;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
@@ -77,6 +82,11 @@ Route::middleware(['auth', 'verified', EnsureTenantContext::class])->group(funct
         Route::get('grouping', GroupingWorkspace::class)->name('grouping');
         Route::get('purchase-orders', PurchaseOrderIndex::class)->name('purchase-orders.index');
         Route::get('purchase-orders/{purchaseOrder:uuid}', PurchaseOrderShow::class)->name('purchase-orders.show');
+        Route::get('receipts', GoodsReceiptQueue::class)->name('receipts.index');
+        Route::get('receipts/create/{purchaseOrder:uuid}', RecordGoodsReceipt::class)->name('receipts.create');
+        Route::get('receipts/{goodsReceipt:uuid}', GoodsReceiptShow::class)->name('receipts.show');
+        Route::get('qc-queue', QcQueue::class)->name('qc-queue');
+        Route::get('quality-inspections/{qualityInspection:uuid}/evidence', QualityInspectionEvidenceController::class)->name('qc.evidence');
     });
 });
 

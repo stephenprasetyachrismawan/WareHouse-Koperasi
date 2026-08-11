@@ -113,11 +113,19 @@ final class RecordStockMovementAction
                 );
             }
 
+            // Registered here (inside the transaction) rather than dispatched
+            // right after DB::transaction() returns below, so that when this
+            // action is composed inside a larger caller-owned transaction
+            // (e.g. QC + stock-in), the event only fires once the OUTERMOST
+            // transaction actually commits — never on an uncommitted/rolled
+            // back state. If there is no outer transaction, DB::afterCommit()
+            // runs the callback immediately, matching prior behaviour.
+            DB::afterCommit(function () use ($transaction) {
+                StockMovementRecorded::dispatch($transaction);
+            });
+
             return $transaction;
         });
-
-        // Dispatch domain event AFTER commit
-        StockMovementRecorded::dispatch($transaction);
 
         return $transaction;
     }

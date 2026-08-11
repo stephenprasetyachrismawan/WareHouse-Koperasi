@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Actions\Inventory\RecordStockMovementAction;
+use App\Domain\Inventory\Events\StockMovementRecorded;
 use App\Domain\Inventory\Exceptions\DuplicateStockMovementException;
 use App\Domain\Inventory\ValueObjects\StockMovementInput;
 use App\Enums\MovementType;
@@ -13,6 +14,8 @@ use App\Models\StockTransaction;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseMembership;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 /**
  * Helper to scaffold a full tenant context for stock tests.
@@ -618,6 +621,79 @@ describe('Mass-assignment protection', function () {
         expect($transaction->warehouse_id)->not->toBe($otherWarehouse->id);
     });
 
+});
+
+// =====================================================================
+// Event Timing / Nested Transaction Composition
+// =====================================================================
+describe('StockMovementRecorded event timing', function () {
+    test('fires when called standalone with no outer transaction', function () {
+        Event::fake([StockMovementRecorded::class]);
+
+        ['warehouse' => $warehouse, 'user' => $user, 'item' => $item] = createStockTestContext();
+
+        app(RecordStockMovementAction::class)->execute(new StockMovementInput(
+            warehouseId: $warehouse->id,
+            itemId: $item->id,
+            movementType: MovementType::OpeningBalance,
+            quantity: 10,
+            performedBy: $user->id,
+            idempotencyKey: 'event-standalone',
+        ));
+
+        Event::assertDispatched(StockMovementRecorded::class);
+    });
+
+    test('does not fire when the outer caller-owned transaction rolls back', function () {
+        Event::fake([StockMovementRecorded::class]);
+
+        ['warehouse' => $warehouse, 'user' => $user, 'item' => $item] = createStockTestContext();
+
+        try {
+            DB::transaction(function () use ($warehouse, $user, $item) {
+                app(RecordStockMovementAction::class)->execute(new StockMovementInput(
+                    warehouseId: $warehouse->id,
+                    itemId: $item->id,
+                    movementType: MovementType::OpeningBalance,
+                    quantity: 10,
+                    performedBy: $user->id,
+                    idempotencyKey: 'event-rollback',
+                ));
+
+                throw new RuntimeException('force rollback of the outer transaction');
+            });
+        } catch (RuntimeException) {
+            // expected
+        }
+
+        Event::assertNotDispatched(StockMovementRecorded::class);
+        expect(StockTransaction::where('idempotency_key', 'event-rollback')->exists())->toBeFalse();
+    });
+
+    test('fires exactly once after the outer caller-owned transaction commits', function () {
+        Event::fake([StockMovementRecorded::class]);
+
+        ['warehouse' => $warehouse, 'user' => $user, 'item' => $item] = createStockTestContext();
+
+        DB::transaction(function () use ($warehouse, $user, $item) {
+            app(RecordStockMovementAction::class)->execute(new StockMovementInput(
+                warehouseId: $warehouse->id,
+                itemId: $item->id,
+                movementType: MovementType::OpeningBalance,
+                quantity: 10,
+                performedBy: $user->id,
+                idempotencyKey: 'event-commit',
+            ));
+
+            // The event must not have fired yet — the outer transaction hasn't committed.
+            Event::assertNotDispatched(StockMovementRecorded::class);
+        });
+
+        Event::assertDispatchedTimes(StockMovementRecorded::class, 1);
+    });
+});
+
+describe('Mass-assignment protection continued', function () {
     test('balance_before and balance_after are calculated server-side', function () {
         ['warehouse' => $warehouse, 'user' => $user, 'item' => $item] = createStockTestContext();
 
