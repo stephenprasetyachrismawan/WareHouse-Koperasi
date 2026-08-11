@@ -70,6 +70,18 @@
                                 {{ __('Penyiapan & Pickup') }}
                             </flux:sidebar.item>
                         @endcan
+
+                        @can('create', App\Models\ReturnRequest::class)
+                            <flux:sidebar.item icon="arrow-uturn-left" :href="route('returns.my-returns')" :current="request()->routeIs('returns.my-returns') || request()->routeIs('returns.create') || request()->routeIs('returns.show')" wire:navigate>
+                                {{ __('Retur Barang') }}
+                            </flux:sidebar.item>
+                        @endcan
+
+                        @if(auth()->user()->can('returns.verify'))
+                            <flux:sidebar.item icon="magnifying-glass-circle" :href="route('returns.verification-queue')" :current="request()->routeIs('returns.verification-queue')" wire:navigate>
+                                {{ __('Verifikasi Retur') }}
+                            </flux:sidebar.item>
+                        @endif
                     </flux:sidebar.group>
 
                     <flux:sidebar.group :heading="__('Pengadaan & Purchase')" class="grid">

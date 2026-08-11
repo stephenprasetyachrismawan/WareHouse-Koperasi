@@ -46,8 +46,11 @@ enum Permission: string
     case ExpenseRecord = 'expense.record';
     case ExpenseApprove = 'expense.approve';
 
-    case ReturnVerify = 'return.verify';
-    case ReturnApprove = 'return.approve';
+    case ReturnViewAny = 'returns.viewAny';
+    case ReturnView = 'returns.view';
+    case ReturnCreate = 'returns.create';
+    case ReturnVerify = 'returns.verify';
+    case ReturnApprove = 'returns.approve';
 
     case PredictionRun = 'prediction.run';
     case ReportsView = 'reports.view';
@@ -66,7 +69,6 @@ enum Permission: string
     case StockLedgerView = 'stock.ledger.view';
 
     case KoperasiRequestCreate = 'koperasi.request.create';
-    case KoperasiReturnSubmit = 'koperasi.return.submit';
 
     case PickupRequestViewAny = 'pickup_request.viewAny';
     case PickupRequestCreate = 'pickup_request.create';
