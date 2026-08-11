@@ -82,6 +82,12 @@
                                 {{ __('Verifikasi Retur') }}
                             </flux:sidebar.item>
                         @endif
+
+                        @can('approve', App\Models\ReturnRequest::class)
+                            <flux:sidebar.item icon="clipboard-document-check" :href="route('returns.approval-queue')" :current="request()->routeIs('returns.approval-queue')" wire:navigate>
+                                {{ __('Keputusan Retur') }}
+                            </flux:sidebar.item>
+                        @endcan
                     </flux:sidebar.group>
 
                     <flux:sidebar.group :heading="__('Pengadaan & Purchase')" class="grid">

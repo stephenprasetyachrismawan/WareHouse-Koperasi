@@ -63,4 +63,17 @@ class ReturnRequestPolicy
     {
         return $this->verify($user, $returnRequest);
     }
+
+    public function approve(User $user, ?ReturnRequest $returnRequest = null): bool
+    {
+        if (! $this->hasPermission($user, Permission::ReturnApprove)) {
+            return false;
+        }
+
+        if ($returnRequest) {
+            return $this->isSameWarehouse($user, $returnRequest);
+        }
+
+        return true;
+    }
 }

@@ -29,6 +29,7 @@ use App\Livewire\Procurement\PurchaseOrderShow;
 use App\Livewire\Procurement\PurchasingQueue;
 use App\Livewire\Procurement\QcQueue;
 use App\Livewire\Procurement\RecordGoodsReceipt;
+use App\Livewire\Returns\ApprovalQueue as ReturnsApprovalQueue;
 use App\Livewire\Returns\Create as ReturnsCreate;
 use App\Livewire\Returns\MyReturns;
 use App\Livewire\Returns\Show as ReturnsShow;
@@ -99,6 +100,7 @@ Route::middleware(['auth', 'verified', EnsureTenantContext::class])->group(funct
         Route::get('create', ReturnsCreate::class)->name('create');
         Route::get('my-returns', MyReturns::class)->name('my-returns');
         Route::get('verification-queue', VerificationQueue::class)->name('verification-queue');
+        Route::get('approval-queue', ReturnsApprovalQueue::class)->name('approval-queue');
         Route::get('{returnRequest:uuid}', ReturnsShow::class)->name('show');
         Route::get('evidence/{returnEvidence:uuid}', ReturnEvidenceController::class)->name('evidence');
     });

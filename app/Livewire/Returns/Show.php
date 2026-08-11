@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Returns;
 
+use App\Actions\Returns\ApproveReturnAction;
+use App\Actions\Returns\RejectReturnAction;
 use App\Actions\Returns\SubmitReturnForApprovalAction;
 use App\Actions\Returns\VerifyReturnAction;
 use App\Domain\Returns\ValueObjects\VerifyReturnInput;
@@ -16,6 +18,18 @@ class Show extends Component
 {
     use WithFileUploads;
 
+    private const WITH_RELATIONS = [
+        'items.item',
+        'items.pickupRequestItem',
+        'evidence',
+        'pickupRequest',
+        'cooperativeMembership.user',
+        'verifier',
+        'approver',
+        'rejecter',
+        'disposals',
+    ];
+
     public ReturnRequest $returnRequest;
 
     public string $scannedBarcode = '';
@@ -26,11 +40,15 @@ class Show extends Component
 
     public string $verificationNotes = '';
 
+    public string $rejectReason = '';
+
+    public bool $showRejectForm = false;
+
     public function mount(ReturnRequest $returnRequest): void
     {
         $this->authorize('view', $returnRequest);
 
-        $this->returnRequest = $returnRequest->load(['items.item', 'items.pickupRequestItem', 'evidence', 'pickupRequest', 'cooperativeMembership.user', 'verifier']);
+        $this->returnRequest = $returnRequest->load(self::WITH_RELATIONS);
         $this->verifiedQuantity = $this->returnRequest->items->first()?->return_quantity ?? 1;
     }
 
@@ -59,7 +77,7 @@ class Show extends Component
                 expectedVersion: $this->returnRequest->version,
             ));
 
-            $this->returnRequest = $updated->load(['items.item', 'items.pickupRequestItem', 'evidence', 'pickupRequest', 'cooperativeMembership.user', 'verifier']);
+            $this->returnRequest = $updated->load(self::WITH_RELATIONS);
             session()->flash('success', 'Barang berhasil diverifikasi.');
         } catch (\RuntimeException $e) {
             $this->addError('verify', $e->getMessage());
@@ -70,10 +88,42 @@ class Show extends Component
     {
         try {
             $updated = $action->execute(Auth::user(), $this->returnRequest, $this->returnRequest->version);
-            $this->returnRequest = $updated->load(['items.item', 'items.pickupRequestItem', 'evidence', 'pickupRequest', 'cooperativeMembership.user', 'verifier']);
+            $this->returnRequest = $updated->load(self::WITH_RELATIONS);
             session()->flash('success', 'Retur diteruskan untuk keputusan Kepala Gudang.');
         } catch (\RuntimeException $e) {
             $this->addError('submitForApproval', $e->getMessage());
+        }
+    }
+
+    public function approve(ApproveReturnAction $action): void
+    {
+        try {
+            $updated = $action->execute(Auth::user(), $this->returnRequest);
+            $this->returnRequest = $updated->load(self::WITH_RELATIONS);
+            session()->flash('success', 'Retur disetujui. Barang lama telah dicatat sebagai disposed.');
+        } catch (\RuntimeException $e) {
+            $this->addError('decision', $e->getMessage());
+        }
+    }
+
+    public function showReject(): void
+    {
+        $this->showRejectForm = true;
+    }
+
+    public function reject(RejectReturnAction $action): void
+    {
+        $this->validate([
+            'rejectReason' => 'required|string|min:3',
+        ]);
+
+        try {
+            $updated = $action->execute(Auth::user(), $this->returnRequest, $this->rejectReason);
+            $this->returnRequest = $updated->load(self::WITH_RELATIONS);
+            $this->showRejectForm = false;
+            session()->flash('success', 'Retur ditolak.');
+        } catch (\RuntimeException $e) {
+            $this->addError('decision', $e->getMessage());
         }
     }
 
@@ -85,9 +135,17 @@ class Show extends Component
         $canSubmitForApproval = Gate::forUser(Auth::user())->allows('submitForApproval', $this->returnRequest)
             && $this->returnRequest->status === ReturnStatus::AdminVerified;
 
+        $canApprove = Gate::forUser(Auth::user())->allows('approve', $this->returnRequest)
+            && $this->returnRequest->status === ReturnStatus::WaitingApproval;
+
+        $canSeeAttribution = Gate::forUser(Auth::user())->allows('verify', $this->returnRequest)
+            || Gate::forUser(Auth::user())->allows('approve', $this->returnRequest);
+
         return view('livewire.returns.show', [
             'canVerify' => $canVerify,
             'canSubmitForApproval' => $canSubmitForApproval,
+            'canApprove' => $canApprove,
+            'canSeeAttribution' => $canSeeAttribution,
         ]);
     }
 }

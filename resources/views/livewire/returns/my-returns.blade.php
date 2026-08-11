@@ -35,10 +35,21 @@
                                     'SUBMITTED' => 'Diajukan',
                                     'ADMIN_VERIFIED' => 'Diverifikasi Staff',
                                     'WAITING_APPROVAL' => 'Menunggu Keputusan',
+                                    'APPROVED' => 'Disetujui',
+                                    'REJECTED' => 'Ditolak',
+                                    'REPLACEMENT_PENDING' => 'Menunggu Penggantian',
                                 ];
                                 $label = $statusLabels[$return->status->value] ?? $return->status->label();
+                                $colorClass = match ($return->status->value) {
+                                    'APPROVED', 'REPLACEMENT_PENDING' => 'bg-green-100 text-green-800',
+                                    'REJECTED' => 'bg-red-100 text-red-800',
+                                    default => 'bg-blue-100 text-blue-800',
+                                };
                             @endphp
-                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">{{ $label }}</span>
+                            <span class="px-2 py-1 text-xs rounded-full {{ $colorClass }}">{{ $label }}</span>
+                            @if ($return->status->value === 'REJECTED' && $return->decision_notes)
+                                <p class="text-xs text-gray-500 mt-1">{{ $return->decision_notes }}</p>
+                            @endif
                         </td>
                         <td class="p-3">
                             <flux:button size="sm" href="{{ route('returns.show', $return->uuid) }}">Detail</flux:button>

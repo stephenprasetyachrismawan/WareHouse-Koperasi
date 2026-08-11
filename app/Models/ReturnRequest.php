@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ReturnFaultAttribution;
 use App\Enums\ReturnReasonCode;
 use App\Enums\ReturnStatus;
 use Database\Factories\ReturnRequestFactory;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class ReturnRequest extends Model
 {
@@ -33,11 +35,21 @@ class ReturnRequest extends Model
         'verification_notes',
         'waiting_approval_at',
         'version',
+        'approved_by',
+        'approved_at',
+        'rejected_by',
+        'rejected_at',
+        'decision_notes',
+        'fault_attribution',
+        'fault_rule_version',
+        'disposed_at',
+        'replacement_pickup_request_id',
     ];
 
     protected $casts = [
         'status' => ReturnStatus::class,
         'reason_code' => ReturnReasonCode::class,
+        'fault_attribution' => ReturnFaultAttribution::class,
         'submitted_at' => 'datetime',
         'verified_at' => 'datetime',
         'waiting_approval_at' => 'datetime',
@@ -74,6 +86,26 @@ class ReturnRequest extends Model
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function rejecter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    public function approvals(): MorphMany
+    {
+        return $this->morphMany(Approval::class, 'approvable');
+    }
+
+    public function disposals(): HasMany
+    {
+        return $this->hasMany(ReturnDisposal::class);
     }
 
     public function items(): HasMany
