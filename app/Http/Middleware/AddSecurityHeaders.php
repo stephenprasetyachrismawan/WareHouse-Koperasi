@@ -17,11 +17,26 @@ class AddSecurityHeaders
     {
         $response = $next($request);
         $headers = (array) config('security.headers', []);
+        $contentSecurityPolicy = (string) ($headers['content_security_policy'] ?? "default-src 'self'");
+        $viteDevOrigin = config('security.vite_dev_origin');
+
+        if (is_string($viteDevOrigin) && filter_var($viteDevOrigin, FILTER_VALIDATE_URL)) {
+            $viteDevOrigin = rtrim($viteDevOrigin, '/');
+
+            foreach (['script-src', 'style-src', 'font-src', 'connect-src'] as $directive) {
+                $contentSecurityPolicy = preg_replace(
+                    '/(^|;\\s*)'.preg_quote($directive, '/').'\\s+([^;]*)/',
+                    '$1'.$directive.' $2 '.$viteDevOrigin,
+                    $contentSecurityPolicy,
+                    1
+                ) ?? $contentSecurityPolicy;
+            }
+        }
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', (string) ($headers['referrer_policy'] ?? 'strict-origin-when-cross-origin'));
         $response->headers->set('X-Frame-Options', (string) ($headers['frame_options'] ?? 'SAMEORIGIN'));
-        $response->headers->set('Content-Security-Policy', (string) ($headers['content_security_policy'] ?? "default-src 'self'"));
+        $response->headers->set('Content-Security-Policy', $contentSecurityPolicy);
 
         if (
             config('app.env') === 'production'

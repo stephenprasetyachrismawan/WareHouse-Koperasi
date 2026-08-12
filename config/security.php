@@ -3,6 +3,8 @@
 return [
     'request_id_header' => 'X-Request-Id',
 
+    'vite_dev_origin' => env('VITE_DEV_SERVER_ORIGIN'),
+
     'request_id_pattern' => '/\A[A-Za-z0-9._:-]{1,128}\z/',
 
     'headers' => [

@@ -51,4 +51,19 @@ class SecurityHeadersTest extends TestCase
             ->get('/')
             ->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     }
+
+    public function test_configured_vite_origin_is_allowed_for_dev_assets_without_wildcard_sources(): void
+    {
+        config([
+            'security.vite_dev_origin' => 'https://vite-warehouse.stevewithcode.net',
+        ]);
+
+        $csp = (string) $this->get('/')->headers->get('Content-Security-Policy');
+
+        $this->assertMatchesRegularExpression('/script-src [^;]*https:\\/\\/vite-warehouse\\.stevewithcode\\.net/', $csp);
+        $this->assertMatchesRegularExpression('/style-src [^;]*https:\\/\\/vite-warehouse\\.stevewithcode\\.net/', $csp);
+        $this->assertMatchesRegularExpression('/font-src [^;]*https:\\/\\/vite-warehouse\\.stevewithcode\\.net/', $csp);
+        $this->assertMatchesRegularExpression('/connect-src [^;]*https:\\/\\/vite-warehouse\\.stevewithcode\\.net/', $csp);
+        $this->assertStringNotContainsString('script-src *', $csp);
+    }
 }
