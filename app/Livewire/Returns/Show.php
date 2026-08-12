@@ -67,7 +67,7 @@ class Show extends Component
             'verificationNotes' => 'nullable|string',
         ]);
 
-        $evidencePath = $this->staffPhoto->store("return-evidence/{$this->returnRequest->warehouse_id}", 'local');
+        $evidencePath = $this->staffPhoto->store("return-evidence/{$this->returnRequest->warehouse_id}", 'private');
         $evidenceMime = $this->staffPhoto->getMimeType();
 
         try {
