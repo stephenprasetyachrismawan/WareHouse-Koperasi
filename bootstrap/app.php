@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\LogRequestContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             AssignRequestId::class,
             AddSecurityHeaders::class,
+            LogRequestContext::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
