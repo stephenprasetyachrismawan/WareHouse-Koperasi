@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Notifications\DeviceTokenController;
 use App\Http\Controllers\Notifications\NotificationDeepLinkController;
 use App\Http\Controllers\Procurement\QualityInspectionEvidenceController;
@@ -44,6 +45,9 @@ use App\Livewire\Returns\VerificationQueue;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+
+Route::get('/health/live', [HealthController::class, 'live'])->name('health.live');
+Route::get('/health/ready', [HealthController::class, 'ready'])->name('health.ready');
 
 // Must be served from the root path to get root service-worker scope, and
 // unauthenticated like any other static asset the browser fetches.
