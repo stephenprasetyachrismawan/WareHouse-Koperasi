@@ -122,7 +122,10 @@ class WarehouseMembership extends Model
 
         if ($roleEnum) {
             if ($roleEnum === WarehouseRole::AppAdmin) {
-                return true;
+                // App Admin is an administration role. It must not gain
+                // operational permissions because a registry entry is
+                // missing or incomplete.
+                return false;
             }
 
             $defaultPermValues = array_map(

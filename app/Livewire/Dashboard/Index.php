@@ -47,7 +47,9 @@ class Index extends Component
         // user with no active membership from reaching this route — this
         // is defense in depth, not the primary control.
         abort_if($membership === null, 403);
-        abort_unless($membership->hasPermission(Permission::DashboardView), 403);
+        $isAppAdmin = $membership->role === WarehouseRole::AppAdmin->value
+            || $membership->role === WarehouseRole::AppAdmin;
+        abort_unless($isAppAdmin || $membership->hasPermission(Permission::DashboardView), 403);
 
         return $this->renderForMembership($membership);
     }
