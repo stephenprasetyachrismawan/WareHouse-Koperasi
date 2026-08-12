@@ -7,6 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property-read GoodsReceipt|null $goodsReceipt
+ * @property-read PurchaseOrderItem|null $purchaseOrderItem
+ * @property-read Item|null $item
+ */
 class GoodsReceiptItem extends Model
 {
     use HasFactory;

@@ -13,7 +13,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property-read ReturnStatus $status
+ * @property-read WarehouseMembership|null $cooperativeMembership
+ * @property-read PickupRequest|null $replacementPickup
+ * @property Carbon|null $approved_at
+ * @property Carbon|null $rejected_at
+ */
 class ReturnRequest extends Model
 {
     /** @use HasFactory<ReturnRequestFactory> */

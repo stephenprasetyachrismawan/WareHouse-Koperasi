@@ -4,11 +4,13 @@ use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\Notifications\DeviceTokenController;
 use App\Http\Controllers\Notifications\NotificationDeepLinkController;
 use App\Http\Controllers\Procurement\QualityInspectionEvidenceController;
+use App\Http\Controllers\Reports\DownloadReportExportController;
 use App\Http\Controllers\Returns\ReturnEvidenceController;
 use App\Http\Middleware\EnsureTenantContext;
 use App\Livewire\Company\Users\Create as CompanyUsersCreate;
 use App\Livewire\Company\Users\Edit as CompanyUsersEdit;
 use App\Livewire\Company\Users\Index as CompanyUsersIndex;
+use App\Livewire\Dashboard\Index as DashboardIndex;
 use App\Livewire\Inventory\Items\Create as InventoryItemsCreate;
 use App\Livewire\Inventory\Items\Edit as InventoryItemsEdit;
 use App\Livewire\Inventory\Items\Index as InventoryItemsIndex;
@@ -32,6 +34,7 @@ use App\Livewire\Procurement\PurchaseOrderShow;
 use App\Livewire\Procurement\PurchasingQueue;
 use App\Livewire\Procurement\QcQueue;
 use App\Livewire\Procurement\RecordGoodsReceipt;
+use App\Livewire\Reports\Index as ReportsIndex;
 use App\Livewire\Returns\ApprovalQueue as ReturnsApprovalQueue;
 use App\Livewire\Returns\Create as ReturnsCreate;
 use App\Livewire\Returns\MyReturns;
@@ -57,9 +60,11 @@ Route::name('auth.google.')->middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'verified', EnsureTenantContext::class])->group(function () {
-    Route::view('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', DashboardIndex::class)->name('dashboard');
 
     Route::get('inbox', NotificationsInbox::class)->name('inbox');
+    Route::get('reports', ReportsIndex::class)->name('reports.index');
+    Route::get('reports/exports/{reportExport:uuid}', DownloadReportExportController::class)->name('reports.exports.download');
 
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::post('devices', [DeviceTokenController::class, 'store'])->name('devices.store');

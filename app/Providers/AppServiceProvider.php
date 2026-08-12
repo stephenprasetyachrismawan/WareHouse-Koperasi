@@ -8,9 +8,11 @@ use App\Enums\WarehouseRole;
 use App\Http\Middleware\EnsureTenantContext;
 use App\Listeners\Procurement\CreatePurchaseRequestForStockShortage;
 use App\Listeners\Returns\ReEvaluateReturnReplacementOnStockAccepted;
+use App\Models\ReportExport;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseMembership;
+use App\Policies\ReportExportPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Date;
@@ -69,6 +71,8 @@ class AppServiceProvider extends ServiceProvider
 
             return $membership->role === 'app_admin' || $membership->role === WarehouseRole::AppAdmin->value;
         });
+
+        Gate::policy(ReportExport::class, ReportExportPolicy::class);
 
         Event::listen(
             StockShortageDetected::class,

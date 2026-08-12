@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property-read PurchaseRequest|null $purchaseRequest
+ * @property-read Item|null $item
+ */
 class PurchaseRequestItem extends Model
 {
     use HasFactory;

@@ -12,6 +12,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property-read PurchaseOrderStatus $status
+ * @property-read Supplier|null $supplier
+ * @property-read GoodsReceipt|null $goodsReceipt
+ */
 class PurchaseOrder extends Model
 {
     use HasFactory, HasUuids;

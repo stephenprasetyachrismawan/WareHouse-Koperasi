@@ -18,6 +18,11 @@
                     <flux:sidebar.item icon="bell" :href="route('inbox')" :current="request()->routeIs('inbox')" wire:navigate>
                         {{ __('Kotak Masuk') }}
                     </flux:sidebar.item>
+                    @if(! auth()->user()->isSuperAdmin() && auth()->user()->activeMembership()?->role !== 'app_admin' && auth()->user()->can('reports.view'))
+                        <flux:sidebar.item icon="chart-bar" :href="route('reports.index')" :current="request()->routeIs('reports.*')" wire:navigate>
+                            {{ __('Laporan') }}
+                        </flux:sidebar.item>
+                    @endif
                 </flux:sidebar.group>
 
                 @if(auth()->check() && (auth()->user()->isSuperAdmin() || auth()->user()->isAppAdmin() || auth()->user()->can('users.view')))
