@@ -205,7 +205,7 @@ git commit -m "security: scope notification broadcasts by warehouse"
 - Modify: `app/Http/Controllers/Procurement/QualityInspectionEvidenceController.php`
 - Modify: `tests/Feature/Reports/OperationalReportsTest.php`
 - Modify: `tests/Feature/Procurement/GoodsReceiptSecurityConcurrencyTest.php`
-- Modify: `tests/Feature/Returns/ReturnEvidenceSecurityTest.php`
+- Modify: `tests/Feature/Returns/ReturnApprovalTenantIsolationTest.php`
 
 **Interfaces:**
 - `Storage::disk('private')` is the only application disk used for report CSVs and QC/return evidence; its root is `storage/app/private` and it is not publicly served.
@@ -255,6 +255,7 @@ git commit -m "security: isolate reports and evidence on private storage"
 **Files:**
 - Create: `tests/Feature/Security/TenantIsolationRegressionTest.php`
 - Create: `tests/Feature/Security/PrivilegeEscalationRegressionTest.php`
+- Create: `tests/Feature/Security/FileAndExportSecurityTest.php`
 - Create: `tests/Feature/Security/FileAndExportSecurityTest.php`
 - Create: `docs/security/phase-6-4a-threat-model.md`
 - Create: `docs/security/phase-6-4a-assessment.md`
@@ -368,3 +369,7 @@ git pull --ff-only origin main
 ```
 
 Then verify `composer run dev`/the repository's equivalent process group, web, Vite, queue, and Reverb before creating the 6.4B branch.
+
+## Execution record
+
+Implemented on `hardening/security-tenant-isolation` through commits `4a3820f`, `c564cfd`, `a3403d8`, and `144a063`, with the final file/export regression test added after the initial review. Focused security tests, 585 feature tests, Pint, Composer audit, npm audit, and the frontend build passed. PHPStan remains a pre-existing baseline failure with 409 errors outside the changed files and is recorded as an unresolved repository gate, not suppressed.
