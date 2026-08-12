@@ -23,16 +23,16 @@ The code-level 6.4A/6.4B gates are green, but required production-environment ev
 | --- | --- | --- |
 | 6.4A Security & Tenant Isolation | PR #35 / `67cafa7` | Merged; focused security and 585 feature tests passed |
 | 6.4B Resilience, Performance & Observability | PR #36 / `f3d9a94` | Merged; 593 feature tests passed |
-| 6.4C Backup, Restore & Gate | current branch | Not merged; final gate BLOCKED |
+| 6.4C Backup, Restore & Gate | [PR #37](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/37) / `51cba80` | Merged; final gate BLOCKED |
 
 ## Security and correctness
 
 - Tenant UUID/path swaps, inactive membership, privilege escalation, private export/evidence, broadcast authorization, headers, and request correlation tests pass.
 - App Admin permission fallback now fails closed.
 - Stock reconciliation detects ledger/materialized balance differences and does not mutate stock.
-- Full feature suite on 6.4B: 593 passed / 593.
+- Full feature suite on 6.4B: 593 passed / 593; final 6.4C suite: 597 passed / 597.
 - Composer audit: no advisories. npm audit: 0 vulnerabilities.
-- PHPStan: existing repository baseline failure of 409 errors; no suppressions added.
+- PHPStan: existing repository baseline failure of 410 errors; no suppressions added.
 - Secret scanner binaries are unavailable on this VPS, so repository secret scanning is **NOT VERIFIED**.
 
 ## Backup and restore evidence
