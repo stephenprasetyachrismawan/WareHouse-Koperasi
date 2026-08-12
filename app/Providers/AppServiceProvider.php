@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseMembership;
 use Carbon\CarbonImmutable;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -37,6 +38,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        // Realtime notifications need Reverb running alongside serve/queue/
+        // vite whenever `composer run dev` / `php artisan dev` is used.
+        if ($this->app->runningInConsole()) {
+            DevCommands::artisan('reverb:start', 'reverb');
+        }
 
         if (str_starts_with(config('app.url'), 'https://')) {
             URL::forceScheme('https');

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Notifications;
 
+use App\Models\DeviceToken;
 use App\Models\InboxNotification;
 use Database\Seeders\CompanyAndWarehouseSeeder;
 use Database\Seeders\DemoGoodsReceiptSeeder;
@@ -54,10 +55,19 @@ class DemoNotificationSeederTest extends TestCase
         $this->assertGreaterThan(0, InboxNotification::where('type', 'PICKUP_REQUESTED')->count());
         $this->assertGreaterThan(0, InboxNotification::where('type', 'READY_FOR_PICKUP')->count());
 
+        // A demo device per Kepala Gudang so the push-eligibility path has
+        // something to fan out to — always an obviously-fake token.
+        $this->assertGreaterThan(0, DeviceToken::count());
+        $this->assertTrue(DeviceToken::pluck('encrypted_token')->every(
+            fn (string $token) => str_starts_with($token, 'fake-fcm-token-')
+        ));
+
         $countBefore = InboxNotification::count();
+        $deviceCountBefore = DeviceToken::count();
 
         $this->seed(DemoNotificationSeeder::class);
 
         $this->assertSame($countBefore, InboxNotification::count());
+        $this->assertSame($deviceCountBefore, DeviceToken::count());
     }
 }

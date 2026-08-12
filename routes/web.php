@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\Notifications\DeviceTokenController;
+use App\Http\Controllers\Notifications\NotificationDeepLinkController;
 use App\Http\Controllers\Procurement\QualityInspectionEvidenceController;
 use App\Http\Controllers\Returns\ReturnEvidenceController;
 use App\Http\Middleware\EnsureTenantContext;
@@ -40,6 +42,13 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
+// Must be served from the root path to get root service-worker scope, and
+// unauthenticated like any other static asset the browser fetches.
+Route::get('/firebase-messaging-sw.js', fn () => response()
+    ->view('service-worker.firebase-messaging-sw')
+    ->header('Content-Type', 'application/javascript'))
+    ->name('firebase-messaging-sw');
+
 Route::name('auth.google.')->middleware('guest')->group(function () {
     Route::get('auth/google', [SocialiteController::class, 'redirectToGoogle'])->name('redirect');
     Route::get('auth/google/callback', [SocialiteController::class, 'handleGoogleCallback'])->name('callback');
@@ -51,6 +60,12 @@ Route::middleware(['auth', 'verified', EnsureTenantContext::class])->group(funct
     Route::view('dashboard', 'dashboard')->name('dashboard');
 
     Route::get('inbox', NotificationsInbox::class)->name('inbox');
+
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::post('devices', [DeviceTokenController::class, 'store'])->name('devices.store');
+        Route::delete('devices/{deviceToken:uuid}', [DeviceTokenController::class, 'destroy'])->name('devices.destroy');
+        Route::get('{inboxNotification:uuid}', [NotificationDeepLinkController::class, 'show'])->name('deep-link');
+    });
 
     // Tenant User Management Routes
     Route::prefix('company')->name('company.')->group(function () {

@@ -143,4 +143,36 @@ class InboxLivewireTest extends TestCase
 
         $this->assertSame(0, InboxNotification::forRecipient($this->user->id)->unread()->count());
     }
+
+    public function test_unread_badge_reflects_a_notification_created_after_mount_once_echo_event_arrives(): void
+    {
+        $component = Livewire::actingAs($this->user)->test(UnreadBadge::class);
+        $component->assertDontSeeHtml('bg-red-500');
+
+        InboxNotification::factory()->unread()->create([
+            'recipient_id' => $this->user->id,
+            'warehouse_id' => $this->warehouse->id,
+        ]);
+
+        // Simulates the browser dispatching Livewire.dispatch('inbox-notification-received')
+        // after Echo receives the broadcast — the component re-renders from the
+        // database rather than trusting anything carried on the event itself.
+        $component->dispatch('inbox-notification-received', uuid: 'irrelevant')
+            ->assertSeeHtml('bg-red-500');
+    }
+
+    public function test_inbox_reflects_a_notification_created_after_mount_once_echo_event_arrives(): void
+    {
+        $component = Livewire::actingAs($this->user)->test(Inbox::class);
+        $component->assertDontSee('Arrived via realtime');
+
+        InboxNotification::factory()->unread()->create([
+            'recipient_id' => $this->user->id,
+            'warehouse_id' => $this->warehouse->id,
+            'title' => 'Arrived via realtime',
+        ]);
+
+        $component->dispatch('inbox-notification-received', uuid: 'irrelevant')
+            ->assertSee('Arrived via realtime');
+    }
 }
