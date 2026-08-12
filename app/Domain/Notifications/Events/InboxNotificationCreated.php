@@ -34,9 +34,11 @@ class InboxNotificationCreated implements ShouldBroadcastNow
             return [];
         }
 
-        return [
-            new PrivateChannel("user.{$notification->recipient_id}.notifications"),
-        ];
+        $channel = $notification->warehouse_id === null
+            ? "user.{$notification->recipient_id}.platform.notifications"
+            : "user.{$notification->recipient_id}.warehouse.{$notification->warehouse_id}.notifications";
+
+        return [new PrivateChannel($channel)];
     }
 
     public function broadcastAs(): string

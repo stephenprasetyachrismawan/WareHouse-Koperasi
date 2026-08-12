@@ -2,7 +2,13 @@
 
 namespace Tests\Feature\Notifications;
 
+use App\Domain\Notifications\Events\InboxNotificationCreated;
+use App\Enums\NotificationType;
+use App\Enums\WarehouseRole;
+use App\Models\InboxNotification;
 use App\Models\User;
+use App\Models\Warehouse;
+use App\Models\WarehouseMembership;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
@@ -32,27 +38,43 @@ class ChannelAuthorizationTest extends TestCase
         require base_path('routes/channels.php');
     }
 
-    private function authorize(User $actingAs, int $channelUserId): TestResponse
+    private function authorizeWarehouse(User $actingAs, int $channelUserId, int $warehouseId): TestResponse
     {
         return $this->actingAs($actingAs)->post('/broadcasting/auth', [
-            'channel_name' => "private-user.{$channelUserId}.notifications",
+            'channel_name' => "private-user.{$channelUserId}.warehouse.{$warehouseId}.notifications",
             'socket_id' => '1234.5678',
         ]);
     }
 
-    public function test_user_can_authorize_their_own_notification_channel(): void
+    public function test_user_can_authorize_their_own_active_warehouse_channel(): void
     {
+        $warehouse = Warehouse::factory()->create();
         $user = User::factory()->create();
+        WarehouseMembership::factory()->create([
+            'user_id' => $user->id,
+            'warehouse_id' => $warehouse->id,
+            'role' => WarehouseRole::StaffAdmin->value,
+            'status' => 'active',
+        ]);
 
-        $this->authorize($user, $user->id)->assertOk();
+        $this->authorizeWarehouse($user, $user->id, $warehouse->id)->assertOk();
     }
 
     public function test_user_cannot_authorize_another_users_notification_channel(): void
     {
+        $warehouse = Warehouse::factory()->create();
         $user = User::factory()->create();
         $other = User::factory()->create();
 
-        $this->authorize($user, $other->id)->assertForbidden();
+        $this->authorizeWarehouse($user, $other->id, $warehouse->id)->assertForbidden();
+    }
+
+    public function test_user_cannot_authorize_a_warehouse_without_active_membership(): void
+    {
+        $warehouse = Warehouse::factory()->create();
+        $user = User::factory()->create();
+
+        $this->authorizeWarehouse($user, $user->id, $warehouse->id)->assertForbidden();
     }
 
     public function test_unauthenticated_request_is_denied(): void
@@ -63,7 +85,7 @@ class ChannelAuthorizationTest extends TestCase
         // (403) for a guarded channel with no resolvable user — there is no
         // distinct 401 path in this flow.
         $this->post('/broadcasting/auth', [
-            'channel_name' => "private-user.{$other->id}.notifications",
+            'channel_name' => "private-user.{$other->id}.warehouse.999999.notifications",
             'socket_id' => '1234.5678',
         ])->assertForbidden();
     }
@@ -73,15 +95,40 @@ class ChannelAuthorizationTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)->post('/broadcasting/auth', [
-            'channel_name' => 'private-user.not-a-number.notifications',
+            'channel_name' => 'private-user.not-a-number.warehouse.1.notifications',
             'socket_id' => '1234.5678',
         ])->assertForbidden();
     }
 
     public function test_inactive_user_is_denied_even_for_their_own_channel(): void
     {
+        $warehouse = Warehouse::factory()->create();
         $user = User::factory()->create(['status' => 'suspended']);
+        WarehouseMembership::factory()->create([
+            'user_id' => $user->id,
+            'warehouse_id' => $warehouse->id,
+            'status' => 'active',
+        ]);
 
-        $this->authorize($user, $user->id)->assertForbidden();
+        $this->authorizeWarehouse($user, $user->id, $warehouse->id)->assertForbidden();
+    }
+
+    public function test_notification_event_uses_the_notification_warehouse_in_its_channel(): void
+    {
+        $warehouse = Warehouse::factory()->create();
+        $user = User::factory()->create();
+        $notification = InboxNotification::factory()->create([
+            'recipient_id' => $user->id,
+            'warehouse_id' => $warehouse->id,
+            'type' => NotificationType::ApprovalRequired,
+        ]);
+
+        $channels = (new InboxNotificationCreated($notification->id))->broadcastOn();
+
+        $this->assertCount(1, $channels);
+        $this->assertSame(
+            "private-user.{$user->id}.warehouse.{$warehouse->id}.notifications",
+            $channels[0]->name,
+        );
     }
 }
