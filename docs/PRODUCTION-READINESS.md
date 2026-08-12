@@ -15,6 +15,7 @@ The code-level 6.4A/6.4B gates are green, but required production-environment ev
 - Current workspace uses SQLite, database queue/cache, local private storage, and local Reverb configuration.
 - Current runtime is development configuration (`APP_ENV=local`, `APP_DEBUG=true`); it is not a production target.
 - No production-like PostgreSQL staging database, isolated Redis, managed/private object-storage backup, fake FCM provider, or approved load generator is available here.
+- Browser smoke check: local `/health/live` returned 200 with `{"status":"ok"}`, security headers, request ID, and no console messages; authenticated mutation flows were intentionally not run in the isolated browser context.
 
 ## Slice evidence
 
@@ -48,6 +49,8 @@ PostgreSQL/PITR: NOT VERIFIED
 ```
 
 The local drill is executable evidence for the script safety path, not proof of production recovery.
+
+The final local drill completed on 2026-08-12 UTC with `backup executed: YES`, `restore executed: YES`, `database_integrity=ok`, a restored synthetic row, and a restored synthetic private evidence object.
 
 ## RPO / RTO
 

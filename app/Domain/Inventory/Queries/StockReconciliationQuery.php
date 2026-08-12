@@ -11,7 +11,7 @@ use App\Models\Warehouse;
 final class StockReconciliationQuery
 {
     /**
-     * @return list<array{warehouse_id: int, item_id: int, ledger_total: int, materialized_balance: int, difference: int, healthy: bool}>
+     * @return array<int, array{warehouse_id: int, item_id: int, ledger_total: int, materialized_balance: int, difference: int, healthy: bool}>
      */
     public function forWarehouse(Warehouse $warehouse): array
     {
@@ -43,6 +43,6 @@ final class StockReconciliationQuery
                 'difference' => $difference,
                 'healthy' => $difference === 0,
             ];
-        })->all();
+        })->values()->all();
     }
 }
