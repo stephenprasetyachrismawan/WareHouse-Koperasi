@@ -10,10 +10,12 @@ use App\Enums\Permission;
 use App\Enums\PurchaseOrderStatus;
 use App\Enums\PurchaseRequestStatus;
 use App\Enums\ReturnStatus;
+use App\Models\DeviceToken;
 use App\Models\PickupRequest;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\ReturnRequest;
+use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Seeder;
 
@@ -48,6 +50,10 @@ class DemoNotificationSeeder extends Seeder
         $recipients = app(RecipientResolver::class);
 
         $heads = $recipients->warehouseUsersWithPermission($warehouse->id, Permission::PurchaseRequestApprove);
+
+        foreach ($heads as $head) {
+            $this->seedDemoDeviceToken($head);
+        }
 
         $waitingPr = PurchaseRequest::where('warehouse_id', $warehouse->id)
             ->where('status', PurchaseRequestStatus::WaitingApproval->value)
@@ -142,6 +148,23 @@ class DemoNotificationSeeder extends Seeder
 
         $this->seedReturnNotifications($warehouse, $createNotification, $recipients);
         $this->seedPurchaseOrderNotifications($warehouse, $createNotification);
+    }
+
+    /**
+     * A demo device so the Kepala Gudang push-eligibility path (FR-51) has
+     * something to fan out to in this seeded environment. The token is
+     * obviously fake (never a value that could reach a real provider) and
+     * this is idempotent — reseeding never duplicates a device per user.
+     */
+    private function seedDemoDeviceToken(User $head): void
+    {
+        if (DeviceToken::where('user_id', $head->id)->exists()) {
+            return;
+        }
+
+        DeviceToken::factory()->for($head)->create([
+            'device_name' => 'Demo Browser (Seeded)',
+        ]);
     }
 
     private function seedReturnNotifications(Warehouse $warehouse, CreateInboxNotificationAction $createNotification, RecipientResolver $recipients): void

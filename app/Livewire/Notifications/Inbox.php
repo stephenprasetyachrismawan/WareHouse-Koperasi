@@ -7,6 +7,7 @@ use App\Actions\Notifications\MarkNotificationReadAction;
 use App\Domain\Notifications\Queries\InboxNotificationsQuery;
 use App\Models\InboxNotification;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -15,6 +16,17 @@ class Inbox extends Component
     use WithPagination;
 
     public string $filter = 'all';
+
+    /**
+     * Realtime delivery only ever triggers a re-render from the database —
+     * when viewing page 1, a newly arrived notification simply appears on
+     * the next render; deeper pages are left alone rather than shifted.
+     */
+    #[On('inbox-notification-received')]
+    public function refresh(): void
+    {
+        //
+    }
 
     public function setFilter(string $filter): void
     {

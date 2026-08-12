@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Notifications\Events\InboxNotificationCreated;
+use App\Domain\Notifications\Push\FcmPushNotificationSender;
+use App\Domain\Notifications\Push\PushNotificationSender;
 use App\Domain\Pickup\Events\PickupRequestReadyForPickup;
 use App\Domain\Pickup\Events\PickupRequestSubmitted;
 use App\Domain\Procurement\Events\CancellationApproved;
@@ -15,6 +18,7 @@ use App\Domain\Returns\Events\ReturnApproved;
 use App\Domain\Returns\Events\ReturnReadyForRepickup;
 use App\Domain\Returns\Events\ReturnRejected;
 use App\Domain\Returns\Events\ReturnSubmitted;
+use App\Listeners\Notifications\DispatchPushDeliveryForEligibleNotification;
 use App\Listeners\Notifications\NotifyCancellationApproved;
 use App\Listeners\Notifications\NotifyCancellationRejected;
 use App\Listeners\Notifications\NotifyCancellationRequested;
@@ -39,6 +43,11 @@ use Illuminate\Support\ServiceProvider;
  */
 class NotificationServiceProvider extends ServiceProvider
 {
+    public function register(): void
+    {
+        $this->app->bind(PushNotificationSender::class, FcmPushNotificationSender::class);
+    }
+
     public function boot(): void
     {
         Event::listen(PurchaseRequestSubmitted::class, NotifyPurchaseRequestApprovalRequired::class);
@@ -58,5 +67,7 @@ class NotificationServiceProvider extends ServiceProvider
         Event::listen(ReturnReadyForRepickup::class, NotifyReplacementReady::class);
 
         Event::listen(PurchaseOrderSent::class, NotifyPurchaseOrderSent::class);
+
+        Event::listen(InboxNotificationCreated::class, DispatchPushDeliveryForEligibleNotification::class);
     }
 }
