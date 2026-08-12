@@ -45,9 +45,12 @@
                SCROLL REVEAL (subtle)
             ══════════════════════════════════════ */
         .reveal {
-            opacity: 0;
             transform: translateY(30px);
             transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .reveal-enabled .reveal {
+            opacity: 0;
         }
 
         .reveal.active {
@@ -271,7 +274,7 @@
     </style>
 
     @fonts
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/welcome.js'])
 </head>
 
 <body class="bg-white font-body text-neutral-800 antialiased">
@@ -743,30 +746,6 @@
             </div>
         </div>
     </footer>
-
-    {{-- ════════════════ SCROLL REVEAL JS ════════════════ --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-                const revealEls = document.querySelectorAll('.reveal');
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('active'); });
-                }, { threshold: 0.15, rootMargin: '0px 0px -30px 0px' });
-                revealEls.forEach(el => observer.observe(el));
-
-                const navbar = document.getElementById('navbar');
-                window.addEventListener('scroll', () => {
-                    if (window.scrollY > 80) {
-                        navbar.style.background = 'rgba(23,23,23,0.95)';
-                        navbar.style.backdropFilter = 'blur(12px)';
-                        navbar.style.boxShadow = '0 4px 30px rgba(0,0,0,0.3)';
-                    } else {
-                        navbar.style.background = 'transparent';
-                        navbar.style.backdropFilter = 'none';
-                        navbar.style.boxShadow = 'none';
-                    }
-                }, { passive: true });
-            });
-    </script>
 
 </body>
 

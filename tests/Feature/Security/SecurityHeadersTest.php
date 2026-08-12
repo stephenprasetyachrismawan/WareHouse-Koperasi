@@ -66,4 +66,13 @@ class SecurityHeadersTest extends TestCase
         $this->assertMatchesRegularExpression('/connect-src [^;]*https:\\/\\/vite-warehouse\\.stevewithcode\\.net/', $csp);
         $this->assertStringNotContainsString('script-src *', $csp);
     }
+
+    public function test_homepage_scroll_reveal_is_not_blocked_by_csp(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertOk()
+            ->assertSee('welcome')
+            ->assertDontSee("document.addEventListener('DOMContentLoaded'");
+    }
 }
