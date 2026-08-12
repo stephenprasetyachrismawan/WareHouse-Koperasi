@@ -24,6 +24,7 @@ use RuntimeException;
  * @property int|null $source_id
  * @property string|null $reason
  * @property int|null $performed_by
+ * @property-read User|null $performer
  * @property string $idempotency_key
  * @property Carbon $occurred_at
  * @property int|null $reversal_of_id

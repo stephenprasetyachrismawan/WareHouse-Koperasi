@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property-read ReturnRequest|null $returnRequest
+ * @property-read Item|null $item
+ */
 class ReturnRequestItem extends Model
 {
     /** @use HasFactory<ReturnRequestItemFactory> */

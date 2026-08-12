@@ -54,6 +54,7 @@ enum Permission: string
 
     case PredictionRun = 'prediction.run';
     case ReportsView = 'reports.view';
+    case ReportsExport = 'reports.export';
 
     case ItemViewAny = 'item.viewAny';
     case ItemCreate = 'item.create';

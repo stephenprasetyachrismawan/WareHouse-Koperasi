@@ -9,6 +9,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property-read GoodsReceiptItem|null $goodsReceiptItem
+ * @property-read User|null $inspector
+ */
 class QualityInspection extends Model
 {
     use HasFactory, HasUuids;

@@ -13,6 +13,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
+/**
+ * @property-read PurchaseRequestStatus $status
+ * @property-read PurchaseRequestSource $source
+ * @property-read PurchaseRequestUrgency $urgency
+ */
 class PurchaseRequest extends Model
 {
     use HasFactory, HasUuids;

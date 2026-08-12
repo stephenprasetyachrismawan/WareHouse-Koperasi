@@ -13,6 +13,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 
+/**
+ * @property-read PickupRequestStatus $status
+ * @property-read User|null $user
+ */
 class PickupRequest extends Model
 {
     use HasFactory;

@@ -59,6 +59,38 @@ class PurchaseRequestFactory extends Factory
         ]);
     }
 
+    public function poCreated(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => PurchaseRequestStatus::PoCreated->value,
+            'approved_at' => now(),
+        ]);
+    }
+
+    public function poSent(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => PurchaseRequestStatus::PoSent->value,
+            'approved_at' => now(),
+        ]);
+    }
+
+    public function goodsReceived(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => PurchaseRequestStatus::GoodsReceived->value,
+            'approved_at' => now(),
+        ]);
+    }
+
+    public function completed(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => PurchaseRequestStatus::Completed->value,
+            'approved_at' => now(),
+        ]);
+    }
+
     public function cancelled(): static
     {
         return $this->state(fn (array $attributes) => [

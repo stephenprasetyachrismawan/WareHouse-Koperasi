@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property-read PurchaseOrder|null $purchaseOrder
+ * @property-read Item|null $item
+ */
 class PurchaseOrderItem extends Model
 {
     use HasFactory;

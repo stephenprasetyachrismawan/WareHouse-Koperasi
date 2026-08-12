@@ -83,6 +83,8 @@ class RoleAndPermissionSeeder extends Seeder
                 'returns.approve',
                 'predictions.view',
                 'predictions.run',
+                'reports.view',
+                'reports.export',
                 'audit.view',
             ],
 
@@ -108,6 +110,8 @@ class RoleAndPermissionSeeder extends Seeder
                 'returns.viewAny',
                 'returns.view',
                 'returns.verify',
+                'reports.view',
+                'reports.export',
             ],
 
             'purchasing' => [
@@ -127,6 +131,8 @@ class RoleAndPermissionSeeder extends Seeder
                 'receipts.viewAny',
                 'receipts.view',
                 'receipts.create',
+                'reports.view',
+                'reports.export',
             ],
 
             'koperasi' => [
