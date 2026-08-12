@@ -66,7 +66,7 @@ class Create extends Component
 
         $warehouseId = Auth::user()->activeWarehouse()?->id;
 
-        $evidencePath = $this->photo->store("return-evidence/{$warehouseId}", 'local');
+        $evidencePath = $this->photo->store("return-evidence/{$warehouseId}", 'private');
         $evidenceMime = $this->photo->getMimeType();
 
         $returnRequest = $action->execute(Auth::user(), new CreateReturnInput(

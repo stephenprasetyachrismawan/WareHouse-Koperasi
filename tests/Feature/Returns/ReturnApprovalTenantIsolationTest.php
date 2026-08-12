@@ -18,6 +18,7 @@ use App\Models\WarehouseMembership;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ReturnApprovalTenantIsolationTest extends TestCase
@@ -89,6 +90,35 @@ class ReturnApprovalTenantIsolationTest extends TestCase
         $this->actingAs($head)
             ->get(route('returns.evidence', $evidence->uuid))
             ->assertNotFound();
+    }
+
+    public function test_authorized_evidence_is_read_from_the_private_disk(): void
+    {
+        Storage::fake('private');
+
+        $warehouse = Warehouse::factory()->create();
+        $head = User::factory()->create();
+        WarehouseMembership::factory()->create([
+            'user_id' => $head->id,
+            'warehouse_id' => $warehouse->id,
+            'role' => WarehouseRole::KepalaGudang->value,
+            'status' => 'active',
+        ]);
+
+        $returnRequest = ReturnRequest::factory()->waitingApproval()->create(['warehouse_id' => $warehouse->id]);
+        $path = "return-evidence/{$warehouse->id}/evidence.jpg";
+        Storage::disk('private')->put($path, 'synthetic evidence');
+        $evidence = ReturnEvidence::factory()->create([
+            'return_request_id' => $returnRequest->id,
+            'warehouse_id' => $warehouse->id,
+            'path' => $path,
+            'mime' => 'image/jpeg',
+        ]);
+
+        $this->actingAs($head)
+            ->get(route('returns.evidence', $evidence->uuid))
+            ->assertOk()
+            ->assertHeader('content-type', 'image/jpeg');
     }
 
     public function test_historical_attribution_is_not_altered_by_a_later_qc_record(): void

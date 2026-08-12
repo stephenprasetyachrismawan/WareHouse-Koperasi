@@ -97,7 +97,7 @@ class OperationalReportsTest extends TestCase
 
     public function test_authorized_csv_export_uses_filters_and_private_storage(): void
     {
-        Storage::fake('local');
+        Storage::fake('private');
 
         $warehouse = Warehouse::factory()->create(['code' => 'WH-EXPORT']);
         $user = User::factory()->create();
@@ -123,9 +123,10 @@ class OperationalReportsTest extends TestCase
         ]);
 
         $export = ReportExport::query()->firstOrFail();
-        Storage::disk('local')->assertExists($export->path);
-        $this->assertStringContainsString('Item Export', Storage::disk('local')->get($export->path));
-        $this->assertStringNotContainsString('evidence', Storage::disk('local')->get($export->path));
+        Storage::disk('private')->assertExists($export->path);
+        $this->assertStringContainsString('Item Export', Storage::disk('private')->get($export->path));
+        $this->assertStringNotContainsString('evidence', Storage::disk('private')->get($export->path));
+        Storage::disk('public')->assertMissing($export->path);
     }
 
     public function test_app_admin_needs_explicit_export_permission(): void
@@ -165,7 +166,7 @@ class OperationalReportsTest extends TestCase
 
     public function test_export_download_is_owner_and_tenant_scoped_and_expires(): void
     {
-        Storage::fake('local');
+        Storage::fake('private');
 
         $warehouseA = Warehouse::factory()->create();
         $warehouseB = Warehouse::factory()->create();

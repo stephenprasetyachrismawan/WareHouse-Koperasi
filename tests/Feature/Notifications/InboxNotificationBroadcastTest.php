@@ -82,7 +82,10 @@ class InboxNotificationBroadcastTest extends TestCase
 
         $this->assertCount(1, $channels);
         $this->assertInstanceOf(PrivateChannel::class, $channels[0]);
-        $this->assertEquals("private-user.{$user->id}.notifications", $channels[0]->name);
+        $this->assertEquals(
+            "private-user.{$user->id}.warehouse.{$notification->warehouse_id}.notifications",
+            $channels[0]->name
+        );
     }
 
     public function test_broadcast_payload_is_minimal_and_safe(): void

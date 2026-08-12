@@ -75,7 +75,7 @@ final class CreateOperationalReportExportAction
         fclose($handle);
 
         $path = 'reports/'.$warehouse->id.'/'.Str::uuid().'.csv';
-        Storage::disk('local')->put($path, $csv);
+        Storage::disk('private')->put($path, $csv);
 
         $export->update([
             'path' => $path,

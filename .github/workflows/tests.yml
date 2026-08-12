@@ -38,5 +38,8 @@ jobs:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite
 
+      - name: Run security regression suite
+        run: php artisan test tests/Feature/Security
+
       - name: Run CI Checks
         run: composer ci:check

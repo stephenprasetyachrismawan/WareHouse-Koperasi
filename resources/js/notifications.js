@@ -46,6 +46,14 @@ if (userId) {
     // import above. Waiting for 'livewire:init' here would be too late:
     // Livewire's own (non-module) script runs and fires that event before
     // this deferred module executes, so the listener would never attach.
-    window.Echo.private(`user.${userId}.notifications`)
-        .listen('.notification.created', handleNotificationCreated);
+    const subscribe = (channel) => {
+        window.Echo.private(channel)
+            .listen('.notification.created', handleNotificationCreated);
+    };
+
+    if (activeWarehouseId) {
+        subscribe(`user.${userId}.warehouse.${activeWarehouseId}.notifications`);
+    }
+
+    subscribe(`user.${userId}.platform.notifications`);
 }

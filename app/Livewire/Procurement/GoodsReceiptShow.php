@@ -76,7 +76,7 @@ class GoodsReceiptShow extends Component
         $evidenceMime = null;
 
         if ($this->evidence) {
-            $evidencePath = $this->evidence->store("qc-evidence/{$goodsReceiptItem->warehouse_id}/{$goodsReceiptItem->id}", 'local');
+            $evidencePath = $this->evidence->store("qc-evidence/{$goodsReceiptItem->warehouse_id}/{$goodsReceiptItem->id}", 'private');
             $evidenceMime = $this->evidence->getMimeType();
         }
 

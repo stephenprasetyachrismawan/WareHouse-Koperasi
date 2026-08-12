@@ -15,9 +15,9 @@ class ReturnEvidenceController extends Controller
     {
         Gate::authorize('view', $returnEvidence->returnRequest);
 
-        abort_unless(Storage::disk('local')->exists($returnEvidence->path), 404);
+        abort_unless(Storage::disk('private')->exists($returnEvidence->path), 404);
 
-        return Storage::disk('local')->response(
+        return Storage::disk('private')->response(
             $returnEvidence->path,
             headers: ['Content-Type' => $returnEvidence->mime ?? 'application/octet-stream']
         );
