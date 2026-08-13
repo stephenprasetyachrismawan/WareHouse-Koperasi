@@ -9,6 +9,7 @@ use App\Models\PickupRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 class RejectPickupRequestAction
 {
@@ -32,6 +33,7 @@ class RejectPickupRequestAction
             }
 
             $approval = $pickupRequest->approvals()->create([
+                'uuid' => (string) Str::uuid(),
                 'warehouse_id' => $pickupRequest->warehouse_id,
                 'requested_by' => $pickupRequest->user_id,
                 'approver_id' => $actor->id,

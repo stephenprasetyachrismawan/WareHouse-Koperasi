@@ -10,6 +10,7 @@ use App\Enums\ReturnStatus;
 use App\Models\PickupRequest;
 use App\Models\ReturnRequest;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * The orchestrator for REPLACEMENT_PENDING: checks authoritative stock and
@@ -58,6 +59,7 @@ class PrepareReplacementPickupAction
             $koperasiUser = $locked->cooperativeMembership->user;
 
             $pickupRequest = PickupRequest::create([
+                'uuid' => (string) Str::uuid(),
                 'warehouse_id' => $locked->warehouse_id,
                 'request_number' => $this->generatePickupNumber(),
                 'user_id' => $koperasiUser->id,
@@ -72,6 +74,7 @@ class PrepareReplacementPickupAction
             ]);
 
             $pickupRequest->approvals()->create([
+                'uuid' => (string) Str::uuid(),
                 'warehouse_id' => $locked->warehouse_id,
                 'requested_by' => $koperasiUser->id,
                 'approver_id' => $locked->approved_by,

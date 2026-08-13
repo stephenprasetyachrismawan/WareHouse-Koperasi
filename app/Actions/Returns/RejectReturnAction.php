@@ -9,6 +9,7 @@ use App\Models\ReturnRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -34,6 +35,7 @@ class RejectReturnAction
             }
 
             $approval = $locked->approvals()->create([
+                'uuid' => (string) Str::uuid(),
                 'warehouse_id' => $locked->warehouse_id,
                 'requested_by' => $locked->submitted_by,
                 'approver_id' => $actor->id,
