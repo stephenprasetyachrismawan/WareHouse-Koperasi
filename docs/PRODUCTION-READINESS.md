@@ -1,6 +1,6 @@
 # Production Readiness — Phase 6.4
 
-Last evaluated: 2026-08-12 UTC
+Last evaluated: 2026-08-13 UTC
 
 ## Final decision
 
@@ -24,6 +24,20 @@ The code-level 6.4A/6.4B gates are green, but required production-environment ev
 | 6.4A Security & Tenant Isolation | PR #35 / `67cafa7` | Merged; focused security and 585 feature tests passed |
 | 6.4B Resilience, Performance & Observability | PR #36 / `f3d9a94` | Merged; 593 feature tests passed |
 | 6.4C Backup, Restore & Gate | [PR #37](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/37) / `51cba80` | Merged; final gate BLOCKED |
+| Seeder/data integrity correction | [PR #43](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/43) / `347c0aa` | Merged; full seed and approval UUID regression fixed |
+
+## Latest post-merge verification
+
+- `DB_DATABASE=:memory: DB_CONNECTION=sqlite php artisan test`: 603 passed / 603, 1,451 assertions.
+- `tests/Feature/Seeders/DatabaseSeederCompletenessTest`: full business seed passed twice without duplicate core records; both `WH-PUSAT` and `WH-BARAT` are present and no seeded approval has a null UUID.
+- `vendor/bin/pint --test`: passed.
+- `npm run build`: passed.
+- `composer run dev`: passed after stopping the pre-existing dev session that owned ports 8000, 8080, and 5173; Laravel, queue, Reverb, log tail, and Vite then started successfully in the intended order.
+- Browser smoke at `https://wh.stevewithcode.net`: page rendered with non-empty DOM and screenshot; Vite `@vite/client`, `resources/js/app.js`, and `resources/js/welcome.js` returned 200; `/health/live` and `/health/ready` returned 200.
+- `https://vite-warehouse.stevewithcode.net/` returned the normal Vite development-server landing response (root is not the Laravel application); the Laravel page successfully loaded its Vite assets from that hostname.
+- `https://wh.stevewithcode.com`: **NOT VERIFIED** — DNS returned `ERR_NAME_NOT_RESOLVED`. The hostname exists in `/etc/cloudflared/config.yml`, but the DNS record is an external Cloudflare action and remains a blocker.
+- Browser observed non-blocking warnings: Laravel Boost's development browser logger was rejected by the production-style CSP, Cloudflare Insights was not in `script-src`, and Reverb attempted `localhost:8080` from the public page. These do not make the public homepage blank, but require environment-specific production configuration before sign-off.
+- `composer test`: Pint passed, but PHPStan failed with 407 existing repository errors. This remains an explicit static-analysis risk; no suppression or new baseline was added.
 
 ## Security and correctness
 
