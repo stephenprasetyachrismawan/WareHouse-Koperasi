@@ -17,6 +17,8 @@ use App\Domain\Procurement\ValueObjects\RecordGoodsReceiptInput;
 use App\Enums\PurchaseRequestStatus;
 use App\Enums\QualityInspectionCondition;
 use App\Enums\QualityInspectionResult;
+use App\Enums\ReturnFaultAttribution;
+use App\Enums\ReturnReasonCode;
 use App\Enums\ReturnStatus;
 use App\Models\Item;
 use App\Models\PickupRequest;
@@ -25,8 +27,10 @@ use App\Models\ReturnRequest;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Warehouse;
+use App\Models\WarehouseMembership;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 
 /**
  * Phase 5.3: progresses the Phase 5.2 REPLACEMENT_PENDING demo returns
@@ -134,6 +138,7 @@ class DemoReturnReplacementSeeder extends Seeder
         $item = Item::firstOrCreate(
             ['warehouse_id' => $warehouse->id, 'code' => $itemCode],
             [
+                'uuid' => (string) Str::uuid(),
                 'name' => "Barang Demo Penggantian {$itemCode}",
                 'unit' => 'pcs',
                 'minimum_stock' => 5,
@@ -149,11 +154,27 @@ class DemoReturnReplacementSeeder extends Seeder
             return;
         }
 
-        $returnRequest = ReturnRequest::factory()->replacementPending()->create([
+        $membership = WarehouseMembership::where('warehouse_id', $warehouse->id)
+            ->where('user_id', $anyCompletedPickup->user_id)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        $returnRequest = ReturnRequest::create([
+            'uuid' => (string) Str::uuid(),
             'warehouse_id' => $warehouse->id,
+            'cooperative_membership_id' => $membership->id,
             'pickup_request_id' => $anyCompletedPickup->id,
             'return_number' => 'RET-'.now()->format('Ymd').'-'.strtoupper(substr(bin2hex(random_bytes(4)), 0, 8)),
+            'status' => ReturnStatus::ReplacementPending,
+            'reason_code' => ReturnReasonCode::Damaged,
             'reason_notes' => $marker,
+            'submitted_by' => $anyCompletedPickup->user_id,
+            'submitted_at' => now(),
+            'approved_by' => $staff->id,
+            'approved_at' => now(),
+            'fault_attribution' => ReturnFaultAttribution::Supplier,
+            'disposed_at' => now(),
+            'version' => 1,
         ]);
         $returnRequest->items()->create([
             'pickup_request_item_id' => $anyCompletedPickup->items()->first()->id,
