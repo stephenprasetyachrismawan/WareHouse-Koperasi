@@ -39,7 +39,7 @@ Record that AWS CLI is present but `aws sts get-caller-identity` cannot authenti
 
 Keep the decision explicit: provider-neutral contract now; provider-specific ADR only after an approved provider and scoped credentials are supplied.
 
-- [ ] **Step 3: Commit the design documents**
+- [x] **Step 3: Commit the design documents**
 
 ```bash
 git add docs/architecture/0011-managed-production-environment.md \
@@ -59,11 +59,11 @@ git commit -m "docs(production): design phase 6.4e managed environment"
 - `ops:validate-production` reports safe named checks and exits nonzero for invalid production dependencies.
 - Required production checks include PostgreSQL, TLS mode, Redis-backed queue/cache/session, private S3 storage, HTTPS Reverb, exact origins, no Vite dev origin, and nonempty required public-safe identifiers.
 
-- [ ] **Step 1: Add failing tests**
+- [x] **Step 1: Add failing tests**
 
 Add tests that configure a valid production contract and then independently reject SQLite, `DB_SSLMODE=prefer`, database queue/cache/session, local private storage, missing S3 bucket, localhost Reverb/Vite, wildcard Reverb origins, and missing Reverb app credentials. Assert only check names and safe messages.
 
-- [ ] **Step 2: Run focused tests to prove red**
+- [x] **Step 2: Run focused tests to prove red**
 
 ```bash
 php artisan test tests/Feature/Operations/ProductionConfigurationCommandTest.php
@@ -71,18 +71,18 @@ php artisan test tests/Feature/Operations/ProductionConfigurationCommandTest.php
 
 Expected: the new checks fail because the current validator does not enforce the complete Phase 6.4E contract.
 
-- [ ] **Step 3: Implement the smallest validator/config change**
+- [x] **Step 3: Implement the smallest validator/config change**
 
 Use config values already loaded by Laravel; do not print credential values. Keep local development valid outside the production command. Treat `VITE_DEV_SERVER_ORIGIN` as required-unset in production, while allowing it in local development.
 
-- [ ] **Step 4: Run focused green and formatting**
+- [x] **Step 4: Run focused green and formatting**
 
 ```bash
 php artisan test tests/Feature/Operations/ProductionConfigurationCommandTest.php
 vendor/bin/pint --test
 ```
 
-- [ ] **Step 5: Commit the validator slice**
+- [x] **Step 5: Commit the validator slice**
 
 ```bash
 git add app/Console/Commands/ValidateProductionConfigurationCommand.php config/security.php tests/Feature/Operations/ProductionConfigurationCommandTest.php
@@ -103,28 +103,28 @@ git commit -m "security: validate managed production dependencies"
 - Storage mode requires both flags, writes a unique `phase-6-4e/smoke/<uuid>` object to the configured private disk, reads it, deletes it, and reports the operation without printing the key.
 - Any failure returns exit code 1 and names the failed component.
 
-- [ ] **Step 1: Add failing command tests**
+- [x] **Step 1: Add failing command tests**
 
 Cover: validator failure short-circuits; database/Redis success is reported; storage smoke refuses missing confirmation; successful storage smoke writes/reads/deletes a synthetic object; no business table is changed. Use Laravel fakes for external boundaries and assert output contains no secret fixture values.
 
-- [ ] **Step 2: Run focused tests to prove red**
+- [x] **Step 2: Run focused tests to prove red**
 
 ```bash
 php artisan test tests/Feature/Operations/VerifyProductionInfrastructureCommandTest.php
 ```
 
-- [ ] **Step 3: Implement minimal command**
+- [x] **Step 3: Implement minimal command**
 
 Use the database connection and Redis facade for read-only probes. Inject/use the private filesystem disk for the confirmed synthetic object lifecycle. Catch provider exceptions into safe component failures; do not expose exception messages containing connection details.
 
-- [ ] **Step 4: Run focused green and format**
+- [x] **Step 4: Run focused green and format**
 
 ```bash
 php artisan test tests/Feature/Operations/VerifyProductionInfrastructureCommandTest.php
 vendor/bin/pint --test
 ```
 
-- [ ] **Step 5: Commit the smoke seam**
+- [x] **Step 5: Commit the smoke seam**
 
 ```bash
 git add app/Console/Commands/VerifyProductionInfrastructureCommand.php tests/Feature/Operations/VerifyProductionInfrastructureCommandTest.php README.md
@@ -157,7 +157,7 @@ Include managed PostgreSQL/TLS/users, Redis/TLS/auth, private object storage/enc
 
 State that repository preparation is implemented, while actual managed resources are not verified and Phase 6.4F gates remain pending.
 
-- [ ] **Step 4: Run documentation and secret review**
+- [x] **Step 4: Run documentation and secret review**
 
 ```bash
 git diff --check
@@ -166,7 +166,7 @@ rg -n "password|secret|token|BEGIN .*PRIVATE KEY|AKIA" docs .env.example
 
 Expected: only variable names/placeholders and no credential values.
 
-- [ ] **Step 5: Commit documentation**
+- [x] **Step 5: Commit documentation**
 
 ```bash
 git add .env.example README.md docs/verification/phase-6-4e-production-infrastructure.md docs/PRODUCTION-READINESS.md .github/workflows/tests.yml
