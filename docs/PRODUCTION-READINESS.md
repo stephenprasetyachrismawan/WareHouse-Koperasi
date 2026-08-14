@@ -10,12 +10,14 @@ PRODUCTION READINESS: BLOCKED
 
 The code-level 6.4A/6.4B gates and the available local PostgreSQL/Redis compatibility lane are green, but required managed production-environment evidence is not available. Phase 7 Machine Learning must not start.
 
+Latest merged `main` after Phase 6.4D verification: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR #45).
+
 ## Environment assumptions
 
 - Current workspace runtime uses local development configuration; the verification lane additionally used disposable PostgreSQL 16.14 and Redis 6.2.20 on loopback.
 - Current runtime is development configuration (`APP_ENV=local`, `APP_DEBUG=true`); it is not a production target.
 - No managed PostgreSQL staging/backup/PITR, private S3-compatible object storage, fake FCM provider, or production-like load environment is available here.
-- Browser smoke check: local `/health/live` returned 200 with `{"status":"ok"}`, security headers, request ID, and no console messages; authenticated mutation flows were intentionally not run in the isolated browser context.
+- Browser smoke check: the post-merge isolated browser loaded `https://wh.stevewithcode.net/` with a non-empty accessibility tree, visible navigation/hero/services/testimonials/FAQ/footer content, and the expected Laravel title. `/health/live` and `/health/ready` returned 200. Console findings are recorded as environment blockers below; they are not treated as a clean production-browser result.
 
 ## Slice evidence
 
@@ -25,7 +27,7 @@ The code-level 6.4A/6.4B gates and the available local PostgreSQL/Redis compatib
 | 6.4B Resilience, Performance & Observability | PR #36 / `f3d9a94` | Merged; 593 feature tests passed |
 | 6.4C Backup, Restore & Gate | [PR #37](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/37) / `51cba80` | Merged; final gate BLOCKED |
 | Seeder/data integrity correction | [PR #43](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/43) / `347c0aa` | Merged; full seed and approval UUID regression fixed |
-| Phase 6.4D environment verification | branch `hardening/production-environment-verification` | In progress; local compatibility evidence recorded, managed gates remain blocked |
+| Phase 6.4D environment verification | [PR #45](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/45) / `7eb1d80` | Merged; local compatibility evidence recorded, managed gates remain blocked |
 
 ## Latest post-merge verification
 
@@ -40,10 +42,12 @@ The code-level 6.4A/6.4B gates and the available local PostgreSQL/Redis compatib
 - `composer audit`: no advisories; `npm audit --audit-level=high`: 0 vulnerabilities.
 - Gitleaks v8.30.1: history/worktree scan passed with one exact reviewed false-positive documentation allowlist; no active credential found.
 - `composer run dev`: passed after stopping the pre-existing dev session that owned ports 8000, 8080, and 5173; Laravel, queue, Reverb, log tail, and Vite then started successfully in the intended order.
+- Post-merge `composer run dev`: passed after `npm run build`; Laravel served on loopback `:8000`, Vite on `:5173`, queue listener, Pail, and Reverb on `:8080` started. This is development orchestration evidence, not production supervision evidence.
 - Browser smoke at `https://wh.stevewithcode.net`: page rendered with non-empty DOM and screenshot; Vite `@vite/client`, `resources/js/app.js`, and `resources/js/welcome.js` returned 200; `/health/live` and `/health/ready` returned 200.
 - `https://vite-warehouse.stevewithcode.net/` returned the normal Vite development-server landing response (root is not the Laravel application); the Laravel page successfully loaded its Vite assets from that hostname.
 - `https://wh.stevewithcode.com`: **NOT VERIFIED** — DNS returned `ERR_NAME_NOT_RESOLVED`. The hostname exists in `/etc/cloudflared/config.yml`, but the DNS record is an external Cloudflare action and remains a blocker.
-- Browser observed non-blocking warnings: Laravel Boost's development browser logger was rejected by the production-style CSP, Cloudflare Insights was not in `script-src`, and Reverb attempted `localhost:8080` from the public page. These do not make the public homepage blank, but require environment-specific production configuration before sign-off.
+- Browser observed configuration failures: Laravel Boost's development browser logger was rejected by CSP, Cloudflare Insights was not in `script-src`, and Reverb attempted `wss://localhost:8080` from the public page and failed. These do not make the public homepage blank—the asset requests returned 200 and the page rendered—but require environment-specific production configuration before sign-off.
+- Post-merge PostgreSQL/seeder rerun: clean PostgreSQL 16.14 `php artisan migrate --force` passed, `php artisan db:seed --force` passed twice, and counts remained `warehouses=2`, `users=12`, `items=48`, `stock_balances=45`, `stock_transactions=58`, `pickup_requests=16`, `purchase_requests=33`, `purchase_orders=19`, `goods_receipts=11`, `quality_inspections=9`, `return_requests=12`, `inbox_notifications=61`, `null_approval_uuids=0`. Persistent development `php artisan migrate --no-interaction` reported `Nothing to migrate`.
 - `composer test`: Pint passed, but PHPStan exceeded the 300-second Composer process timeout. This remains an explicit static-analysis blocker; no suppression or new baseline was added.
 
 ## Security and correctness
@@ -99,7 +103,7 @@ Required before PASS: production secrets managed externally, runtime DB least pr
 | Load/capacity | Missing | Local health-only ApacheBench baseline: 200 requests, c10, 0 failures, p50 242 ms, p95 409 ms, p99 440 ms | BLOCKED for production-like capacity |
 | RPO/RTO | Proposed only | 15-minute RPO / 60-minute RTO have no authorised sign-off or measured managed restore | BLOCKED |
 | Secret scan | Not verified | Gitleaks v8.30.1 checksum-verified scan passed; exact historical docs false positive reviewed | VERIFIED |
-| Production configuration | Development runtime | `APP_ENV=local`, `APP_DEBUG=true`; validator now rejects local endpoints/private local disk in production mode | BLOCKED |
+| Production configuration | Development runtime | `APP_ENV=local`, `APP_DEBUG=true`; validator now rejects local endpoints/private local disk in production mode; browser saw `wss://localhost:8080` | BLOCKED |
 | Static analysis | Existing debt | `composer test` timed out in PHPStan after Pint passed | BLOCKED |
 | Public `.com` hostname | DNS unresolved | `wh.stevewithcode.com` still fails DNS; `.net` Laravel/health/assets work | BLOCKED |
 
@@ -110,7 +114,7 @@ Required before PASS: production secrets managed externally, runtime DB least pr
 3. Load/capacity evidence is not verified in an isolated production-like environment.
 4. RPO/RTO have no explicit operations sign-off.
 5. `composer test` cannot complete because PHPStan exceeds the configured process timeout.
-6. Current workspace is not a production configuration (`APP_DEBUG=true`), and public Reverb/CSP endpoint validation is not closed.
+6. Current workspace is not a production configuration (`APP_DEBUG=true`); public Reverb/CSP endpoint validation is not closed, with browser evidence of failed `wss://localhost:8080` and CSP violations.
 7. `wh.stevewithcode.com` remains DNS-unresolved.
 
 ## Accepted risks
