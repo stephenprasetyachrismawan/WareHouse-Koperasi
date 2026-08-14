@@ -8,6 +8,7 @@ use App\Enums\PurchaseRequestStatus;
 use App\Models\PurchaseRequestGroup;
 use App\Models\PurchaseRequestItem;
 use App\Models\User;
+use App\Models\Warehouse;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -67,9 +68,12 @@ class CreatePurchaseRequestGroupAction
     {
         $date = now()->format('Ymd');
 
+        Warehouse::query()->whereKey($warehouseId)->lockForUpdate()->firstOrFail();
+
         $sequence = PurchaseRequestGroup::forWarehouse($warehouseId)
             ->where('group_number', 'like', "PRG-{$date}-%")
             ->lockForUpdate()
+            ->get()
             ->count() + 1;
 
         return sprintf('PRG-%s-%04d', $date, $sequence);

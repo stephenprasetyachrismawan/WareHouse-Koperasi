@@ -1,0 +1,6 @@
+title = "Warehouse Koperasi secret scanning policy"
+
+[[allowlists]]
+description = "Reviewed historical documentation example; it is not a credential and the current file uses an external-secret placeholder."
+commits = ["e445fc051cf6e08448ac9f8c4fc53e3c07244234"]
+paths = [".claude/skills/laravel-best-practices/rules/config\\.md"]

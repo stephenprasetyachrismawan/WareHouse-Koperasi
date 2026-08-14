@@ -54,6 +54,25 @@ class CreatePurchaseRequestGroupTest extends TestCase
         ]);
     }
 
+    public function test_it_generates_a_group_number_without_locking_an_aggregate_query(): void
+    {
+        $warehouse = Warehouse::factory()->create();
+        $user = User::factory()->create();
+        $purchaseRequest = PurchaseRequest::factory()->approved()->create(['warehouse_id' => $warehouse->id]);
+        $item = PurchaseRequestItem::factory()->create([
+            'purchase_request_id' => $purchaseRequest->id,
+            'requested_quantity' => 1,
+        ]);
+
+        $group = app(CreatePurchaseRequestGroupAction::class)->execute($user, new CreateGroupInput(
+            warehouseId: $warehouse->id,
+            notes: 'PostgreSQL compatibility',
+            allocations: [new AllocationInput($item->id, 1)],
+        ));
+
+        $this->assertMatchesRegularExpression('/^PRG-\\d{8}-\\d{4}$/', $group->group_number);
+    }
+
     public function test_it_rejects_allocation_exceeding_remaining_quantity(): void
     {
         $warehouse = Warehouse::factory()->create();

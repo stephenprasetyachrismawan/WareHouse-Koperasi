@@ -15,6 +15,7 @@ use App\Models\StockBalance;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseMembership;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -232,11 +233,15 @@ class OperationalReportsTest extends TestCase
             StockBalance::factory()->for($warehouse)->for($item)->create(['quantity' => 5]);
         }
 
-        DB::enableQueryLog();
+        $reportQueryCount = 0;
+        DB::listen(static function (QueryExecuted $query) use (&$reportQueryCount): void {
+            $sql = strtolower($query->sql);
+            if (str_contains($sql, 'items') || str_contains($sql, 'stock_balances')) {
+                $reportQueryCount++;
+            }
+        });
         $this->actingAs($user)->get(route('reports.index', ['type' => 'stock']))->assertOk();
-        $queryCount = count(DB::getQueryLog());
-        DB::disableQueryLog();
 
-        $this->assertLessThan(60, $queryCount, 'Stock report appears to have an N+1 query pattern.');
+        $this->assertLessThan(6, $reportQueryCount, 'Stock report appears to have an N+1 query pattern.');
     }
 }

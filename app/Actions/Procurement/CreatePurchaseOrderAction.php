@@ -12,6 +12,7 @@ use App\Models\PurchaseRequestAllocation;
 use App\Models\PurchaseRequestGroup;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Models\Warehouse;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -84,9 +85,12 @@ class CreatePurchaseOrderAction
     {
         $date = now()->format('Ymd');
 
+        Warehouse::query()->whereKey($warehouseId)->lockForUpdate()->firstOrFail();
+
         $sequence = PurchaseOrder::forWarehouse($warehouseId)
             ->where('po_number', 'like', "PO-{$date}-%")
             ->lockForUpdate()
+            ->get()
             ->count() + 1;
 
         return sprintf('PO-%s-%04d', $date, $sequence);
