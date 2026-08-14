@@ -10,7 +10,7 @@ PRODUCTION READINESS: BLOCKED
 
 The code-level 6.4A/6.4B gates and the available local PostgreSQL/Redis compatibility lane are green, but required managed production-environment evidence is not available. Phase 7 Machine Learning must not start.
 
-Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR #45). Latest `main`, including the post-merge evidence update: `03797345eb1be9eab90685db5e16acf0189f0353` (PR #47).
+Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR #45). Post-merge evidence update: `03797345eb1be9eab90685db5e16acf0189f0353` (PR #47).
 
 ## Environment assumptions
 
