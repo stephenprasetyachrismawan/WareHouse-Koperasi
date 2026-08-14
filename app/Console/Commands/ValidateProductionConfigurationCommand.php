@@ -14,27 +14,49 @@ class ValidateProductionConfigurationCommand extends Command
 
     public function handle(): int
     {
-        $privateRoot = (string) config('filesystems.disks.private.root');
+        $privateDisk = (array) config('filesystems.disks.private', []);
+        $pgsql = (array) config('database.connections.pgsql', []);
+        $redis = (array) config('database.redis.default', []);
         $reverbApps = (array) config('reverb.apps.apps', []);
         $reverb = (array) ($reverbApps[0] ?? []);
         $reverbOrigins = (array) ($reverb['allowed_origins'] ?? []);
         $reverbHost = (string) data_get($reverb, 'options.host', '');
         $viteOrigin = config('security.vite_dev_origin');
-        $privateDisk = (array) config('filesystems.disks.private', []);
+        $viteReverbHost = (string) config('security.vite_reverb_host', '');
+        $appUrl = (string) config('app.url', '');
+        $canonicalOrigin = rtrim($appUrl, '/');
+        $reverbCredentialsPresent = filled($reverb['key'] ?? null)
+            && filled($reverb['secret'] ?? null)
+            && filled($reverb['app_id'] ?? null);
+        $privateS3Configured = ($privateDisk['driver'] ?? null) === 's3'
+            && ($privateDisk['visibility'] ?? null) === 'private'
+            && filled($privateDisk['bucket'] ?? null);
 
         $checks = [
             'APP_ENV' => config('app.env') === 'production',
             'APP_DEBUG' => config('app.debug') === false,
-            'HTTPS_URL' => str_starts_with((string) config('app.url'), 'https://'),
+            'HTTPS_URL' => $this->isPublicHttpsEndpoint($appUrl),
             'APP_KEY' => filled(config('app.key')),
             'SESSION_COOKIE_SECURE' => config('session.secure') === true,
-            'QUEUE_CONNECTION' => config('queue.default') !== 'sync',
-            'PRIVATE_STORAGE' => $privateRoot !== '' && is_dir($privateRoot) && is_writable($privateRoot),
-            'PRIVATE_STORAGE_DRIVER' => ($privateDisk['driver'] ?? null) === 's3',
+            'DB_CONNECTION' => config('database.default') === 'pgsql',
+            'DB_TLS' => in_array(strtolower((string) ($pgsql['sslmode'] ?? '')), ['require', 'verify-full'], true),
+            'REDIS_TLS' => str_starts_with(strtolower(trim((string) ($redis['url'] ?? ''))), 'rediss://'),
+            'QUEUE_CONNECTION' => config('queue.default') === 'redis',
+            'CACHE_STORE' => config('cache.default') === 'redis',
+            'SESSION_DRIVER' => config('session.driver') === 'redis',
+            'FILESYSTEM_DISK' => config('filesystems.default') === 's3',
+            'PRIVATE_STORAGE' => $privateS3Configured,
+            'PRIVATE_STORAGE_DRIVER' => $privateS3Configured,
+            'BROADCAST_CONNECTION' => config('broadcasting.default') === 'reverb',
             'REVERB_TLS' => (($reverb['options']['scheme'] ?? null) === 'https'),
             'REVERB_HOST' => $this->isPublicEndpoint($reverbHost),
-            'REVERB_ORIGINS' => $reverbOrigins !== [] && ! in_array('*', $reverbOrigins, true),
+            'REVERB_APP_CREDENTIALS' => $reverbCredentialsPresent,
+            'REVERB_ORIGINS' => $reverbOrigins !== []
+                && ! in_array('*', $reverbOrigins, true)
+                && in_array($canonicalOrigin, array_map(static fn (mixed $origin): string => rtrim((string) $origin, '/'), $reverbOrigins), true),
             'VITE_DEV_SERVER_ORIGIN' => $viteOrigin === null || $this->isPublicHttpsEndpoint((string) $viteOrigin),
+            'VITE_REVERB_HOST' => $this->isPublicEndpoint($viteReverbHost),
+            'VITE_REVERB_TLS' => strtolower((string) config('security.vite_reverb_scheme')) === 'https',
         ];
 
         $failed = false;

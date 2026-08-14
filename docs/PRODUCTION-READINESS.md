@@ -28,6 +28,7 @@ Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR 
 | 6.4C Backup, Restore & Gate | [PR #37](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/37) / `51cba80` | Merged; final gate BLOCKED |
 | Seeder/data integrity correction | [PR #43](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/43) / `347c0aa` | Merged; full seed and approval UUID regression fixed |
 | Phase 6.4D environment verification | [PR #45](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/45) / `7eb1d80` | Merged; local compatibility evidence recorded, managed gates remain blocked |
+| Phase 6.4E managed-environment preparation | pending PR from `hardening/managed-production-environment` | Provider-neutral production contract, fail-closed validator, and safe infrastructure smoke seam implemented; managed provisioning remains blocked |
 
 ## Latest post-merge verification
 
@@ -49,6 +50,7 @@ Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR 
 - Browser observed configuration failures: Laravel Boost's development browser logger was rejected by CSP, Cloudflare Insights was not in `script-src`, and Reverb attempted `wss://localhost:8080` from the public page and failed. These do not make the public homepage blank—the asset requests returned 200 and the page rendered—but require environment-specific production configuration before sign-off.
 - Post-merge PostgreSQL/seeder rerun: clean PostgreSQL 16.14 `php artisan migrate --force` passed, `php artisan db:seed --force` passed twice, and counts remained `warehouses=2`, `users=12`, `items=48`, `stock_balances=45`, `stock_transactions=58`, `pickup_requests=16`, `purchase_requests=33`, `purchase_orders=19`, `goods_receipts=11`, `quality_inspections=9`, `return_requests=12`, `inbox_notifications=61`, `null_approval_uuids=0`. Persistent development `php artisan migrate --no-interaction` reported `Nothing to migrate`.
 - `composer test`: Pint passed, but PHPStan exceeded the 300-second Composer process timeout. This remains an explicit static-analysis blocker; no suppression or new baseline was added.
+- Phase 6.4E preparation: `ops:validate-production` now rejects SQLite/non-TLS DB, database-backed queue/cache/session, non-private S3 storage, missing Reverb credentials, unpinned Reverb origins, localhost Reverb frontend endpoints, and public production URLs. `ops:verify-production-infrastructure` is read-only by default; its private-storage probe requires explicit confirmation and is not a substitute for managed-provider evidence.
 
 ## Security and correctness
 
@@ -88,7 +90,7 @@ Because these targets lack sign-off and the production backup provider is not co
 
 ## Deployment and operational controls
 
-Runbooks exist for deployment, backup/restore, queue, stock reconciliation, Reverb, and security incidents. The production validator requires debug off, HTTPS, secure session cookies, non-sync queue, private storage, Reverb TLS, and pinned origins. It fails safely on this local configuration.
+Runbooks exist for deployment, backup/restore, queue, stock reconciliation, Reverb, and security incidents. The production validator requires debug off, HTTPS, secure session cookies, PostgreSQL with TLS, Redis-backed queue/cache/session with TLS, private S3 storage, Reverb credentials/TLS, exact origins, and no localhost frontend endpoints. It fails safely on this local configuration. The infrastructure smoke command validates configuration, database connectivity, and Redis without business mutations; storage probing is explicitly opt-in.
 
 Required before PASS: production secrets managed externally, runtime DB least privilege, encrypted database and object backups, scheduled backup monitoring, isolated restore drill with representative PostgreSQL/private evidence, production-like staging, load profile evidence, approved RPO/RTO, production Reverb/CSP/DNS, successful static-analysis gate, and named operational owners.
 
@@ -106,6 +108,7 @@ Required before PASS: production secrets managed externally, runtime DB least pr
 | Production configuration | Development runtime | `APP_ENV=local`, `APP_DEBUG=true`; validator now rejects local endpoints/private local disk in production mode; browser saw `wss://localhost:8080` | BLOCKED |
 | Static analysis | Existing debt | `composer test` timed out in PHPStan after Pint passed | BLOCKED |
 | Public `.com` hostname | DNS unresolved | `wh.stevewithcode.com` still fails DNS; `.net` Laravel/health/assets work | BLOCKED |
+| Managed production environment | No provider access | Provider-neutral ADR/inventory and smoke seam are present; no managed PostgreSQL/Redis/private storage/secret manager/monitoring credentials are available | BLOCKED |
 
 ## Blockers
 
@@ -116,6 +119,7 @@ Required before PASS: production secrets managed externally, runtime DB least pr
 5. `composer test` cannot complete because PHPStan exceeds the configured process timeout.
 6. Current workspace is not a production configuration (`APP_DEBUG=true`); public Reverb/CSP endpoint validation is not closed, with browser evidence of failed `wss://localhost:8080` and CSP violations.
 7. `wh.stevewithcode.com` remains DNS-unresolved.
+8. Phase 6.4E cannot provision or verify managed PostgreSQL, Redis, private object storage, secret management, process supervision, backup monitoring, or canonical DNS without approved provider access and external operational actions.
 
 ## Accepted risks
 

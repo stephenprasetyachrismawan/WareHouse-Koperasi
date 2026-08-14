@@ -9,6 +9,7 @@ composer install --no-dev --classmap-authoritative
 npm ci
 npm run build
 php artisan ops:validate-production
+php artisan ops:verify-production-infrastructure
 php artisan migrate --force
 php artisan optimize
 ```
@@ -21,6 +22,10 @@ The validator must pass without printing secret values. Use `migrate`, never `mi
 - Runtime database user cannot alter schema/roles; migrations use a separate credential.
 - Private storage is not publicly served.
 - Queue workers, scheduler, Reverb, and web processes are supervised and restart-safe.
+- The infrastructure probe is read-only by default: it validates configuration,
+  database connectivity, and Redis. Run the private-storage write/read/delete
+  probe only in an isolated environment with both
+  `--storage-smoke --confirm-storage-smoke`.
 - Health checks consume `/health/live` and `/health/ready`.
 - Backups, monitoring, alert ownership, and rollback procedure are active.
 

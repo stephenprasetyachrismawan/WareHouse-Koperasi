@@ -122,6 +122,33 @@ ML_SERVICE_TIMEOUT_SECONDS=5
 
 Secret production tidak boleh berada di `.env` yang tersimpan di Git. Gunakan secret manager platform deployment.
 
+### Kontrak production dan smoke check
+
+Production harus menggunakan managed PostgreSQL dengan TLS, Redis terautentikasi
+melalui TLS, private object storage, queue/cache/session berbasis Redis, asset
+frontend hasil build, dan Reverb melalui hostname WSS publik. Jangan gunakan
+`composer run dev` sebagai supervisor production.
+
+Validator aman (tidak menulis data) dan probe infrastruktur sintetis tersedia:
+
+```bash
+php artisan ops:validate-production
+php artisan ops:verify-production-infrastructure
+```
+
+Probe object storage hanya boleh dijalankan pada environment terisolasi dengan
+konfirmasi eksplisit:
+
+```bash
+php artisan ops:verify-production-infrastructure --storage-smoke --confirm-storage-smoke
+```
+
+Perintah tersebut menulis lalu menghapus satu object sintetis pada disk `private`;
+jangan jalankan terhadap data bisnis production tanpa synthetic tenant/prosedur
+operasional yang disetujui. Status provisioning provider dan bukti executable
+Phase 6.4E dicatat di
+[`docs/verification/phase-6-4e-production-infrastructure.md`](docs/verification/phase-6-4e-production-infrastructure.md).
+
 ## Database, Seeder, dan Dummy Data
 
 ```bash
