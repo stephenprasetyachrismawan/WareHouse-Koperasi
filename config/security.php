@@ -5,6 +5,10 @@ return [
 
     'vite_dev_origin' => env('VITE_DEV_SERVER_ORIGIN'),
 
+    'vite_reverb_host' => env('VITE_REVERB_HOST'),
+
+    'vite_reverb_scheme' => env('VITE_REVERB_SCHEME', 'https'),
+
     'request_id_pattern' => '/\A[A-Za-z0-9._:-]{1,128}\z/',
 
     'headers' => [
