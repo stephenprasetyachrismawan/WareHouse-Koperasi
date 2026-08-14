@@ -28,7 +28,8 @@ Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR 
 | 6.4C Backup, Restore & Gate | [PR #37](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/37) / `51cba80` | Merged; final gate BLOCKED |
 | Seeder/data integrity correction | [PR #43](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/43) / `347c0aa` | Merged; full seed and approval UUID regression fixed |
 | Phase 6.4D environment verification | [PR #45](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/45) / `7eb1d80` | Merged; local compatibility evidence recorded, managed gates remain blocked |
-| Phase 6.4E managed-environment preparation | pending PR from `hardening/managed-production-environment` | Provider-neutral production contract, fail-closed validator, and safe infrastructure smoke seam implemented; managed provisioning remains blocked |
+| Phase 6.4E managed-environment preparation | [PR #50](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/50) / `a7b193a` | Merged; provider-neutral production contract, fail-closed validator, and safe infrastructure smoke seam implemented; managed provisioning remains blocked |
+| Composer build workflow follow-up | [PR #51](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/51) / `b92c68f` | Merged; `composer run build` delegates to the locked frontend build |
 
 ## Latest post-merge verification
 
@@ -51,6 +52,8 @@ Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR 
 - Post-merge PostgreSQL/seeder rerun: clean PostgreSQL 16.14 `php artisan migrate --force` passed, `php artisan db:seed --force` passed twice, and counts remained `warehouses=2`, `users=12`, `items=48`, `stock_balances=45`, `stock_transactions=58`, `pickup_requests=16`, `purchase_requests=33`, `purchase_orders=19`, `goods_receipts=11`, `quality_inspections=9`, `return_requests=12`, `inbox_notifications=61`, `null_approval_uuids=0`. Persistent development `php artisan migrate --no-interaction` reported `Nothing to migrate`.
 - `composer test`: Pint passed, but PHPStan exceeded the 300-second Composer process timeout. This remains an explicit static-analysis blocker; no suppression or new baseline was added.
 - Phase 6.4E preparation: `ops:validate-production` now rejects SQLite/non-TLS DB, database-backed queue/cache/session, non-private S3 storage, missing Reverb credentials, unpinned Reverb origins, localhost Reverb frontend endpoints, and public production URLs. `ops:verify-production-infrastructure` is read-only by default; its private-storage probe requires explicit confirmation and is not a substitute for managed-provider evidence.
+- Final `main` verification at `b92c68f`: `composer run build` passed after the build alias merge, and `composer run dev` passed after its automatic build; Laravel, queue, Reverb, Pail, and Vite started on the intended local ports.
+- Final Cloudflare probes after restart: `https://wh.stevewithcode.net/` returned 200, `/health/live` and `/health/ready` returned 200, and `https://vite-warehouse.stevewithcode.net/@vite/client` returned 200. The `.com` hostname remains DNS-unresolved and is still a blocker.
 
 ## Security and correctness
 
