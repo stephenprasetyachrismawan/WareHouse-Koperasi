@@ -12,6 +12,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestAllocation;
 use App\Models\User;
+use App\Models\Warehouse;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -110,9 +111,12 @@ class RecordGoodsReceiptAction
     {
         $date = now()->format('Ymd');
 
+        Warehouse::query()->whereKey($warehouseId)->lockForUpdate()->firstOrFail();
+
         $sequence = GoodsReceipt::forWarehouse($warehouseId)
             ->where('receipt_number', 'like', "GR-{$date}-%")
             ->lockForUpdate()
+            ->get()
             ->count() + 1;
 
         return sprintf('GR-%s-%04d', $date, $sequence);
