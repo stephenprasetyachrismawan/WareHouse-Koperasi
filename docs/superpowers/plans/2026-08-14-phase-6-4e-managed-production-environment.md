@@ -94,7 +94,7 @@ git commit -m "security: validate managed production dependencies"
 **Files:**
 - Create: `app/Console/Commands/VerifyProductionInfrastructureCommand.php`
 - Modify: `app/Console/Kernel.php` only if command auto-discovery is not active
-- Create: `tests/Feature/Operations/VerifyProductionInfrastructureCommandTest.php`
+- Create: `tests/Feature/Operations/ProductionInfrastructureCommandTest.php`
 - Modify: `README.md` or deployment docs with exact invocation
 
 **Interfaces:**

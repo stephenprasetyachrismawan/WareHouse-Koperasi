@@ -57,6 +57,15 @@ class ProductionConfigurationCommandTest extends TestCase
             ->assertExitCode(1);
     }
 
+    public function test_local_frontend_reverb_host_is_rejected_in_production(): void
+    {
+        $this->configureValidProduction();
+        config(['security.vite_reverb_host' => 'localhost']);
+
+        $this->artisan('ops:validate-production')
+            ->assertExitCode(1);
+    }
+
     public function test_sqlite_and_non_tls_database_are_rejected_in_production(): void
     {
         $this->configureValidProduction();
