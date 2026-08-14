@@ -41,6 +41,7 @@ jobs:
           php artisan key:generate --ansi
           php artisan migrate --force --ansi
           npm ci
+          npm run build
         env:
           DB_CONNECTION: sqlite
           DB_DATABASE: database/database.sqlite
@@ -52,9 +53,6 @@ jobs:
         run: |
           composer audit
           npm audit --audit-level=high
-
-      - name: Run frontend build
-        run: npm run build
 
       - name: Run formatting, static analysis, and full tests
         run: composer test
