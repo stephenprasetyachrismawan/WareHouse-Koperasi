@@ -8,6 +8,9 @@ use App\Models\ReturnRequest;
 use App\Models\ReturnRequestItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<ReturnRequestItem>
+ */
 class ReturnRequestItemFactory extends Factory
 {
     protected $model = ReturnRequestItem::class;

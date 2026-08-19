@@ -9,6 +9,9 @@ use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
+/**
+ * @extends Factory<PickupRequest>
+ */
 class PickupRequestFactory extends Factory
 {
     protected $model = PickupRequest::class;

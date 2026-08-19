@@ -10,6 +10,9 @@ use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<QualityInspection>
+ */
 class QualityInspectionFactory extends Factory
 {
     protected $model = QualityInspection::class;

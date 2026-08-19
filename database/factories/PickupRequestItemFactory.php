@@ -7,6 +7,9 @@ use App\Models\PickupRequest;
 use App\Models\PickupRequestItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<PickupRequestItem>
+ */
 class PickupRequestItemFactory extends Factory
 {
     protected $model = PickupRequestItem::class;
