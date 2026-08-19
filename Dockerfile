@@ -24,6 +24,11 @@ RUN composer dump-autoload --no-dev --optimize --classmap-authoritative
 # ---------------------------------------------------------------------------
 # Stage: frontend — compiled Vite assets, node toolchain never reaches runtime.
 #
+# Needs vendor/ from the `vendor` stage before building: resources/css/app.css
+# imports vendor/livewire/flux/dist/flux.css directly, and Tailwind's content
+# scan also globs vendor/livewire/flux*/stubs -- the Flux UI package ships its
+# compiled CSS/Blade stubs through Composer, not npm.
+#
 # VITE_* build args are public browser-facing config only (the Reverb *app
 # key*, not the app secret) -- safe to pass as build args, unlike real
 # secrets. They get compiled as literal strings into the built JS, so the
@@ -46,6 +51,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+COPY --from=vendor /app/vendor ./vendor
 RUN npm run build
 
 # ---------------------------------------------------------------------------
@@ -58,15 +64,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libzip-dev \
         libpq-dev \
         libsqlite3-dev \
+        libonig-dev \
+        libcurl4-openssl-dev \
+        libxml2-dev \
         unzip \
     && docker-php-ext-install -j"$(nproc)" \
         pdo_pgsql \
         pdo_sqlite \
         pcntl \
         bcmath \
+        mbstring \
+        curl \
+        dom \
+        xml \
         zip \
     && docker-php-ext-enable opcache \
-    && apt-get purge -y --auto-remove libzip-dev libpq-dev libsqlite3-dev unzip \
+    && apt-get purge -y --auto-remove libzip-dev libpq-dev libsqlite3-dev libonig-dev libcurl4-openssl-dev libxml2-dev unzip \
     && rm -rf /var/lib/apt/lists/*
 
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/zz-opcache.ini
