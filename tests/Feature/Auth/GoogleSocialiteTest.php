@@ -47,6 +47,37 @@ class GoogleSocialiteTest extends TestCase
             ->assertRedirect();
     }
 
+    public function test_speculative_prefetch_does_not_mutate_oauth_state(): void
+    {
+        // Browsers (via Chrome's Speculation Rules API, which Cloudflare's
+        // "Speed Brain" feature can auto-enable for every same-origin link)
+        // may speculatively prefetch this GET link before the user actually
+        // clicks it -- e.g. on hover. Socialite::redirect() stores a fresh
+        // "state" nonce in the session on every hit, so a speculative hit
+        // racing the real click desyncs the state Google echoes back from
+        // what's in the session by the time the callback arrives, surfacing
+        // as InvalidStateException for a real user who never did anything
+        // wrong. Chrome marks these requests with Sec-Purpose: prefetch.
+        $this->fakeGoogle();
+
+        $response = $this->withHeaders(['Sec-Purpose' => 'prefetch'])
+            ->get(route('auth.google.redirect'));
+
+        $response->assertNoContent();
+        $this->assertNull(session('state'));
+    }
+
+    public function test_prerender_speculative_request_does_not_mutate_oauth_state(): void
+    {
+        $this->fakeGoogle();
+
+        $response = $this->withHeaders(['Sec-Purpose' => 'prefetch;prerender'])
+            ->get(route('auth.google.redirect'));
+
+        $response->assertNoContent();
+        $this->assertNull(session('state'));
+    }
+
     public function test_new_verified_user_is_provisioned_and_sent_to_company_setup(): void
     {
         $this->fakeGoogle();
