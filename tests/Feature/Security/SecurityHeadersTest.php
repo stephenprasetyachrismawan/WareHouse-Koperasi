@@ -75,4 +75,17 @@ class SecurityHeadersTest extends TestCase
             ->assertSee('welcome')
             ->assertDontSee("document.addEventListener('DOMContentLoaded'");
     }
+
+    public function test_script_src_allows_unsafe_eval_so_livewire_expressions_are_not_blocked(): void
+    {
+        // Livewire's default JS runtime evaluates wire:click/wire:submit/
+        // wire:model expressions via `new Function()`, which the browser
+        // treats as `unsafe-eval`. Without this, every Livewire action
+        // (e.g. saving a form) throws client-side before it can even send
+        // a request — observed live as company/users/create's save button
+        // doing nothing.
+        $csp = (string) $this->get('/')->headers->get('Content-Security-Policy');
+
+        $this->assertMatchesRegularExpression("/script-src [^;]*'unsafe-eval'/", $csp);
+    }
 }
