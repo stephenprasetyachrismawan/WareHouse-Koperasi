@@ -321,10 +321,11 @@ jobs:
           echo "- Web: \`${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}@${{ steps.push-web.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
 
   # ---------------------------------------------------------------------------
-  # Deliberately gated to workflow_dispatch only for this first slice: the
-  # VPS has no Docker install, deploy user, or SSH secrets configured yet.
-  # A normal push to main stops after image-publish. This job is enabled
-  # once Section 41 (VPS provisioning) is complete, by removing this gate.
+  # Deliberately gated to workflow_dispatch only. The VPS is provisioned and
+  # the first cutover is complete (Section 41), but manual promotion for
+  # development remains current, intentional policy -- see CD.md §9. A normal
+  # push to main stops after image-publish; this job only runs when a human
+  # explicitly dispatches it with run_deploy=true.
   deploy-development:
     name: deploy-development
     if: github.event_name == 'workflow_dispatch' && inputs.run_deploy

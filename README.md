@@ -12,6 +12,8 @@ Dokumen ini adalah panduan instalasi dan menjalankan **Warehouse Koperasi SaaS**
 | `UI-RULES.md` | Aturan antarmuka, responsivitas, aksesibilitas, pola layar, komponen, status, formulir, pemindaian barcode, dan UX per role. |
 | `BATASAN.md` | Ruang lingkup, di luar lingkup, batas fase, asumsi, keputusan yang tidak boleh diubah diam-diam, serta daftar pertanyaan terbuka. |
 | `AGENTS.md` | Instruksi wajib untuk developer dan AI coding agent. |
+| `CI.md` | Kontrak continuous integration — gate merge yang aktif di GitHub Actions. |
+| `CD.md` | Kontrak continuous delivery/deployment — alur deployment development yang aktif. |
 | `.agent/README.md` | Entry point aturan agent di repositori. |
 | `.agent/WORKFLOW.md` | Workflow implementasi, TDD, review, dan quality gate. |
 | `.ai/guidelines/warehouse-project.md` | Custom guideline yang dapat digabungkan oleh Laravel Boost. |
