@@ -178,9 +178,7 @@ Every deployment report should include:
 
 ## 9. Manual promotion gate — current intentional policy
 
-Development deployment is deliberately gated behind `workflow_dispatch` with `run_deploy=true`. It does **not** run automatically on every merge to `main`. This is intentional, current policy — not a temporary placeholder to remove reflexively.
-
-Note: the gate's inline comment in `ci-cd.yml` currently reads *"enabled once Section 41 (VPS provisioning) is complete, by removing this gate"* — Section 41 (the first cutover) is now complete, but per explicit direction this task does **not** remove the gate. The comment is stale and should be corrected in a small follow-up PR to avoid misleading a future reader; the gate itself stays manual until a separate, explicit decision changes it. Automatic deploy-on-merge for development may be considered later; it is not approved as of this document.
+Development deployment is deliberately gated behind `workflow_dispatch` with `run_deploy=true`. It does **not** run automatically on every merge to `main`. This is intentional, current policy — not a temporary placeholder to remove reflexively. The gate's inline comment in `ci-cd.yml` was corrected in Phase 6.4F-0B to say exactly this, replacing an earlier comment that misleadingly implied the gate should be removed once VPS provisioning was done. Automatic deploy-on-merge for development may be considered later; it is not approved as of this document.
 
 ## 10. Production
 

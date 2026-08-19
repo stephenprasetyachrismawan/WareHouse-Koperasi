@@ -40,29 +40,23 @@ merge
 
 ## 3. Current real jobs
 
-Two workflow files are active in `.github/workflows/`. Both run on every pull request; documenting both here because CI.md must reflect reality, not the intended end state.
-
-### `tests.yml` — job `ci`
-The original, pre-Docker CI lane. SQLite-only, unpinned third-party actions. Runs: security regression suite, `composer audit` + `npm audit`, `composer test` (Pint + PHPStan + full suite), Gitleaks.
-
-### `ci-cd.yml` — jobs `quality`, `integration (PostgreSQL + Redis)`, `image build (no publish)`, `image publish (GHCR)`, `deploy-development`
-The newer, SHA-pinned lane, added for the Docker/CI-CD infrastructure (Phase 6.4F-0). Superset of `tests.yml`'s coverage plus PostgreSQL/Redis compatibility and container build/publish.
+One workflow file is active in `.github/workflows/`: `ci-cd.yml`. (An earlier, overlapping `tests.yml` existed alongside it briefly during the Docker/CI-CD buildout; it was a strict subset of `quality` below — same setup, same `composer test`, same Gitleaks scan, just unpinned action refs and no PostgreSQL/Redis/container coverage — and was consolidated away in Phase 6.4F-0B with zero coverage loss.)
 
 | Job | Runs on | Responsibility |
 | --- | --- | --- |
-| `quality` | PR + push to main | Fast SQLite lane: security tests, dependency audits, Pint, PHPStan level 7, full test suite, Gitleaks |
+| `quality` | PR + push to main | Security regression suite, dependency audits, Pint, PHPStan level 7, full test suite, Gitleaks — SQLite fast lane |
 | `integration (PostgreSQL + Redis)` | PR + push to main | Migrates and runs the full suite against ephemeral PostgreSQL 16; separately exercises a real Redis cache/queue round-trip |
 | `image build (no publish)` | PR + push to main | Builds both Dockerfile targets (`runtime`, `web`) to prove they build; never pushes |
 | `image publish (GHCR)` | push to `main` only | Rebuilds (cheaply, via BuildKit cache) and pushes both images to GHCR with immutable digests |
 | `deploy-development` | `workflow_dispatch` with `run_deploy=true` only | SSHes into the development VPS and runs the already-published images; not part of PR CI |
 
-**Known duplication (tracked, not fixed in this document):** `tests.yml`'s `ci` job and `ci-cd.yml`'s `quality` job currently overlap almost completely — both run `composer test` and Gitleaks against SQLite. `tests.yml` also uses unpinned action refs (`@v4`, `@v2`, `@v2.3.9`), which is inconsistent with the SHA-pinning standard established for `ci-cd.yml`. Consolidating these into a single lane is recommended as a follow-up (see the PR that reviews required-check configuration, §8 below) — not done here because it touches which checks are safe to mark required, and this document is scoped to recording current reality, not redesigning it.
+Every third-party action in `ci-cd.yml` is pinned to a full commit SHA (with a version comment alongside it) — this is current, standing policy, not a one-time cleanup. A PR that reintroduces a floating tag (`@v4`, `@main`, etc.) for a third-party action should be treated as a regression.
 
 Deployment is deliberately **not** part of pull-request CI. `deploy-development` only runs when a human explicitly triggers `workflow_dispatch` with `run_deploy=true` — see [CD.md](CD.md) for why.
 
 ## 4. Quality contract
 
-The `quality` job (and `tests.yml`'s `ci` job) run, in order:
+The `quality` job runs, in order:
 
 ```bash
 composer install --no-interaction --prefer-dist --no-progress
