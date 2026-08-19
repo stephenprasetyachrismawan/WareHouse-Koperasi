@@ -149,7 +149,7 @@ jobs:
           DB_USERNAME: warehouse_ci
           DB_PASSWORD: warehouse_ci
 
-      - name: Full test suite against PostgreSQL + Redis-backed cache/queue/session
+      - name: Full test suite against PostgreSQL
         run: php artisan test --compact
         env:
           DB_CONNECTION: pgsql
@@ -158,9 +158,23 @@ jobs:
           DB_DATABASE: warehouse_koperasi_ci
           DB_USERNAME: warehouse_ci
           DB_PASSWORD: warehouse_ci
-          CACHE_STORE: redis
-          QUEUE_CONNECTION: redis
-          SESSION_DRIVER: redis
+
+      # The rest of the suite runs under phpunit.xml's own sync/array/file
+      # queue/cache/session defaults -- most tests assert job side effects
+      # immediately after triggering them, which only holds under a
+      # synchronous queue. Forcing the whole suite onto a real async Redis
+      # queue breaks that unrelated assumption without proving anything
+      # extra, so Redis compatibility gets its own targeted, isolated
+      # test file instead of a suite-wide driver override.
+      - name: Verify Redis cache/queue compatibility
+        run: php artisan test --compact tests/Feature/Infrastructure/RedisCompatibilityTest.php
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: warehouse_koperasi_ci
+          DB_USERNAME: warehouse_ci
+          DB_PASSWORD: warehouse_ci
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           REDIS_CLIENT: phpredis
