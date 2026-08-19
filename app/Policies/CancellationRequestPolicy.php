@@ -5,29 +5,43 @@ namespace App\Policies;
 use App\Enums\Permission;
 use App\Models\CancellationRequest;
 use App\Models\User;
+use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 
 class CancellationRequestPolicy
 {
+    private function hasPermission(User $user, string $permission): bool
+    {
+        if ($user->activeMembership() === null) {
+            return false;
+        }
+
+        try {
+            return $user->hasPermissionTo($permission);
+        } catch (PermissionDoesNotExist) {
+            return false;
+        }
+    }
+
     public function viewAny(User $user): bool
     {
-        return $user->hasActiveMembership() && $user->hasPermission(Permission::PurchaseRequestCancel); // same as approve/cancel basically
+        return $this->hasPermission($user, Permission::PurchaseRequestCancel->value);
     }
 
     public function view(User $user, CancellationRequest $cancellationRequest): bool
     {
-        if (! $user->hasActiveMembership() || ! $user->hasPermission(Permission::PurchaseRequestView)) {
+        if (! $this->hasPermission($user, Permission::PurchaseRequestView->value)) {
             return false;
         }
 
-        return $user->active_warehouse_id === $cancellationRequest->warehouse_id;
+        return $user->activeWarehouse()?->id === $cancellationRequest->warehouse_id;
     }
 
     public function decide(User $user, CancellationRequest $cancellationRequest): bool
     {
-        if (! $user->hasActiveMembership() || ! $user->hasPermission(Permission::PurchaseRequestCancel)) {
+        if (! $this->hasPermission($user, Permission::PurchaseRequestCancel->value)) {
             return false;
         }
 
-        return $user->active_warehouse_id === $cancellationRequest->warehouse_id;
+        return $user->activeWarehouse()?->id === $cancellationRequest->warehouse_id;
     }
 }
