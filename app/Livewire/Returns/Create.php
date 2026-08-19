@@ -8,8 +8,12 @@ use App\Domain\Returns\ValueObjects\CreateReturnInput;
 use App\Enums\ReturnReasonCode;
 use App\Models\PickupRequestItem;
 use App\Models\ReturnRequest;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Livewire\Features\SupportRedirects\Redirector;
 use Livewire\WithFileUploads;
 
 class Create extends Component
@@ -24,7 +28,7 @@ class Create extends Component
 
     public string $reasonNotes = '';
 
-    public $photo = null;
+    public ?TemporaryUploadedFile $photo = null;
 
     public bool $reviewing = false;
 
@@ -58,7 +62,7 @@ class Create extends Component
         $this->reviewing = false;
     }
 
-    public function submit(CreateReturnAction $action): mixed
+    public function submit(CreateReturnAction $action): RedirectResponse|Redirector
     {
         $this->authorize('create', ReturnRequest::class);
 
@@ -66,7 +70,14 @@ class Create extends Component
 
         $warehouseId = Auth::user()->activeWarehouse()?->id;
 
-        $evidencePath = $this->photo->store("return-evidence/{$warehouseId}", 'private');
+        $evidencePath = $this->photo?->store("return-evidence/{$warehouseId}", 'private');
+
+        if (! $evidencePath) {
+            $this->addError('photo', 'Gagal mengunggah bukti foto. Silakan coba lagi.');
+
+            return back();
+        }
+
         $evidenceMime = $this->photo->getMimeType();
 
         $returnRequest = $action->execute(Auth::user(), new CreateReturnInput(
@@ -85,7 +96,7 @@ class Create extends Component
         return redirect()->route('returns.my-returns');
     }
 
-    public function render(EligibleReturnItemsQuery $eligibleQuery)
+    public function render(EligibleReturnItemsQuery $eligibleQuery): View
     {
         $warehouseId = Auth::user()->activeWarehouse()?->id;
 

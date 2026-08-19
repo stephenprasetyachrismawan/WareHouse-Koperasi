@@ -11,9 +11,11 @@ use App\Actions\Returns\VerifyReturnAction;
 use App\Domain\Returns\ValueObjects\VerifyReturnInput;
 use App\Enums\ReturnStatus;
 use App\Models\ReturnRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 class Show extends Component
@@ -40,7 +42,7 @@ class Show extends Component
 
     public int $verifiedQuantity = 1;
 
-    public $staffPhoto = null;
+    public ?TemporaryUploadedFile $staffPhoto = null;
 
     public string $verificationNotes = '';
 
@@ -53,7 +55,7 @@ class Show extends Component
         $this->authorize('view', $returnRequest);
 
         $this->returnRequest = $returnRequest->load(self::WITH_RELATIONS);
-        $this->verifiedQuantity = $this->returnRequest->items->first()?->return_quantity ?? 1;
+        $this->verifiedQuantity = $this->returnRequest->items->first()->return_quantity ?? 1;
     }
 
     public function verify(VerifyReturnAction $action): void
@@ -67,7 +69,14 @@ class Show extends Component
             'verificationNotes' => 'nullable|string',
         ]);
 
-        $evidencePath = $this->staffPhoto->store("return-evidence/{$this->returnRequest->warehouse_id}", 'private');
+        $evidencePath = $this->staffPhoto?->store("return-evidence/{$this->returnRequest->warehouse_id}", 'private');
+
+        if (! $evidencePath) {
+            $this->addError('staffPhoto', 'Gagal mengunggah bukti foto. Silakan coba lagi.');
+
+            return;
+        }
+
         $evidenceMime = $this->staffPhoto->getMimeType();
 
         try {
@@ -154,7 +163,7 @@ class Show extends Component
         }
     }
 
-    public function render()
+    public function render(): View
     {
         $canVerify = Gate::forUser(Auth::user())->allows('verify', $this->returnRequest)
             && $this->returnRequest->status === ReturnStatus::Submitted;
