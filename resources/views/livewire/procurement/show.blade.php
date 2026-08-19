@@ -82,11 +82,11 @@
         <ul class="space-y-4">
             @foreach($purchaseRequest->approvals as $approval)
             <li class="border-b pb-2">
-                <strong>{{ $approval->user->name }}</strong> - 
-                <span class="{{ $approval->status === 'APPROVED' ? 'text-green-600' : 'text-red-600' }}">{{ $approval->status }}</span> 
+                <strong>{{ $approval->approver->name ?? 'System' }}</strong> -
+                <span class="{{ $approval->status->value === 'APPROVED' ? 'text-green-600' : 'text-red-600' }}">{{ $approval->status->value }}</span>
                 ({{ $approval->created_at }})
-                @if($approval->notes)
-                <p class="text-sm text-gray-600">Catatan: {{ $approval->notes }}</p>
+                @if($approval->reason)
+                <p class="text-sm text-gray-600">Catatan: {{ $approval->reason }}</p>
                 @endif
             </li>
             @endforeach
