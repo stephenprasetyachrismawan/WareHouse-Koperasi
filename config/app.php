@@ -123,4 +123,18 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Allow Demo Seeding
+    |--------------------------------------------------------------------------
+    |
+    | `DevelopmentSeeder` always seeds in local/testing. Anywhere else it is
+    | skipped unless this is explicitly set to true — fixed-password demo
+    | accounts must never be seeded into production by accident
+    | (BATASAN.md §14, SECURITY-RULES.md §4.3). Defaults to false.
+    |
+    */
+
+    'allow_demo_seeding' => (bool) env('ALLOW_DEMO_SEEDING', false),
+
 ];

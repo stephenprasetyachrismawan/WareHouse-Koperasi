@@ -296,6 +296,17 @@
                 @endforeach
             </div>
             <div class="flex items-center gap-3">
+                @auth
+                <a href="{{ route('dashboard') }}"
+                    class="rounded-full border border-white/40 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15">{{
+                    __('Buka Dashboard') }}</a>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit"
+                        class="rounded-full bg-red-700 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-800/40 transition hover:bg-red-600 hover:scale-105">{{
+                        __('Log out') }}</button>
+                </form>
+                @else
                 <a href="{{ route('login') }}"
                     class="rounded-full border border-white/40 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/15">{{
                     __('Masuk') }}</a>
@@ -304,6 +315,7 @@
                     class="rounded-full bg-red-700 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-red-800/40 transition hover:bg-red-600 hover:scale-105">{{
                     __('Daftar') }}</a>
                 @endif
+                @endauth
             </div>
         </nav>
     </header>
@@ -335,14 +347,16 @@
                         Dipercaya oleh 1000+ Koperasi Desa Merah Putih
                     </div>
                     <div class="mt-8 flex flex-wrap items-center gap-4">
-                        <a href="{{ route('register') }}"
+                        <a href="{{ auth()->check() ? route('dashboard') : route('register') }}"
                             class="group rounded-full bg-red-700 px-8 py-3.5 text-sm font-bold text-white shadow-xl shadow-red-800/40 transition hover:bg-red-600 hover:scale-105">
-                            Mulai Sekarang <span class="ml-2 inline-block transition group-hover:translate-x-1">→</span>
+                            {{ auth()->check() ? __('Buka Dashboard') : 'Mulai Sekarang' }} <span class="ml-2 inline-block transition group-hover:translate-x-1">→</span>
                         </a>
+                        @guest
                         <a href="{{ route('login') }}"
                             class="rounded-full border border-white/40 px-8 py-3.5 text-sm font-bold text-white transition hover:bg-white/10">
                             Pelajari Lebih Lanjut
                         </a>
+                        @endguest
                     </div>
                 </div>
 
@@ -542,9 +556,9 @@
                     sesuai kebutuhan Anda.
                 </p>
                 <div class="mt-8">
-                    <a href="{{ route('register') }}"
+                    <a href="{{ auth()->check() ? route('dashboard') : route('register') }}"
                         class="group inline-flex items-center gap-2 rounded-full bg-red-700 px-7 py-3.5 text-sm font-bold text-white shadow-xl shadow-red-800/40 transition hover:bg-red-600 hover:scale-105">
-                        Mulai Sekarang <span class="transition group-hover:translate-x-1">→</span>
+                        {{ auth()->check() ? __('Buka Dashboard') : 'Mulai Sekarang' }} <span class="transition group-hover:translate-x-1">→</span>
                     </a>
                 </div>
             </div>
@@ -644,6 +658,19 @@
                 terpercaya.
             </p>
             <div class="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                @auth
+                <a href="{{ route('dashboard') }}"
+                    class="group w-full rounded-full bg-white px-8 py-4 text-base font-bold text-red-700 shadow-xl transition hover:bg-amber-50 hover:scale-105 sm:w-auto">
+                    {{ __('Buka Dashboard') }} <span class="ml-2 inline-block transition group-hover:translate-x-1">→</span>
+                </a>
+                <form method="POST" action="{{ route('logout') }}" class="w-full sm:w-auto">
+                    @csrf
+                    <button type="submit"
+                        class="w-full rounded-full border-2 border-white/70 px-8 py-4 text-base font-bold text-white transition hover:bg-white hover:text-red-700 sm:w-auto">
+                        {{ __('Log out') }}
+                    </button>
+                </form>
+                @else
                 <a href="{{ route('register') }}"
                     class="group w-full rounded-full bg-white px-8 py-4 text-base font-bold text-red-700 shadow-xl transition hover:bg-amber-50 hover:scale-105 sm:w-auto">
                     Daftar Sekarang <span class="ml-2 inline-block transition group-hover:translate-x-1">→</span>
@@ -652,6 +679,7 @@
                     class="w-full rounded-full border-2 border-white/70 px-8 py-4 text-base font-bold text-white transition hover:bg-white hover:text-red-700 sm:w-auto">
                     Masuk Akun
                 </a>
+                @endauth
             </div>
         </div>
     </section>
@@ -729,12 +757,24 @@
                 <div>
                     <h4 class="text-sm font-bold uppercase tracking-wider text-white">Akun</h4>
                     <ul class="mt-4 space-y-2.5 text-sm">
+                        @auth
+                        <li><a href="{{ route('dashboard') }}"
+                                class="transition hover:text-red-400 hover:translate-x-1 inline-block">{{ __('Buka Dashboard') }}</a></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit"
+                                    class="transition hover:text-red-400 hover:translate-x-1 inline-block">{{ __('Log out') }}</button>
+                            </form>
+                        </li>
+                        @else
                         <li><a href="{{ route('login') }}"
                                 class="transition hover:text-red-400 hover:translate-x-1 inline-block">Masuk</a></li>
                         @if (Route::has('register'))
                         <li><a href="{{ route('register') }}"
                                 class="transition hover:text-red-400 hover:translate-x-1 inline-block">Daftar</a></li>
                         @endif
+                        @endauth
                     </ul>
                 </div>
             </div>
