@@ -7,19 +7,23 @@ use App\Actions\Pickup\SubmitPickupRequestAction;
 use App\Domain\Pickup\ValueObjects\PickupRequestInput;
 use App\Domain\Pickup\ValueObjects\PickupRequestItemInput;
 use App\Models\Item;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
+use Livewire\Features\SupportRedirects\Redirector;
 
 class Create extends Component
 {
-    public $search = '';
+    public string $search = '';
 
-    public $items = []; // Selected items
+    /** @var array<int, array{id: int, name: string, quantity: int, notes: string}> */
+    public array $items = []; // Selected items
 
-    public $notes = '';
+    public string $notes = '';
 
-    public function addItem($itemId)
+    public function addItem(int|string $itemId): void
     {
         $item = Item::with('stockBalance')->find($itemId);
         if ($item) {
@@ -39,13 +43,13 @@ class Create extends Component
         }
     }
 
-    public function removeItem($index)
+    public function removeItem(int $index): void
     {
         unset($this->items[$index]);
         $this->items = array_values($this->items);
     }
 
-    public function submit(CreatePickupRequestAction $createAction, SubmitPickupRequestAction $submitAction)
+    public function submit(CreatePickupRequestAction $createAction, SubmitPickupRequestAction $submitAction): RedirectResponse|Redirector|null
     {
         $this->validate([
             'items' => 'required|array|min:1',
@@ -58,7 +62,7 @@ class Create extends Component
             $warehouseId = session('tenant_id', 1);
 
             $itemInputs = array_map(function ($item) {
-                return new PickupRequestItemInput($item['id'], $item['quantity'], $item['notes'] ?? null);
+                return new PickupRequestItemInput($item['id'], $item['quantity'], $item['notes']);
             }, $this->items);
 
             $input = new PickupRequestInput($warehouseId, $user->id, $this->notes, $itemInputs);
@@ -72,10 +76,12 @@ class Create extends Component
         } catch (\Exception $e) {
             Log::error('Pickup Submit Error: '.$e->getMessage());
             $this->addError('general', 'Failed to create request: '.$e->getMessage());
+
+            return null;
         }
     }
 
-    public function render()
+    public function render(): View
     {
         $searchResults = [];
         if (strlen($this->search) >= 2) {

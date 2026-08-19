@@ -10,28 +10,35 @@ use App\Enums\PurchaseRequestSource;
 use App\Enums\PurchaseRequestUrgency;
 use App\Models\Item;
 use App\Models\PurchaseRequest;
+use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\Features\SupportRedirects\Redirector;
 
 class Create extends Component
 {
-    public $urgency = 'NORMAL';
+    public string $urgency = 'NORMAL';
 
-    public $notes = '';
+    public string $notes = '';
 
-    public $items = []; // [item_id, quantity]
+    /** @var array<int, array{item_id: int|string, quantity: int}> */
+    public array $items = []; // [item_id, quantity]
 
-    public $availableItems = [];
+    /** @var Collection<int, Item> */
+    public Collection $availableItems;
 
-    public $duplicateWarning = false;
+    public bool $duplicateWarning = false;
 
-    public $duplicateInfo = [];
+    /** @var array<int, array{request_number: string, item_name: string, quantity: int}> */
+    public array $duplicateInfo = [];
 
-    public $is_duplicate_override = false;
+    public bool $is_duplicate_override = false;
 
-    public $duplicate_override_reason = '';
+    public string $duplicate_override_reason = '';
 
-    public function mount()
+    public function mount(): void
     {
         $this->authorize('create', PurchaseRequest::class);
 
@@ -40,24 +47,24 @@ class Create extends Component
         $this->items = [['item_id' => '', 'quantity' => 1]];
     }
 
-    public function addItem()
+    public function addItem(): void
     {
         $this->items[] = ['item_id' => '', 'quantity' => 1];
     }
 
-    public function removeItem($index)
+    public function removeItem(int $index): void
     {
         unset($this->items[$index]);
         $this->items = array_values($this->items);
         $this->checkDuplicates();
     }
 
-    public function updatedItems()
+    public function updatedItems(): void
     {
         $this->checkDuplicates();
     }
 
-    public function checkDuplicates()
+    public function checkDuplicates(): void
     {
         $this->duplicateWarning = false;
         $this->duplicateInfo = [];
@@ -100,7 +107,7 @@ class Create extends Component
         }
     }
 
-    public function save(CreatePurchaseRequestAction $createAction, SubmitPurchaseForApprovalAction $submitAction)
+    public function save(CreatePurchaseRequestAction $createAction, SubmitPurchaseForApprovalAction $submitAction): RedirectResponse|Redirector
     {
         $this->authorize('create', PurchaseRequest::class);
 
@@ -122,7 +129,7 @@ class Create extends Component
 
         $input = new PurchaseRequestInput(
             warehouseId: $warehouseId,
-            userId: Auth::id(),
+            userId: Auth::user()->id,
             source: PurchaseRequestSource::ManualStaff,
             urgency: PurchaseRequestUrgency::from($this->urgency),
             notes: $this->notes,
@@ -137,7 +144,7 @@ class Create extends Component
         return redirect()->route('procurement.index')->with('success', 'Purchase Request created successfully.');
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.procurement.create');
     }

@@ -8,6 +8,7 @@ use App\Actions\Procurement\RejectPurchaseCancellationAction;
 use App\Actions\Procurement\RejectPurchaseRequestAction;
 use App\Models\CancellationRequest;
 use App\Models\PurchaseRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,23 +17,23 @@ class ApprovalInbox extends Component
 {
     use WithPagination;
 
-    public $tab = 'purchase_requests'; // purchase_requests, cancellations
+    public string $tab = 'purchase_requests'; // purchase_requests, cancellations
 
-    public $actionModal = false;
+    public bool $actionModal = false;
 
-    public $actionType = ''; // approve_pr, reject_pr, approve_cancel, reject_cancel
+    public string $actionType = ''; // approve_pr, reject_pr, approve_cancel, reject_cancel
 
-    public $selectedId = null;
+    public int|string|null $selectedId = null;
 
-    public $notes = '';
+    public string $notes = '';
 
-    public function switchTab($tab)
+    public function switchTab(string $tab): void
     {
         $this->tab = $tab;
         $this->resetPage();
     }
 
-    public function openActionModal($type, $id)
+    public function openActionModal(string $type, int|string $id): void
     {
         $this->actionType = $type;
         $this->selectedId = $id;
@@ -40,7 +41,7 @@ class ApprovalInbox extends Component
         $this->actionModal = true;
     }
 
-    public function closeActionModal()
+    public function closeActionModal(): void
     {
         $this->actionModal = false;
     }
@@ -50,7 +51,7 @@ class ApprovalInbox extends Component
         RejectPurchaseRequestAction $rejectPr,
         ApprovePurchaseCancellationAction $approveCancel,
         RejectPurchaseCancellationAction $rejectCancel
-    ) {
+    ): void {
         $this->authorize('approve', PurchaseRequest::class);
 
         $user = Auth::user();
@@ -82,7 +83,7 @@ class ApprovalInbox extends Component
         $this->actionModal = false;
     }
 
-    public function render()
+    public function render(): View
     {
         $this->authorize('approve', PurchaseRequest::class);
 
