@@ -3,6 +3,7 @@
 namespace App\Livewire\Procurement;
 
 use App\Models\PurchaseRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,13 +12,13 @@ class Index extends Component
 {
     use WithPagination;
 
-    public $status = '';
+    public string $status = '';
 
-    public $source = '';
+    public string $source = '';
 
-    public $urgency = '';
+    public string $urgency = '';
 
-    public function render()
+    public function render(): View
     {
         $this->authorize('viewAny', PurchaseRequest::class);
 

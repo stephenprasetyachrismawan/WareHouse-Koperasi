@@ -8,10 +8,13 @@ use App\Domain\Procurement\Queries\ApprovedAllocatablePurchaseRequestsQuery;
 use App\Domain\Procurement\ValueObjects\AllocationInput;
 use App\Domain\Procurement\ValueObjects\CreateGroupInput;
 use App\Domain\Procurement\ValueObjects\CreatePurchaseOrderInput;
+use App\Models\Item;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequestAllocation;
 use App\Models\PurchaseRequestGroup;
 use App\Models\Supplier;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -105,7 +108,10 @@ class GroupingWorkspace extends Component
             ->with('success', 'Purchase Order berhasil dibuat.');
     }
 
-    private function cartSummary()
+    /**
+     * @return Collection<int, array{item_id: int, item_name: string, item_unit: string, total_quantity: int}>
+     */
+    private function cartSummary(): Collection
     {
         if (! $this->groupId) {
             return collect();
@@ -116,7 +122,12 @@ class GroupingWorkspace extends Component
             ->with('purchaseRequestItem.item')
             ->get()
             ->groupBy('purchaseRequestItem.item_id')
-            ->map(function ($allocations) {
+            /**
+             * @param  Collection<int, PurchaseRequestAllocation>  $allocations
+             * @return array{item_id: int, item_name: string, item_unit: string, total_quantity: int}
+             */
+            ->map(function (Collection $allocations): array {
+                /** @var Item $item */
                 $item = $allocations->first()->purchaseRequestItem->item;
 
                 return [
@@ -129,7 +140,7 @@ class GroupingWorkspace extends Component
             ->values();
     }
 
-    public function render(ApprovedAllocatablePurchaseRequestsQuery $candidatesQuery)
+    public function render(ApprovedAllocatablePurchaseRequestsQuery $candidatesQuery): View
     {
         $warehouseId = Auth::user()->activeWarehouse()?->id;
 

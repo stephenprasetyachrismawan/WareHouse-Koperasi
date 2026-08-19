@@ -79,6 +79,9 @@ class Movement extends Component
         }
     }
 
+    /**
+     * @return array<string, string|array<int, mixed>>
+     */
     public function rules(): array
     {
         return [

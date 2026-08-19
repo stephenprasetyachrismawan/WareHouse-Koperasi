@@ -46,9 +46,12 @@ class Edit extends Component
         $this->description = $item->description ?? '';
         $this->unit = $item->unit;
         $this->minimum_stock = $item->minimum_stock;
-        $this->barcode = $item->primaryBarcode()?->barcode ?? '';
+        $this->barcode = $item->primaryBarcode()->barcode ?? '';
     }
 
+    /**
+     * @return array<string, string|array<int, mixed>>
+     */
     public function rules(): array
     {
         /** @var User $actor */
