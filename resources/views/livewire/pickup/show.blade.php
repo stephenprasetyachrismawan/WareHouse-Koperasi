@@ -69,11 +69,11 @@
                 @foreach($pickupRequest->approvals as $approval)
                     <li class="bg-gray-50 p-3 rounded border">
                         <div class="flex justify-between">
-                            <span class="font-semibold">{{ $approval->actor->name }} ({{ $approval->type }})</span>
+                            <span class="font-semibold">{{ $approval->approver->name ?? 'System' }}</span>
                             <span class="text-sm text-gray-500">{{ $approval->created_at->format('d M Y H:i') }}</span>
                         </div>
                         <p class="mt-1">
-                            Status: <span class="font-semibold {{ $approval->status === 'APPROVED' ? 'text-green-600' : 'text-red-600' }}">{{ $approval->status }}</span>
+                            Status: <span class="font-semibold {{ $approval->status->value === 'APPROVED' ? 'text-green-600' : 'text-red-600' }}">{{ $approval->status->value }}</span>
                         </p>
                         @if($approval->reason)
                             <p class="text-gray-700 mt-1">Alasan: {{ $approval->reason }}</p>
