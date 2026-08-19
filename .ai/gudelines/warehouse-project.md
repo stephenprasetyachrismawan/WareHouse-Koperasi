@@ -2,7 +2,8 @@
 
 These rules supplement Laravel Boost guidelines.
 
-- Read `PRD.md`, `BATASAN.md`, `SECURITY-RULES.md`, `ARCHITECTURE.md`, and `UI-RULES.md` before implementation.
+- Read `PRD.md`, `BATASAN.md`, `SECURITY-RULES.md`, `ARCHITECTURE.md`, `UI-RULES.md`, `CI.md`, and `CD.md` before implementation.
+- `CI.md` governs the merge gate (what GitHub Actions must pass before merge); `CD.md` governs how the development environment is actually deployed. Do not assume a different CI/CD process — read the current documents.
 - Treat `Warehouse` as the tenant. All operational data, queries, jobs, cache keys, broadcasts, files, exports, and notifications must be tenant-aware.
 - Use Laravel Policies/Gates for model-level authorisation. Do not rely on hidden UI or role middleware alone.
 - Keep controllers and Livewire page actions thin. Use Form Requests, explicit Actions/Services, and Query Objects.

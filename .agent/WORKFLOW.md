@@ -54,7 +54,7 @@ Keep implementation slices small. Prefer a vertical slice that can be demonstrat
 - Is keyboard and screen-reader behavior valid?
 - Is sensitive data absent from the HTML/Livewire payload unless authorised?
 
-## Verification
+## Local Verification
 
 Run focused tests first, then repository quality gates. For workflow changes, demonstrate:
 
@@ -66,6 +66,33 @@ Run focused tests first, then repository quality gates. For workflow changes, de
 - audit/notification output;
 - rollback or compensating action.
 
+Local verification narrows down what's broken before pushing. It does not authorize a merge — see `CI.md`.
+
+## Pull Request
+
+Push the branch and open a Pull Request. State requirement IDs, affected tenant/role/workflow, schema/migration impact, security impact, tests added, and rollout/rollback notes (`AGENTS.md` §9).
+
+## GitHub CI Verification
+
+Wait for GitHub Actions to reach a terminal state (`gh pr checks --watch`). Inspect the actual result — do not infer it from the push succeeding or from local output. If a required check fails, follow the failure rule in `CI.md` §7: inspect the job, inspect logs, fix the real root cause, push, wait again. Never merge with a required check pending or red.
+
+## Merge
+
+Merge only after every required check is green (`AGENTS.md` §5). Prefer merge-via-PR over any direct push to `main`.
+
+## Deployment Verification (if applicable)
+
+If the change results in a deployment — directly, or because it lands on `main` and a deployment is later triggered — verify the actual result per `CD.md`, not just that a workflow step "ran":
+
+- GitHub Environment and workflow run
+- published image digest(s)
+- migration result
+- health result (`/health/live`, `/health/ready`)
+- smoke result
+- rollback result, if a rollback occurred
+
+A deployment job still running, queued, or `workflow_dispatch`-pending is not completion evidence.
+
 ## Review
 
 Review the diff twice:
@@ -74,3 +101,7 @@ Review the diff twice:
 2. **Specification review:** exact fidelity to PRD and acceptance criteria.
 
 Do not merge with unresolved high-risk findings.
+
+## Completion
+
+Report completion using the evidence format in `AGENTS.md` §10 and `CI.md` §8 (and `CD.md` §8 when a deployment applies): branch, commit SHA, PR number, workflow run, per-job results, and remaining risks. Do not report completion on local evidence alone.

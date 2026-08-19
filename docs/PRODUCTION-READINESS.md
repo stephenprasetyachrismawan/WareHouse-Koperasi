@@ -1,6 +1,6 @@
 # Production Readiness — Phase 6.4
 
-Last evaluated: 2026-08-19 UTC (static-analysis gate closure; see Phase 6.4F-1 update below)
+Last evaluated: 2026-08-19 UTC (first development Docker cutover + CI/CD governance closure; see Phase 6.4F-0 update below)
 
 ## Final decision
 
@@ -8,9 +8,29 @@ Last evaluated: 2026-08-19 UTC (static-analysis gate closure; see Phase 6.4F-1 u
 PRODUCTION READINESS: BLOCKED
 ```
 
-The code-level 6.4A/6.4B gates and the available local PostgreSQL/Redis compatibility lane are green, but required managed production-environment evidence is not available. Phase 7 Machine Learning must not start.
+The code-level 6.4A/6.4B gates, static analysis, GitHub CI (with real PostgreSQL/Redis compatibility lanes, not just local ones), and the first development Docker cutover are all green — but required **managed production-environment** evidence (managed PostgreSQL/Redis/object storage, encrypted backup automation, RPO/RTO sign-off, production-like load, DNS, production Reverb/CSP) is still not available. None of the Phase 6.4F-0 work below changes this verdict — it closes a different, already-itemized set of blockers (static analysis, CI, containerization) and does not touch the managed-infrastructure blockers, which remain open. Phase 7 Machine Learning must not start.
 
 Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR #45). Post-merge evidence update: `03797345eb1be9eab90685db5e16acf0189f0353` (PR #47).
+
+## Phase 6.4F-0 — CI/CD and first development Docker cutover (2026-08-19)
+
+Full contracts: [`CI.md`](../CI.md), [`CD.md`](../CD.md).
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| PHPStan level 7 | VERIFIED — 0 errors | Phase 6.4F-1, PR #54 |
+| GitHub CI (`quality` + `integration`) | **ACTIVE** | `.github/workflows/ci-cd.yml`; every PR blocked on real GitHub Actions results, not local output |
+| PostgreSQL compatibility lane | **ACTIVE in CI** (ephemeral, per-run) | `integration` job migrates and runs the full suite against PostgreSQL 16 on every PR |
+| Redis compatibility lane | **ACTIVE in CI** (ephemeral, per-run) | `integration` job exercises a real Redis cache/queue round-trip via `tests/Feature/Infrastructure/RedisCompatibilityTest.php` |
+| Docker image build | **ACTIVE** | `image-build` job builds both `runtime`/`web` Dockerfile targets on every PR (no push) |
+| GHCR publishing | **ACTIVE** | `image-publish` job pushes immutable, digest-addressable images on trusted `main` only |
+| Development Docker runtime | **ACTIVE** | First cutover verified 2026-08-19: real data (20 users, 5 companies, 6 roles) migrated into named Docker volumes, zero data loss, `APP_KEY` preserved (never regenerated) |
+| Development CD | **ACTIVE / MANUAL** | `deploy-development` job, gated behind `workflow_dispatch` + `run_deploy=true` (not automatic on merge) — real end-to-end run verified: workflow `32246477458`, commit `c99ddb1`, digests `sha256:443e3b90…` (app) / `sha256:5e885ecf…` (web) |
+| Docker-to-Docker rollback | VERIFIED | `deploy/rollback-development.sh` exercised directly; correctly reported `DEPLOYMENT FAILED — ROLLBACK SUCCEEDED`, then forward-restored via `deploy-development.sh` |
+| First-cutover legacy fallback | VERIFIED | Full drill: Docker stopped → legacy `composer dev` restarted and served real traffic/data with `.env`/`APP_KEY` confirmed untouched → legacy stopped deterministically → Docker restarted and reverified |
+| Public WebSocket (Reverb) | VERIFIED | Real `wss://wh.stevewithcode.net` handshake → `HTTP/1.1 101` → `pusher:connection_established`, through the Cloudflare Tunnel to Reverb |
+
+This does **not** change the overall `PRODUCTION READINESS: BLOCKED` decision — it is a separate, now-closed set of gates (static analysis, GitHub CI, containerized development delivery). The managed-infrastructure, backup/restore, RPO/RTO, load/capacity, and DNS blockers documented below are unrelated and remain open. Development remains SQLite/database-backed-queue/cache/session at the runtime level (see `CD.md` §4) — the PostgreSQL/Redis compatibility lanes above are CI-only, proving forward-compatibility, not a claim that development itself runs on them.
 
 ## Environment assumptions
 

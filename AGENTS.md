@@ -9,9 +9,11 @@ Before editing code, read:
 3. `SECURITY-RULES.md`
 4. `ARCHITECTURE.md`
 5. `UI-RULES.md`
-6. `.agent/WORKFLOW.md`
+6. `CI.md`
+7. `CD.md`
+8. `.agent/WORKFLOW.md`
 
-Do not infer permissions, tenant boundaries, or workflow transitions from UI screenshots alone.
+Do not infer permissions, tenant boundaries, or workflow transitions from UI screenshots alone. `CI.md` and `CD.md` are normative sources of truth for how changes get merged and how the development environment is actually deployed — read them even for changes that don't touch `.github/workflows/` or `deploy/`, since they define the merge gate every change must pass.
 
 ## 2. Mandatory Agent Tooling
 
@@ -49,7 +51,10 @@ Laravel Boost custom project rules live in `.ai/guidelines/warehouse-project.md`
 - Security: `SECURITY-RULES.md`.
 - Architecture and boundaries: `ARCHITECTURE.md`.
 - UI behavior: `UI-RULES.md`.
+- Continuous integration / merge governance: `CI.md`.
+- Deployment / release / runtime-delivery governance: `CD.md`.
 - Existing tests and migrations are executable evidence, but they do not silently override documentation. Raise inconsistencies.
+- If an agent's own memory or a prior conversation implies a different CI/CD process than what `CI.md`/`CD.md` currently describe, the repository documentation wins. Re-read `CI.md`/`CD.md` rather than trusting recollection — they are updated whenever the real pipeline changes.
 
 ## 4. Non-Negotiable Rules
 
@@ -80,7 +85,9 @@ For each change:
 7. Run focused tests, formatting (`vendor/bin/pint --test`), and asset build (`npm run build`).
 8. Push the branch to origin (`git push -u origin <branch>`).
 9. Create a Pull Request (`gh pr create`).
-10. Merge the Pull Request into `main` (`gh pr merge --merge --delete-branch`).
+10. Wait for GitHub Actions to reach a terminal state (`gh pr checks --watch`). Do not merge while a required check is pending or red — see `CI.md`.
+11. Merge the Pull Request into `main` only after required checks are green (`gh pr merge --merge --delete-branch`).
+12. If the change affects a deployed environment, verify the actual deployment result (digest, health, smoke) before reporting the task complete — see `CD.md`. A deployment still running or pending is not completion evidence.
 
 ## 6. Required Test Cases for Tenant Models
 
@@ -153,3 +160,37 @@ npm run build
 ```
 
 Also run relevant focused tests for concurrency, tenancy, authorization, and browser behavior.
+
+## 11. CI/CD Mandatory Agent Behaviour
+
+For **every** future code change — even if the user says nothing about CI/CD — an agent must, without being reminded:
+
+1. Read `CI.md` and `CD.md` before starting.
+2. Create a dedicated branch (§5).
+3. Follow the appropriate TDD loop (`.agent/WORKFLOW.md`).
+4. Run local gates before pushing.
+5. Push the branch.
+6. Open a Pull Request.
+7. Inspect actual GitHub Actions results (`gh pr checks`, `gh run view`) — never assume from the push alone.
+8. Do not merge while a required check is red or still pending.
+9. Merge only after required checks are green.
+10. If the change results in a deployment, inspect the actual CD result — workflow run, digest, health, smoke — per `CD.md`.
+11. Do not claim something is deployed until that health evidence exists.
+
+The user should never need to remind an agent to follow this — it applies by default to every change in this repository.
+
+## 12. Documentation Drift
+
+Any PR that changes:
+
+- `.github/workflows/**`
+- `Dockerfile`
+- `deploy/**`
+- `compose*.yaml`
+- health endpoints
+- registry strategy (GHCR naming, tagging, digest handling)
+- the GitHub Environment contract (secrets/variables consumed)
+- deployment transport (SSH, keys, known-hosts handling)
+- rollback flow
+
+**must** explicitly review `CI.md` and `CD.md` for needed updates in the same PR. A workflow/infrastructure change that leaves these documents stale is incomplete, even if the workflow itself passes.
