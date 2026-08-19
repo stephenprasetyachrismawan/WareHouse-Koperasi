@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property-read PickupRequest|null $pickupRequest
  * @property-read Item|null $item
+ * @property int $eligible_quantity Computed and assigned by EligibleReturnItemsQuery; not a database column.
  */
 class PickupRequestItem extends Model
 {

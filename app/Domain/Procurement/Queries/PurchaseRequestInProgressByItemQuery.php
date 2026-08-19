@@ -23,7 +23,7 @@ use Illuminate\Support\Collection;
 class PurchaseRequestInProgressByItemQuery
 {
     /**
-     * @return Collection<int, object{item_id: int, item_name: string, total_quantity: int}>
+     * @return Collection<int, object{item_id: int<0, max>, item_name: string, total_quantity: int}&\stdClass>
      */
     public function execute(int $warehouseId): Collection
     {

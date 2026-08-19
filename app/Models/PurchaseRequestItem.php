@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /**
  * @property-read PurchaseRequest|null $purchaseRequest
  * @property-read Item|null $item
+ * @property-read int|null $allocated_quantity_sum Only present when loaded via withSum('allocations as allocated_quantity_sum', ...), e.g. ApprovedAllocatablePurchaseRequestsQuery.
+ * @property int $remaining_quantity Computed and assigned by ApprovedAllocatablePurchaseRequestsQuery; not a database column.
+ * @property-read int|null $total_quantity Only present when loaded via selectRaw('... SUM(requested_quantity) as total_quantity'), e.g. PurchaseRequestInProgressByItemQuery.
  */
 class PurchaseRequestItem extends Model
 {
