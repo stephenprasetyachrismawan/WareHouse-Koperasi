@@ -83,6 +83,17 @@ class SocialiteController extends Controller
                 $user->forceFill(['google_id' => $googleId])->save();
             }
 
+            // A user row can exist with no membership at all when a prior
+            // Google sign-in created the account but never finished company
+            // setup (e.g. it failed after this point). Route them back to
+            // setup instead of logging them into a dashboard the tenant
+            // context middleware would immediately 403.
+            if (! $user->isSuperAdmin() && $user->warehouseMemberships()->doesntExist()) {
+                Session::put(self::PENDING_USER_SESSION_KEY, $user->id);
+
+                return redirect()->route('auth.google.complete');
+            }
+
             Auth::login($user);
 
             return redirect()->intended(route('dashboard'));

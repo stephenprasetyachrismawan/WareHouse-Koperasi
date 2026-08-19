@@ -3,6 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use App\Models\WarehouseMembership;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Socialite\Facades\Socialite;
@@ -80,6 +81,7 @@ class GoogleSocialiteTest extends TestCase
             'google_id' => 'google-123',
             'status' => 'active',
         ]);
+        WarehouseMembership::factory()->role('staff_admin')->create(['user_id' => $user->id]);
 
         $this->fakeGoogle();
 
@@ -96,6 +98,7 @@ class GoogleSocialiteTest extends TestCase
             'google_id' => null,
             'status' => 'active',
         ]);
+        WarehouseMembership::factory()->role('staff_admin')->create(['user_id' => $user->id]);
 
         $this->fakeGoogle();
 
@@ -104,6 +107,49 @@ class GoogleSocialiteTest extends TestCase
 
         $this->assertAuthenticatedAs($user);
         $this->assertSame('google-123', $user->fresh()->google_id);
+    }
+
+    public function test_existing_user_without_any_membership_is_sent_to_company_setup_not_dashboard(): void
+    {
+        // Reproduces a real stuck account: a user row (and google_id) created
+        // by a prior Google sign-in attempt that never finished company
+        // setup (e.g. it hit RoleDoesNotExist before this fix). They must
+        // not be silently logged in to a dashboard they'll be 403'd from by
+        // EnsureTenantContext — they must be sent back to complete setup.
+        $user = User::factory()->create([
+            'email' => 'stuck@example.com',
+            'google_id' => 'google-123',
+            'status' => 'active',
+        ]);
+
+        $this->fakeGoogle(['email' => 'stuck@example.com']);
+
+        $this->get(route('auth.google.callback'))
+            ->assertRedirect(route('auth.google.complete'));
+
+        $this->assertGuest();
+        $this->assertSame($user->id, session('google_signin.user_id'));
+    }
+
+    public function test_existing_user_without_any_membership_can_still_complete_company_setup(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'stuck@example.com',
+            'google_id' => 'google-123',
+            'status' => 'active',
+        ]);
+
+        $this->fakeGoogle(['email' => 'stuck@example.com']);
+        $this->get(route('auth.google.callback'));
+
+        $this->post(route('auth.google.complete.store'), [
+            'company_name' => 'Koperasi Pulih Kembali',
+            'company_code' => 'KOP-PULIH',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertDatabaseHas('companies', ['code' => 'KOP-PULIH']);
+        $this->assertTrue($user->fresh()->hasRole('app_admin'));
     }
 
     public function test_deactivated_user_cannot_sign_in_with_google(): void
