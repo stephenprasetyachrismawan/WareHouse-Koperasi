@@ -75,6 +75,9 @@ class DemoGoodsReceiptSeeder extends Seeder
         $this->scenarioE_multiItemPartiallyInspected($warehouse, $receivedBy, $inspectedBy, $supplier, $items, $tag);
     }
 
+    /**
+     * @param  Collection<int, Item>  $items
+     */
     private function scenarioA_sentAwaitingReceipt(Warehouse $warehouse, User $receivedBy, Supplier $supplier, Collection $items, string $tag): void
     {
         $notes = "Demo Seeder Receipt - Scenario A (Sent, awaiting receipt) ({$tag})";
@@ -85,6 +88,9 @@ class DemoGoodsReceiptSeeder extends Seeder
         $this->sendPurchaseOrder($warehouse, $receivedBy, $supplier, $items->take(1), $notes);
     }
 
+    /**
+     * @param  Collection<int, Item>  $items
+     */
     private function scenarioB_receivedQcPending(Warehouse $warehouse, User $receivedBy, Supplier $supplier, Collection $items, string $tag): void
     {
         $notes = "Demo Seeder Receipt - Scenario B (Received, QC pending) ({$tag})";
@@ -101,6 +107,9 @@ class DemoGoodsReceiptSeeder extends Seeder
         ));
     }
 
+    /**
+     * @param  Collection<int, Item>  $items
+     */
     private function scenarioC_qcPassedStockAccepted(Warehouse $warehouse, User $receivedBy, User $inspectedBy, Supplier $supplier, Collection $items, string $tag): void
     {
         $notes = "Demo Seeder Receipt - Scenario C (QC passed, stock accepted) ({$tag})";
@@ -124,6 +133,9 @@ class DemoGoodsReceiptSeeder extends Seeder
         ));
     }
 
+    /**
+     * @param  Collection<int, Item>  $items
+     */
     private function scenarioD_qcFailedStockBlocked(Warehouse $warehouse, User $receivedBy, User $inspectedBy, Supplier $supplier, Collection $items, string $tag): void
     {
         $notes = "Demo Seeder Receipt - Scenario D (QC failed, stock-in blocked) ({$tag})";
@@ -147,6 +159,9 @@ class DemoGoodsReceiptSeeder extends Seeder
         ));
     }
 
+    /**
+     * @param  Collection<int, Item>  $items
+     */
     private function scenarioE_multiItemPartiallyInspected(Warehouse $warehouse, User $receivedBy, User $inspectedBy, Supplier $supplier, Collection $items, string $tag): void
     {
         $notes = "Demo Seeder Receipt - Scenario E (Multi-item, one line still QC pending) ({$tag})";
@@ -171,6 +186,9 @@ class DemoGoodsReceiptSeeder extends Seeder
         ));
     }
 
+    /**
+     * @param  Collection<int, Item>  $items
+     */
     private function sendPurchaseOrder(Warehouse $warehouse, User $actor, Supplier $supplier, Collection $items, string $notes): PurchaseOrder
     {
         $purchaseRequest = PurchaseRequest::create([
