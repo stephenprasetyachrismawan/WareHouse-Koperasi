@@ -39,6 +39,9 @@ class CriticalStockItemsQuery
         return $this->baseQuery($warehouseId)->count();
     }
 
+    /**
+     * @return LengthAwarePaginator<int, Item>
+     */
     public function paginate(int $warehouseId, int $perPage = 15): LengthAwarePaginator
     {
         return $this->baseQuery($warehouseId)

@@ -16,6 +16,9 @@ use InvalidArgumentException;
  */
 final readonly class StockMovementInput
 {
+    /**
+     * @param  array<string, mixed>|null  $metadata
+     */
     public function __construct(
         public int $warehouseId,
         public int $itemId,

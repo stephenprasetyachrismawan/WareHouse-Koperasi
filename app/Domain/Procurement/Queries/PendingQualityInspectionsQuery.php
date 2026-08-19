@@ -7,6 +7,9 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class PendingQualityInspectionsQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, GoodsReceiptItem>
+     */
     public function execute(int $warehouseId, int $perPage = 10): LengthAwarePaginator
     {
         return GoodsReceiptItem::query()

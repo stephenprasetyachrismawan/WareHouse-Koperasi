@@ -4,6 +4,7 @@ namespace App\Domain\Procurement\Queries;
 
 use App\Enums\PurchaseRequestStatus;
 use App\Models\PurchaseRequest;
+use Illuminate\Database\Eloquent\Collection;
 
 class DetectDuplicatePurchaseRequestQuery
 {
@@ -11,6 +12,9 @@ class DetectDuplicatePurchaseRequestQuery
         private readonly InProgressPurchaseRequestsForItem $inProgressQuery
     ) {}
 
+    /**
+     * @return array{is_duplicate: bool, in_progress_qty: int, candidates: Collection<int, PurchaseRequest>}
+     */
     public function execute(int $warehouseId, int $itemId): array
     {
         $inProgressQty = $this->inProgressQuery->execute($warehouseId, $itemId);
