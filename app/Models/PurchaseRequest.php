@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\PurchaseRequestSource;
 use App\Enums\PurchaseRequestStatus;
 use App\Enums\PurchaseRequestUrgency;
+use Database\Factories\PurchaseRequestFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  */
 class PurchaseRequest extends Model
 {
+    /** @use HasFactory<PurchaseRequestFactory> */
     use HasFactory, HasUuids;
 
     protected $fillable = [
@@ -55,51 +57,81 @@ class PurchaseRequest extends Model
         'cancelled_at' => 'datetime',
     ];
 
-    public function uniqueIds()
+    /**
+     * @return array<int, string>
+     */
+    public function uniqueIds(): array
     {
         return ['uuid'];
     }
 
+    /**
+     * @return BelongsTo<Warehouse, $this>
+     */
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * @return HasMany<PurchaseRequestItem, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(PurchaseRequestItem::class);
     }
 
+    /**
+     * @return BelongsTo<PickupRequest, $this>
+     */
     public function pickupRequest(): BelongsTo
     {
         return $this->belongsTo(PickupRequest::class);
     }
 
+    /**
+     * @return BelongsTo<ReturnRequest, $this>
+     */
     public function returnRequest(): BelongsTo
     {
         return $this->belongsTo(ReturnRequest::class);
     }
 
+    /**
+     * @return MorphMany<Approval, $this>
+     */
     public function approvals(): MorphMany
     {
         return $this->morphMany(Approval::class, 'approvable');
     }
 
+    /**
+     * @return HasMany<CancellationRequest, $this>
+     */
     public function cancellationRequests(): HasMany
     {
         return $this->hasMany(CancellationRequest::class);
     }
 
+    /**
+     * @param  Builder<PurchaseRequest>  $query
+     */
     public function scopeForWarehouse(Builder $query, int $warehouseId): void
     {
         $query->where('warehouse_id', $warehouseId);
     }
 
+    /**
+     * @param  Builder<PurchaseRequest>  $query
+     */
     public function scopeInProgress(Builder $query): void
     {
         $query->whereNotIn('status', [
@@ -109,6 +141,9 @@ class PurchaseRequest extends Model
         ]);
     }
 
+    /**
+     * @param  Builder<PurchaseRequest>  $query
+     */
     public function scopeApproved(Builder $query): void
     {
         $query->where('status', PurchaseRequestStatus::Approved);

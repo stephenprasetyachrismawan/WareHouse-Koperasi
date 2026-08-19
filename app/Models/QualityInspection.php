@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\QualityInspectionCondition;
 use App\Enums\QualityInspectionResult;
+use Database\Factories\QualityInspectionFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class QualityInspection extends Model
 {
+    /** @use HasFactory<QualityInspectionFactory> */
     use HasFactory, HasUuids;
 
     protected $fillable = [
@@ -37,26 +39,41 @@ class QualityInspection extends Model
         'inspected_at' => 'datetime',
     ];
 
+    /**
+     * @return array<int, string>
+     */
     public function uniqueIds(): array
     {
         return ['uuid'];
     }
 
+    /**
+     * @return BelongsTo<Warehouse, $this>
+     */
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }
 
+    /**
+     * @return BelongsTo<GoodsReceiptItem, $this>
+     */
     public function goodsReceiptItem(): BelongsTo
     {
         return $this->belongsTo(GoodsReceiptItem::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function inspector(): BelongsTo
     {
         return $this->belongsTo(User::class, 'inspected_by');
     }
 
+    /**
+     * @return BelongsTo<StockTransaction, $this>
+     */
     public function stockTransaction(): BelongsTo
     {
         return $this->belongsTo(StockTransaction::class);

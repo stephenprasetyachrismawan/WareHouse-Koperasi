@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\PurchaseRequestItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class PurchaseRequestItem extends Model
 {
+    /** @use HasFactory<PurchaseRequestItemFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -22,16 +24,25 @@ class PurchaseRequestItem extends Model
         'notes',
     ];
 
+    /**
+     * @return BelongsTo<PurchaseRequest, $this>
+     */
     public function purchaseRequest(): BelongsTo
     {
         return $this->belongsTo(PurchaseRequest::class);
     }
 
+    /**
+     * @return BelongsTo<Item, $this>
+     */
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
     }
 
+    /**
+     * @return HasMany<PurchaseRequestAllocation, $this>
+     */
     public function allocations(): HasMany
     {
         return $this->hasMany(PurchaseRequestAllocation::class);
