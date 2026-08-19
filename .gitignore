@@ -28,3 +28,4 @@ automation/warehouse-orchestrator/node_modules
 .claude/worktrees/
 .gemini/
 graphify-out/
+*.pem

@@ -21,7 +21,7 @@ return [
             // (config/livewire.php `csp_safe`) that avoids this, but it
             // restricts Alpine/Livewire expression syntax app-wide and
             // needs a dedicated compatibility pass before adoption.
-            "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-eval' https://www.gstatic.com https://www.googleapis.com; connect-src 'self' ws: wss: https://*.googleapis.com; media-src 'self' blob:"
+            "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; object-src 'none'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.gstatic.com https://www.googleapis.com; connect-src 'self' ws: wss: https://*.googleapis.com; media-src 'self' blob:"
         ),
         'referrer_policy' => env('SECURITY_REFERRER_POLICY', 'strict-origin-when-cross-origin'),
         'frame_options' => env('SECURITY_FRAME_OPTIONS', 'SAMEORIGIN'),

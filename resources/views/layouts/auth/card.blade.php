@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
@@ -7,8 +7,8 @@
         <div class="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
             <div class="flex w-full max-w-md flex-col gap-6">
                 <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
-                    <span class="flex h-9 w-9 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
+                    <span class="flex h-9 w-9 items-center justify-center overflow-hidden rounded-md bg-white">
+                        <img src="{{ asset('images/logo-kdmp.png') }}" alt="{{ config('app.name', 'Laravel') }}" class="size-9 w-auto object-contain" />
                     </span>
 
                     <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>

@@ -133,6 +133,9 @@ Route::middleware(['auth', 'verified', EnsureTenantContext::class])->group(funct
         Route::get('{returnRequest:uuid}', ReturnsShow::class)->name('show');
         Route::get('evidence/{returnEvidence:uuid}', ReturnEvidenceController::class)->name('evidence');
     });
+
+    // Documentation
+    Route::view('documentation', 'pages.documentation')->name('documentation');
 });
 
 require __DIR__.'/settings.php';
