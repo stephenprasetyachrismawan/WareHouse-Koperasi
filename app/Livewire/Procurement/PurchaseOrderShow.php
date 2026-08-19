@@ -6,6 +6,7 @@ use App\Actions\Procurement\SendPurchaseOrderAction;
 use App\Domain\Procurement\Queries\PurchaseOrderReceivingProgressQuery;
 use App\Domain\Procurement\Queries\PurchaseOrderTraceabilityQuery;
 use App\Models\PurchaseOrder;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -29,7 +30,7 @@ class PurchaseOrderShow extends Component
         $this->purchaseOrder->refresh();
     }
 
-    public function render(PurchaseOrderTraceabilityQuery $traceabilityQuery, PurchaseOrderReceivingProgressQuery $progressQuery)
+    public function render(PurchaseOrderTraceabilityQuery $traceabilityQuery, PurchaseOrderReceivingProgressQuery $progressQuery): View
     {
         return view('livewire.procurement.purchase-order-show', [
             'traceability' => $traceabilityQuery->execute($this->purchaseOrder),

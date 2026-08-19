@@ -7,6 +7,7 @@ use App\Domain\Procurement\ValueObjects\RecordGoodsReceiptInput;
 use App\Enums\PurchaseOrderStatus;
 use App\Models\GoodsReceipt;
 use App\Models\PurchaseOrder;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -57,7 +58,7 @@ class RecordGoodsReceipt extends Component
             ->with('success', 'Penerimaan barang berhasil dicatat.');
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.procurement.record-goods-receipt');
     }

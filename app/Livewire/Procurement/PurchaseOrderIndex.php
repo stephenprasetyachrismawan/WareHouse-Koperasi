@@ -3,6 +3,7 @@
 namespace App\Livewire\Procurement;
 
 use App\Models\PurchaseOrder;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,7 +12,7 @@ class PurchaseOrderIndex extends Component
 {
     use WithPagination;
 
-    public function render()
+    public function render(): View
     {
         $this->authorize('viewAny', PurchaseOrder::class);
 

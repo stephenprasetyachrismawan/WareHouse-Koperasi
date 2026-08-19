@@ -6,6 +6,7 @@ use App\Actions\Procurement\DirectCancelPurchaseRequestAction;
 use App\Actions\Procurement\RequestPurchaseCancellationAction;
 use App\Actions\Procurement\SubmitPurchaseForApprovalAction;
 use App\Models\PurchaseRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -13,39 +14,39 @@ class Show extends Component
 {
     public PurchaseRequest $purchaseRequest;
 
-    public $showCancelModal = false;
+    public bool $showCancelModal = false;
 
-    public $cancellation_reason = '';
+    public string $cancellation_reason = '';
 
-    public $directCancel = false; // true if direct cancel, false if request cancel
+    public bool $directCancel = false; // true if direct cancel, false if request cancel
 
-    public function mount(PurchaseRequest $purchaseRequest)
+    public function mount(PurchaseRequest $purchaseRequest): void
     {
         $this->authorize('view', $purchaseRequest);
 
         $this->purchaseRequest = $purchaseRequest->load(['items.item', 'approvals.requester', 'approvals.approver', 'creator', 'cancellationRequests']);
     }
 
-    public function submitForApproval(SubmitPurchaseForApprovalAction $submitAction)
+    public function submitForApproval(SubmitPurchaseForApprovalAction $submitAction): void
     {
         $submitAction->execute(Auth::user(), $this->purchaseRequest);
         session()->flash('success', 'Purchase Request submitted for approval.');
         $this->purchaseRequest->refresh();
     }
 
-    public function openCancelModal($direct = false)
+    public function openCancelModal(bool $direct = false): void
     {
         $this->directCancel = $direct;
         $this->showCancelModal = true;
         $this->cancellation_reason = '';
     }
 
-    public function closeCancelModal()
+    public function closeCancelModal(): void
     {
         $this->showCancelModal = false;
     }
 
-    public function submitCancel(RequestPurchaseCancellationAction $requestAction, DirectCancelPurchaseRequestAction $directAction)
+    public function submitCancel(RequestPurchaseCancellationAction $requestAction, DirectCancelPurchaseRequestAction $directAction): void
     {
         $this->validate([
             'cancellation_reason' => 'required|string|min:3',
@@ -63,7 +64,7 @@ class Show extends Component
         $this->purchaseRequest->refresh();
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.procurement.show');
     }

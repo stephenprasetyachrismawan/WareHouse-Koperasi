@@ -4,6 +4,7 @@ namespace App\Livewire\Returns;
 
 use App\Enums\ReturnStatus;
 use App\Models\ReturnRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -17,7 +18,7 @@ class ApprovalQueue extends Component
         $this->authorize('viewAny', ReturnRequest::class);
     }
 
-    public function render()
+    public function render(): View
     {
         $warehouseId = Auth::user()->activeWarehouse()?->id;
 

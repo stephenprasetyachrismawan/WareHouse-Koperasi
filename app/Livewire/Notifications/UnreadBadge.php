@@ -3,6 +3,7 @@
 namespace App\Livewire\Notifications;
 
 use App\Domain\Notifications\Queries\InboxNotificationsQuery;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -19,12 +20,12 @@ class UnreadBadge extends Component
         //
     }
 
-    public function render(InboxNotificationsQuery $query)
+    public function render(InboxNotificationsQuery $query): View
     {
         $warehouseId = Auth::user()->activeWarehouse()?->id;
 
         return view('livewire.notifications.unread-badge', [
-            'unreadCount' => $query->unreadCount(Auth::id(), $warehouseId),
+            'unreadCount' => $query->unreadCount(Auth::user()->id, $warehouseId),
         ]);
     }
 }

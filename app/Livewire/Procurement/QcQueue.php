@@ -4,6 +4,7 @@ namespace App\Livewire\Procurement;
 
 use App\Domain\Procurement\Queries\PendingQualityInspectionsQuery;
 use App\Models\GoodsReceipt;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,7 +13,7 @@ class QcQueue extends Component
 {
     use WithPagination;
 
-    public function render(PendingQualityInspectionsQuery $pendingQuery)
+    public function render(PendingQualityInspectionsQuery $pendingQuery): View
     {
         $this->authorize('viewAny', GoodsReceipt::class);
 

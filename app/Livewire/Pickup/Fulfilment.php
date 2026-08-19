@@ -7,16 +7,17 @@ use App\Actions\Pickup\MarkPickupReadyAction;
 use App\Actions\Returns\CompleteReplacementPickupAction;
 use App\Enums\PickupRequestSource;
 use App\Models\PickupRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class Fulfilment extends Component
 {
-    public $searchRequestNumber = '';
+    public string $searchRequestNumber = '';
 
     public ?PickupRequest $currentRequest = null;
 
-    public function search()
+    public function search(): void
     {
         $this->currentRequest = PickupRequest::where('request_number', trim($this->searchRequestNumber))
             ->whereIn('status', ['APPROVED', 'READY_FOR_PICKUP'])
@@ -28,7 +29,7 @@ class Fulfilment extends Component
         }
     }
 
-    public function markReady(MarkPickupReadyAction $action)
+    public function markReady(MarkPickupReadyAction $action): void
     {
         if (! $this->currentRequest) {
             return;
@@ -45,7 +46,7 @@ class Fulfilment extends Component
         }
     }
 
-    public function fulfill(FulfillPickupAction $action, CompleteReplacementPickupAction $completeReplacementAction)
+    public function fulfill(FulfillPickupAction $action, CompleteReplacementPickupAction $completeReplacementAction): void
     {
         if (! $this->currentRequest) {
             return;
@@ -68,7 +69,7 @@ class Fulfilment extends Component
         }
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.pickup.fulfilment');
     }
