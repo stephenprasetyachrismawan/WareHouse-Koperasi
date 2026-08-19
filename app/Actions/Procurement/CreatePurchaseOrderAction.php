@@ -89,7 +89,6 @@ class CreatePurchaseOrderAction
 
         $sequence = PurchaseOrder::forWarehouse($warehouseId)
             ->where('po_number', 'like', "PO-{$date}-%")
-            ->lockForUpdate()
             ->count() + 1;
 
         return sprintf('PO-%s-%04d', $date, $sequence);
