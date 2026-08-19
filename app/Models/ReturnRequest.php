@@ -66,76 +66,122 @@ class ReturnRequest extends Model
         'disposed_at' => 'datetime',
     ];
 
+    /**
+     * @return array<int, string>
+     */
     public function uniqueIds(): array
     {
         return ['uuid'];
     }
 
+    /**
+     * @return BelongsTo<Warehouse, $this>
+     */
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }
 
+    /**
+     * @return BelongsTo<WarehouseMembership, $this>
+     */
     public function cooperativeMembership(): BelongsTo
     {
         return $this->belongsTo(WarehouseMembership::class, 'cooperative_membership_id');
     }
 
+    /**
+     * @return BelongsTo<PickupRequest, $this>
+     */
     public function pickupRequest(): BelongsTo
     {
         return $this->belongsTo(PickupRequest::class);
     }
 
+    /**
+     * @return BelongsTo<PickupRequest, $this>
+     */
     public function replacementPickup(): BelongsTo
     {
         return $this->belongsTo(PickupRequest::class, 'replacement_pickup_request_id');
     }
 
+    /**
+     * @return HasMany<PurchaseRequest, $this>
+     */
     public function replacementPurchaseRequests(): HasMany
     {
         return $this->hasMany(PurchaseRequest::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function submitter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'submitted_by');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function verifier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function rejecter(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rejected_by');
     }
 
+    /**
+     * @return MorphMany<Approval, $this>
+     */
     public function approvals(): MorphMany
     {
         return $this->morphMany(Approval::class, 'approvable');
     }
 
+    /**
+     * @return HasMany<ReturnDisposal, $this>
+     */
     public function disposals(): HasMany
     {
         return $this->hasMany(ReturnDisposal::class);
     }
 
+    /**
+     * @return HasMany<ReturnRequestItem, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(ReturnRequestItem::class);
     }
 
+    /**
+     * @return HasMany<ReturnEvidence, $this>
+     */
     public function evidence(): HasMany
     {
         return $this->hasMany(ReturnEvidence::class);
     }
 
+    /**
+     * @param  Builder<ReturnRequest>  $query
+     * @return Builder<ReturnRequest>
+     */
     public function scopeForWarehouse(Builder $query, int $warehouseId): Builder
     {
         return $query->where('warehouse_id', $warehouseId);

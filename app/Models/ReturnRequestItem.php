@@ -31,21 +31,33 @@ class ReturnRequestItem extends Model
         'barcode_verified' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<ReturnRequest, $this>
+     */
     public function returnRequest(): BelongsTo
     {
         return $this->belongsTo(ReturnRequest::class);
     }
 
+    /**
+     * @return BelongsTo<PickupRequestItem, $this>
+     */
     public function pickupRequestItem(): BelongsTo
     {
         return $this->belongsTo(PickupRequestItem::class);
     }
 
+    /**
+     * @return BelongsTo<Item, $this>
+     */
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
     }
 
+    /**
+     * @return HasOne<ReturnDisposal, $this>
+     */
     public function disposal(): HasOne
     {
         return $this->hasOne(ReturnDisposal::class);
