@@ -1,0 +1,359 @@
+name: ci-cd
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_deploy:
+        description: "Also run deploy-development (requires VPS SSH secrets to exist)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  REGISTRY: ghcr.io
+  APP_IMAGE_NAME: ${{ github.repository_owner }}/warehouse-koperasi
+  WEB_IMAGE_NAME: ${{ github.repository_owner }}/warehouse-koperasi-web
+
+jobs:
+  # ---------------------------------------------------------------------------
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Setup Application (SQLite fast lane)
+        run: |
+          mkdir -p database
+          touch database/database.sqlite
+          composer install --no-interaction --prefer-dist --no-progress
+          cp .env.example .env
+          php artisan key:generate --ansi
+          php artisan migrate --force --ansi
+          npm ci
+          npm run build
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: database/database.sqlite
+
+      - name: Run security regression suite
+        run: php artisan test tests/Feature/Security
+
+      - name: Run dependency audits
+        run: |
+          composer audit
+          npm audit --audit-level=high
+
+      - name: Run formatting, static analysis, and full tests
+        run: composer test
+
+      - name: Scan repository for secrets
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ---------------------------------------------------------------------------
+  integration:
+    name: integration (PostgreSQL + Redis)
+    needs: quality
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: warehouse_koperasi_ci
+          POSTGRES_USER: warehouse_ci
+          POSTGRES_PASSWORD: warehouse_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U warehouse_ci"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: "8.4"
+          extensions: pdo_pgsql, redis
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          npm ci
+          npm run build
+
+      - name: Configure environment for PostgreSQL + Redis
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+        env:
+          DB_CONNECTION: pgsql
+
+      - name: Migrate against ephemeral PostgreSQL
+        run: php artisan migrate --force --ansi
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: warehouse_koperasi_ci
+          DB_USERNAME: warehouse_ci
+          DB_PASSWORD: warehouse_ci
+
+      - name: Full test suite against PostgreSQL
+        run: php artisan test --compact
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: warehouse_koperasi_ci
+          DB_USERNAME: warehouse_ci
+          DB_PASSWORD: warehouse_ci
+
+      # The rest of the suite runs under phpunit.xml's own sync/array/file
+      # queue/cache/session defaults -- most tests assert job side effects
+      # immediately after triggering them, which only holds under a
+      # synchronous queue. Forcing the whole suite onto a real async Redis
+      # queue breaks that unrelated assumption without proving anything
+      # extra, so Redis compatibility gets its own targeted, isolated
+      # test file instead of a suite-wide driver override.
+      - name: Verify Redis cache/queue compatibility
+        run: php artisan test --compact tests/Feature/Infrastructure/RedisCompatibilityTest.php
+        env:
+          DB_CONNECTION: pgsql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 5432
+          DB_DATABASE: warehouse_koperasi_ci
+          DB_USERNAME: warehouse_ci
+          DB_PASSWORD: warehouse_ci
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          REDIS_CLIENT: phpredis
+
+  # ---------------------------------------------------------------------------
+  # Builds both image targets on every PR/push to prove the Dockerfile
+  # actually builds. Never pushes here -- packages: write is granted only
+  # to the separate image-publish job, which only runs on trusted main.
+  image-build:
+    name: image build (no publish)
+    needs: [quality, integration]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Build runtime image (no push)
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          target: runtime
+          push: false
+          build-args: |
+            VITE_REVERB_APP_KEY=ci-build-placeholder
+            VITE_REVERB_HOST=wh.stevewithcode.net
+            VITE_REVERB_PORT=443
+            VITE_REVERB_SCHEME=https
+          cache-from: type=gha,scope=runtime
+          cache-to: type=gha,mode=max,scope=runtime
+
+      - name: Build web image (no push)
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          target: web
+          push: false
+          build-args: |
+            VITE_REVERB_APP_KEY=ci-build-placeholder
+            VITE_REVERB_HOST=wh.stevewithcode.net
+            VITE_REVERB_PORT=443
+            VITE_REVERB_SCHEME=https
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+  # ---------------------------------------------------------------------------
+  # Only runs on trusted main. Rebuilds (BuildKit cache makes this cheap) and
+  # actually publishes to GHCR with an immutable, commit-addressable digest.
+  image-publish:
+    name: image publish (GHCR)
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: [quality, integration]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      app_digest: ${{ steps.push-app.outputs.digest }}
+      web_digest: ${{ steps.push-web.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: App image metadata
+        id: meta-app
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=development
+
+      - name: Build and push app image
+        id: push-app
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          target: runtime
+          push: true
+          tags: ${{ steps.meta-app.outputs.tags }}
+          labels: ${{ steps.meta-app.outputs.labels }}
+          build-args: |
+            VITE_REVERB_APP_KEY=${{ vars.REVERB_APP_KEY }}
+            VITE_REVERB_HOST=wh.stevewithcode.net
+            VITE_REVERB_PORT=443
+            VITE_REVERB_SCHEME=https
+          cache-from: type=gha,scope=runtime
+          cache-to: type=gha,mode=max,scope=runtime
+          sbom: true
+          provenance: true
+
+      - name: Web image metadata
+        id: meta-web
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=development
+
+      - name: Build and push web image
+        id: push-web
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          target: web
+          push: true
+          tags: ${{ steps.meta-web.outputs.tags }}
+          labels: ${{ steps.meta-web.outputs.labels }}
+          build-args: |
+            VITE_REVERB_APP_KEY=${{ vars.REVERB_APP_KEY }}
+            VITE_REVERB_HOST=wh.stevewithcode.net
+            VITE_REVERB_PORT=443
+            VITE_REVERB_SCHEME=https
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+          sbom: true
+          provenance: true
+
+      - name: Record published digests
+        run: |
+          echo "App image digest:  ${{ steps.push-app.outputs.digest }}"
+          echo "Web image digest:  ${{ steps.push-web.outputs.digest }}"
+          echo "### GHCR publish" >> "$GITHUB_STEP_SUMMARY"
+          echo "- App: \`${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}@${{ steps.push-app.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Web: \`${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}@${{ steps.push-web.outputs.digest }}\`" >> "$GITHUB_STEP_SUMMARY"
+
+  # ---------------------------------------------------------------------------
+  # Deliberately gated to workflow_dispatch only for this first slice: the
+  # VPS has no Docker install, deploy user, or SSH secrets configured yet.
+  # A normal push to main stops after image-publish. This job is enabled
+  # once Section 41 (VPS provisioning) is complete, by removing this gate.
+  deploy-development:
+    name: deploy-development
+    if: github.event_name == 'workflow_dispatch' && inputs.run_deploy
+    needs: image-publish
+    runs-on: ubuntu-latest
+    environment: development
+    concurrency:
+      group: deploy-development
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Deploy to development VPS
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          APP_IMAGE: ${{ env.REGISTRY }}/${{ env.APP_IMAGE_NAME }}@${{ needs.image-publish.outputs.app_digest }}
+          WEB_IMAGE: ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}@${{ needs.image-publish.outputs.web_digest }}
+        run: |
+          install -m 600 -D /dev/null ~/.ssh/id_deploy
+          printf '%s' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
+          printf '%s' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/id_deploy -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "/srv/warehouse-koperasi/deploy/deploy-development.sh '$APP_IMAGE' '$WEB_IMAGE'"

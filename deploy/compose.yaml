@@ -1,0 +1,74 @@
+# Deployed to /srv/warehouse-koperasi/deploy/compose.yaml on the VPS by the
+# deploy script. APP_IMAGE and WEB_IMAGE are set per-deploy to an immutable
+# ghcr.io/.../warehouse-koperasi@sha256:<digest> reference -- never `latest`.
+# The VPS only ever runs `docker compose pull` + `up`; nothing here is built
+# on the host.
+#
+# For local development against this same topology, copy .env.docker.example
+# to .env, set APP_IMAGE/WEB_IMAGE to locally built tags, and run
+# `docker compose --project-directory deploy build` once from the repo root.
+
+name: warehouse-koperasi
+
+x-app-image: &app-image ${APP_IMAGE:?APP_IMAGE must be set to an immutable ghcr.io digest reference}
+x-web-image: &web-image ${WEB_IMAGE:?WEB_IMAGE must be set to an immutable ghcr.io digest reference}
+
+x-app-common: &app-common
+  image: *app-image
+  env_file:
+    - .env
+  volumes:
+    # A subdirectory, never database/ itself -- that directory ships the
+    # baked-in migrations/factories/seeders, and a volume mounted directly
+    # over it would shadow them. DB_DATABASE (in .env) must point at
+    # /var/www/html/storage/database/database.sqlite.
+    - sqlite-data:/var/www/html/storage/database
+    - private-storage:/var/www/html/storage/app/private
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  web:
+    image: *web-image
+    depends_on:
+      - app
+    ports:
+      - "127.0.0.1:8000:8000"
+    mem_limit: 128m
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  app:
+    <<: *app-common
+    mem_limit: 768m
+
+  queue:
+    <<: *app-common
+    command: ["queue"]
+    mem_limit: 384m
+
+  scheduler:
+    <<: *app-common
+    command: ["scheduler"]
+    mem_limit: 256m
+
+  reverb:
+    <<: *app-common
+    command: ["reverb"]
+    ports:
+      - "127.0.0.1:8080:8080"
+    mem_limit: 256m
+
+volumes:
+  sqlite-data:
+    name: warehouse-koperasi-sqlite
+  private-storage:
+    name: warehouse-koperasi-private-storage

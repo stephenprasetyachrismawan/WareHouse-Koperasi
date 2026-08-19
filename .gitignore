@@ -9,6 +9,7 @@
 /vendor
 .env
 .env.backup
+.env.bak-*
 .env.production
 .phpactor.json
 .phpunit.result.cache
@@ -24,5 +25,6 @@ yarn-error.log
 /.zed
 automation/warehouse-orchestrator/node_modules
 .agent-runtime/
+.claude/worktrees/
 .gemini/
 graphify-out/
