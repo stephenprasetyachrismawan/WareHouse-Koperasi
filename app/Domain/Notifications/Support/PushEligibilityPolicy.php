@@ -76,6 +76,6 @@ class PushEligibilityPolicy
             ->orderByRaw('notification_type is null')
             ->first();
 
-        return $preference?->enabled ?? true;
+        return $preference->enabled ?? true;
     }
 }

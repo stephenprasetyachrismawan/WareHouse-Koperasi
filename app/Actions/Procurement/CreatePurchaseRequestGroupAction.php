@@ -73,7 +73,6 @@ class CreatePurchaseRequestGroupAction
         $sequence = PurchaseRequestGroup::forWarehouse($warehouseId)
             ->where('group_number', 'like', "PRG-{$date}-%")
             ->lockForUpdate()
-            ->get()
             ->count() + 1;
 
         return sprintf('PRG-%s-%04d', $date, $sequence);

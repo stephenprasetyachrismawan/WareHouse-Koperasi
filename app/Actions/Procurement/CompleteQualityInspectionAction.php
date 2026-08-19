@@ -126,7 +126,7 @@ class CompleteQualityInspectionAction
             ->unique();
 
         foreach ($purchaseRequestIds as $purchaseRequestId) {
-            $purchaseRequest = PurchaseRequest::find($purchaseRequestId);
+            $purchaseRequest = PurchaseRequest::find((int) $purchaseRequestId);
 
             if (! $purchaseRequest || $purchaseRequest->status !== PurchaseRequestStatus::GoodsReceived) {
                 continue;

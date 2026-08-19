@@ -22,7 +22,7 @@ class CheckReplacementAvailabilityAction
             ->where('item_id', $returnRequestItem->item_id)
             ->first();
 
-        $available = max(0, $balance?->quantity ?? 0);
+        $available = max(0, $balance->quantity ?? 0);
 
         return new ReplacementAvailability(
             isAvailable: $available >= $required,
