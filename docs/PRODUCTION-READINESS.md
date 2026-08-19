@@ -1,6 +1,6 @@
 # Production Readiness — Phase 6.4
 
-Last evaluated: 2026-08-14 UTC
+Last evaluated: 2026-08-19 UTC (static-analysis gate closure; see Phase 6.4F-1 update below)
 
 ## Final decision
 
@@ -30,8 +30,22 @@ Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR 
 | Phase 6.4D environment verification | [PR #45](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/45) / `7eb1d80` | Merged; local compatibility evidence recorded, managed gates remain blocked |
 | Phase 6.4E managed-environment preparation | [PR #50](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/50) / `a7b193a` | Merged; provider-neutral production contract, fail-closed validator, and safe infrastructure smoke seam implemented; managed provisioning remains blocked |
 | Composer build workflow follow-up | [PR #51](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/51) / `b92c68f` | Merged; `composer run build` delegates to the locked frontend build |
+| Phase 6.4F-1 static analysis closure | [PR #54](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/pull/54) / `ece3a07` | Merged; PHPStan level 7 411 → 0 errors, 5 real runtime/authorization bugs found and fixed, no baseline/suppressions. GitHub Actions CI green including Gitleaks (run [32222754814](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/actions/runs/32222754814)). Full evidence: `docs/verification/phase-6-4f-static-analysis.md` |
 
 ## Latest post-merge verification
+
+### Phase 6.4F-1 static analysis closure (2026-08-19)
+
+- `composer types:check` (PHPStan level 7, `app/` `bootstrap/app.php` `config/` `database/` `routes/`): **0 errors** (was 411 across 107 files). No baseline, no `ignoreErrors`, no level reduction.
+- `php artisan test --compact`: 643 passed / 643, 1,580 assertions (up from 606/1,458).
+- `vendor/bin/pint --test`: passed. `npm run build`: passed. `composer audit`: no advisories. `npm audit --audit-level=high`: 0 vulnerabilities. `git diff --check`: clean.
+- `composer test` (config:clear + Pint + PHPStan + full suite): passed in ~35s wall time — the prior "PHPStan exceeded the 300-second Composer process timeout" account below is superseded; the real cause was 411 genuine type errors, not a timeout, and the gate now completes quickly once they were fixed.
+- GitHub Actions (`tests` workflow, run `32222754814`, commit `e071a37` merged as `ece3a07`): security regression suite, dependency audits, formatting/static-analysis/full-tests, and **Gitleaks secret scan** all passed. Local Gitleaks remained NOT VERIFIED (binary unavailable on this VPS); GitHub Actions is the authoritative secret-scan evidence and it passed.
+- Post-merge smoke on `main` at `ece3a07`: homepage/login return 200, `/dashboard` and `/pickup/{uuid}` correctly redirect unauthenticated (302, not 500), `auth/google` redirects to Google's OAuth consent screen (302), no fatal errors in `laravel.log`. The 18 Pickup/Procurement/CancellationRequestPolicy regression tests added in this phase re-ran green against the merged `main`.
+- 5 real runtime/authorization bugs found during typing and fixed with regression tests (not typed around): a `TypeError` on every manual purchase request submission, a fatal error on every pickup detail page view, the same class of fatal error on the purchase-request detail page's approval history, 3 unhandled file-upload storage-failure paths, and a fatal `CancellationRequestPolicy` (dormant, not live-wired, but fixed regardless). Full narrative in `docs/verification/phase-6-4f-static-analysis.md`.
+
+**Static analysis is now VERIFIED/CLOSED as a production-readiness gate.** This does not change the overall `PRODUCTION READINESS: BLOCKED` decision below — the managed-infrastructure, backup/restore, RPO/RTO, load/capacity, and DNS blockers are unrelated to this gate and remain open.
+
 
 - `php artisan test`: 606 passed / 606, 1,458 assertions.
 - `tests/Feature/Seeders/DatabaseSeederCompletenessTest`: full business seed passed twice without duplicate core records; both `WH-PUSAT` and `WH-BARAT` are present and no seeded approval has a null UUID.
@@ -50,7 +64,7 @@ Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR 
 - `https://wh.stevewithcode.com`: **NOT VERIFIED** — DNS returned `ERR_NAME_NOT_RESOLVED`. The hostname exists in `/etc/cloudflared/config.yml`, but the DNS record is an external Cloudflare action and remains a blocker.
 - Browser observed configuration failures: Laravel Boost's development browser logger was rejected by CSP, Cloudflare Insights was not in `script-src`, and Reverb attempted `wss://localhost:8080` from the public page and failed. These do not make the public homepage blank—the asset requests returned 200 and the page rendered—but require environment-specific production configuration before sign-off.
 - Post-merge PostgreSQL/seeder rerun: clean PostgreSQL 16.14 `php artisan migrate --force` passed, `php artisan db:seed --force` passed twice, and counts remained `warehouses=2`, `users=12`, `items=48`, `stock_balances=45`, `stock_transactions=58`, `pickup_requests=16`, `purchase_requests=33`, `purchase_orders=19`, `goods_receipts=11`, `quality_inspections=9`, `return_requests=12`, `inbox_notifications=61`, `null_approval_uuids=0`. Persistent development `php artisan migrate --no-interaction` reported `Nothing to migrate`.
-- `composer test`: Pint passed, but PHPStan exceeded the 300-second Composer process timeout. This remains an explicit static-analysis blocker; no suppression or new baseline was added.
+- `composer test` (as of PR #51/`b92c68f`, historical): Pint passed, but PHPStan exceeded the 300-second Composer process timeout. **Superseded 2026-08-19 by Phase 6.4F-1** — see the section above; the real blocker was 411 genuine PHPStan errors, now closed to 0, and `composer test` completes in ~35s.
 - Phase 6.4E preparation: `ops:validate-production` now rejects SQLite/non-TLS DB, database-backed queue/cache/session, non-private S3 storage, missing Reverb credentials, unpinned Reverb origins, localhost Reverb frontend endpoints, and public production URLs. `ops:verify-production-infrastructure` is read-only by default; its private-storage probe requires explicit confirmation and is not a substitute for managed-provider evidence.
 - Final `main` verification at `b92c68f`: `composer run build` passed after the build alias merge, and `composer run dev` passed after its automatic build; Laravel, queue, Reverb, Pail, and Vite started on the intended local ports.
 - Final Cloudflare probes after restart: `https://wh.stevewithcode.net/` returned 200, `/health/live` and `/health/ready` returned 200, and `https://vite-warehouse.stevewithcode.net/@vite/client` returned 200. The `.com` hostname remains DNS-unresolved and is still a blocker.
@@ -62,7 +76,7 @@ Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR 
 - Stock reconciliation detects ledger/materialized balance differences and does not mutate stock.
 - Full feature suite on 6.4B: 593 passed / 593; final 6.4C suite: 597 passed / 597.
 - Composer audit: no advisories. npm audit: 0 vulnerabilities after the lockfile update to nanoid 3.3.18.
-- PHPStan: command/process timeout; no suppressions added.
+- PHPStan: **VERIFIED** — level 7, 0 errors (Phase 6.4F-1, 2026-08-19); no suppressions, baseline, or level reduction added.
 - Secret scanning: **VERIFIED** with Gitleaks v8.30.1. The exact historical documentation false positive and decision are recorded in `.gitleaks.toml`.
 
 ## Backup and restore evidence
@@ -109,7 +123,7 @@ Required before PASS: production secrets managed externally, runtime DB least pr
 | RPO/RTO | Proposed only | 15-minute RPO / 60-minute RTO have no authorised sign-off or measured managed restore | BLOCKED |
 | Secret scan | Not verified | Gitleaks v8.30.1 checksum-verified scan passed; exact historical docs false positive reviewed | VERIFIED |
 | Production configuration | Development runtime | `APP_ENV=local`, `APP_DEBUG=true`; validator now rejects local endpoints/private local disk in production mode; browser saw `wss://localhost:8080` | BLOCKED |
-| Static analysis | Existing debt | `composer test` timed out in PHPStan after Pint passed | BLOCKED |
+| Static analysis | Existing debt | PHPStan level 7: 411 → 0 errors (Phase 6.4F-1, PR #54); `composer test` passes in ~35s | VERIFIED |
 | Public `.com` hostname | DNS unresolved | `wh.stevewithcode.com` still fails DNS; `.net` Laravel/health/assets work | BLOCKED |
 | Managed production environment | No provider access | Provider-neutral ADR/inventory and smoke seam are present; no managed PostgreSQL/Redis/private storage/secret manager/monitoring credentials are available | BLOCKED |
 
@@ -119,7 +133,7 @@ Required before PASS: production secrets managed externally, runtime DB least pr
 2. Encrypted backup automation and backup-failure alerting are not connected to production infrastructure.
 3. Load/capacity evidence is not verified in an isolated production-like environment.
 4. RPO/RTO have no explicit operations sign-off.
-5. `composer test` cannot complete because PHPStan exceeds the configured process timeout.
+5. ~~`composer test` cannot complete because PHPStan exceeds the configured process timeout.~~ **Resolved 2026-08-19 (Phase 6.4F-1, PR #54)** — PHPStan level 7 closed 411 → 0 errors; `composer test` now completes in ~35s.
 6. Current workspace is not a production configuration (`APP_DEBUG=true`); public Reverb/CSP endpoint validation is not closed, with browser evidence of failed `wss://localhost:8080` and CSP violations.
 7. `wh.stevewithcode.com` remains DNS-unresolved.
 8. Phase 6.4E cannot provision or verify managed PostgreSQL, Redis, private object storage, secret management, process supervision, backup monitoring, or canonical DNS without approved provider access and external operational actions.
