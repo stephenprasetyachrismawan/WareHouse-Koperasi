@@ -1,13 +1,16 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/livewire-starter-kit",
+    "name": "stephenprasetyachrismawan/warehouse-koperasi",
     "type": "project",
-    "description": "The official Laravel starter kit for Livewire.",
+    "description": "Warehouse Koperasi -- a multi-tenant SaaS platform for cooperative (koperasi) warehouse stock, procurement, pickup, and returns management.",
     "keywords": [
         "laravel",
-        "framework"
+        "livewire",
+        "warehouse",
+        "koperasi",
+        "inventory"
     ],
-    "license": "MIT",
+    "license": "GPL-3.0-or-later",
     "require": {
         "php": "^8.3",
         "laravel/chisel": "^0.1.0",

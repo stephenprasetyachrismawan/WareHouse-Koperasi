@@ -1,8 +1,60 @@
-# Warehouse Koperasi SaaS — Panduan Instalasi
+# Warehouse Koperasi
 
-Dokumen ini adalah panduan instalasi dan menjalankan **Warehouse Koperasi SaaS** secara lokal untuk pengembangan. Untuk kebutuhan produk, arsitektur, aturan keamanan, dan aturan UI, baca dokumen terkait di bawah — bukan file ini.
+Aplikasi web untuk mengelola stok barang, pengambilan, pengadaan, dan retur di gudang koperasi desa — multi-tenant, satu platform untuk lebih dari satu gudang.
 
-## Dokumen Utama
+## Anggota Kelompok
+
+| Nama | NIM | GitHub |
+|---|---|---|
+| Stephen Prasetya Chrismawan | 25/563032/PPA/07093 | [@stephenprasetyachrismawan](https://github.com/stephenprasetyachrismawan) |
+| Wiladahtul Awaliah | 25/569610/PPA/07174 | [@wiladahtulawaliah2002-maker](https://github.com/wiladahtulawaliah2002-maker) |
+| Muhammad Zhafir Zaydan | 25/563967/PPA/07119 | [@zhafirzidann](https://github.com/zhafirzidann) |
+
+---
+
+## Untuk Pengguna
+
+### Apa itu Warehouse Koperasi?
+
+**Warehouse Koperasi** membantu koperasi desa mengelola gudang tanpa proses kertas dan komunikasi terpisah-pisah — satu alur kerja terpusat dari request sampai stok dan retur, dengan approval dan bukti yang jelas.
+
+| Fitur | Fungsi |
+|---|---|
+| 📦 Inventaris & Stok | Kelola daftar barang, cek saldo stok, lihat riwayat pergerakan |
+| 🛒 Pengambilan (Pickup) | Koperasi anggota mengajukan permintaan barang, disetujui Kepala Gudang |
+| 📄 Pengadaan (Procurement) | Purchase request, grouping, PO, penerimaan & QC barang dari supplier |
+| ↩️ Retur Barang | Ajukan retur, verifikasi, approval, dan penggantian barang |
+| 📊 Laporan | Lihat dan export laporan stok, mutasi, pengadaan, pickup, dan retur |
+| 🔔 Notifikasi | Notifikasi real-time untuk approval dan perubahan status |
+
+Setiap pengguna tergabung dalam satu atau lebih **warehouse** (tenant) dengan role tertentu — data antar warehouse terpisah sepenuhnya.
+
+### Siapa yang Menggunakan
+
+| Role | Untuk Siapa |
+|---|---|
+| **Platform Owner** (`super_admin`) | Mengelola lifecycle tenant dan menunjuk admin warehouse, tanpa jadi operator gudang sehari-hari |
+| **Warehouse Administrator** (`app_admin`) | Mengelola user, role, dan akses warehouse-nya sendiri |
+| **Kepala Gudang** | Memberi keputusan approval secara real-time, termasuk dari perangkat mobile |
+| **Staff Admin Gudang** | Kerja di lantai gudang lewat mobile/tablet — scan barcode, update stok, QC, retur |
+| **Purchasing** | Menghubungkan gudang dan supplier — inbox request, grouping, PO, penerimaan |
+| **Koperasi** | Anggota koperasi yang mengajukan request barang dan retur lewat form sederhana |
+
+### Cara Masuk
+
+Masuk menggunakan **Google Sign-In** — tidak ada pendaftaran mandiri; akun dibuat lewat undangan oleh admin warehouse Anda.
+
+### Dokumentasi Lengkap
+
+Panduan penggunaan lengkap (login, dashboard, role & hak akses, inventaris, pickup, pengadaan, retur, laporan, notifikasi, pengaturan akun) tersedia langsung di dalam aplikasi pada halaman **[Dokumentasi](https://wh.stevewithcode.net/documentation)**.
+
+---
+
+## Untuk Development
+
+Bagian ini untuk developer yang ingin menjalankan, memodifikasi, atau berkontribusi pada aplikasi ini secara lokal.
+
+### Dokumen Utama
 
 | Dokumen | Fungsi |
 |---|---|
@@ -16,28 +68,24 @@ Dokumen ini adalah panduan instalasi dan menjalankan **Warehouse Koperasi SaaS**
 | `CD.md` | Kontrak continuous delivery/deployment — alur deployment development yang aktif. |
 | `.agent/README.md` | Entry point aturan agent di repositori. |
 | `.agent/WORKFLOW.md` | Workflow implementasi, TDD, review, dan quality gate. |
-| `.ai/guidelines/warehouse-project.md` | Custom guideline yang dapat digabungkan oleh Laravel Boost. |
-
-## Bootstrap Proyek
+| `.ai/gudelines/warehouse-project.md` | Custom guideline yang dapat digabungkan oleh Laravel Boost. |
 
 ### 1. Prasyarat
 
-Siapkan PHP `8.3–8.5`, Composer, Node.js versi LTS aktif, npm, PostgreSQL, dan Redis. Docker/Sail dapat dipakai agar lingkungan konsisten.
+Siapkan PHP `8.3–8.5`, Composer, Node.js versi LTS aktif, npm, PostgreSQL, dan Redis. Docker/Sail dapat dipakai agar lingkungan konsisten — lihat `CD.md` untuk alur deployment berbasis Docker yang aktif untuk lingkungan development.
 
 Daftar lengkap dependency baseline (Laravel, Livewire, Fortify, Socialite, Reverb, dll.) beserta rasionalnya ada di `PRD.md` bagian "Baseline Teknologi". Versi final harus dikunci melalui `composer.lock` dan lockfile frontend — jangan mengandalkan versi global mesin developer.
 
-### 2. Buat aplikasi Laravel
+### 2. Clone dan install
 
 ```bash
-composer global require laravel/installer
-laravel new warehouse-koperasi
-cd warehouse-koperasi
+git clone https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi.git
+cd WareHouse-Koperasi
+composer install
+npm install
 ```
 
-Saat installer meminta starter kit, pilih **Livewire**. Pilih autentikasi bawaan Laravel/Fortify, bukan public self-registration untuk production. Registrasi publik harus dinonaktifkan setelah scaffolding karena seluruh user dibuat melalui invitation oleh `super_admin` atau `app_admin` sesuai scope.
-
 ```bash
-npm install
 npm run build
 composer run dev
 ```
@@ -64,7 +112,7 @@ Setelah dependency berubah, perbarui resource agent:
 php artisan boost:update
 ```
 
-Custom guideline proyek berada pada `.ai/guidelines/warehouse-project.md`. Setelah file guideline berubah, jalankan kembali instalasi/update Boost sesuai dokumentasi paket.
+Custom guideline proyek berada pada `.ai/gudelines/warehouse-project.md`. Setelah file guideline berubah, jalankan kembali instalasi/update Boost sesuai dokumentasi paket.
 
 ### 5. Matt Pocock Skills — wajib untuk developer/agent
 
@@ -124,6 +172,8 @@ ML_SERVICE_TIMEOUT_SECONDS=5
 
 Secret production tidak boleh berada di `.env` yang tersimpan di Git. Gunakan secret manager platform deployment.
 
+Untuk lingkungan development berbasis Docker (SQLite, image immutable dari GHCR, deployment via GitHub Actions), lihat `CD.md` dan `.env.docker.example` — bukan template di atas, yang menggambarkan target production (PostgreSQL/Redis).
+
 ### Kontrak production dan smoke check
 
 Production harus menggunakan managed PostgreSQL dengan TLS, Redis terautentikasi
@@ -172,12 +222,17 @@ npm run build
 npm run lint
 ```
 
-Tambahkan PHPStan/Larastan, test coverage, browser test, dependency audit, dan migration smoke test dalam CI sebelum release production.
+Gate lengkap yang benar-benar aktif di GitHub Actions (PHPStan level 7, security regression suite, dependency audit, Gitleaks, kompatibilitas PostgreSQL/Redis, Docker image build) didokumentasikan di `CI.md`. `main` diproteksi oleh GitHub ruleset — PR wajib lolos check tersebut sebelum bisa di-merge.
 
 Prinsip implementasi inti, konvensi branch/pull request, dan urutan roadmap fase ada di `PRD.md`. Baca `PRD.md`, `SECURITY-RULES.md`, dan `ARCHITECTURE.md` sebelum menulis kode.
 
 ## License
 
-This repository is proprietary software. Use, modification, access, and
-distribution are restricted to parties authorised by the SaaS owner. See
-[`LICENSE`](LICENSE) for the complete terms.
+Warehouse Koperasi is free software: you can redistribute it and/or modify it
+under the terms of the **GNU General Public License version 3** (or, at your
+option, any later version), as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful, but **WITHOUT
+ANY WARRANTY**; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE. See [`LICENSE`](LICENSE) for the complete
+terms.
