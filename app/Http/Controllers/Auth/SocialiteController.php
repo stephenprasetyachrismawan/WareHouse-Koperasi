@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
@@ -30,8 +31,22 @@ class SocialiteController extends Controller
     /**
      * Redirect the user to Google's OAuth consent screen.
      */
-    public function redirectToGoogle(): SymfonyRedirectResponse
+    public function redirectToGoogle(Request $request): SymfonyRedirectResponse|Response
     {
+        // Browsers (via Chrome's Speculation Rules API -- e.g. Cloudflare's
+        // "Speed Brain" feature auto-enables this for every same-origin link)
+        // may speculatively prefetch this GET link before the user actually
+        // clicks it. Socialite::redirect() mutates the session (stores a
+        // fresh OAuth "state" nonce) on every hit, so a speculative hit races
+        // the real click and desyncs the state Google echoes back from what's
+        // in the session by the time the callback arrives -- surfacing as
+        // InvalidStateException for a user who did nothing wrong. Chrome
+        // marks speculative requests with Sec-Purpose: prefetch[;prerender];
+        // skip the side-effecting redirect for those.
+        if (str_contains((string) $request->header('Sec-Purpose'), 'prefetch')) {
+            return response()->noContent();
+        }
+
         return Socialite::driver('google')->redirect();
     }
 
