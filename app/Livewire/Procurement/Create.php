@@ -2,8 +2,8 @@
 
 namespace App\Livewire\Procurement;
 
-use App\Actions\Procurement\CreatePurchaseRequestAction;
 use App\Actions\Procurement\SubmitPurchaseForApprovalAction;
+use App\Domain\Procurement\Actions\CreatePurchaseRequestAction;
 use App\Domain\Procurement\ValueObjects\PurchaseRequestInput;
 use App\Domain\Procurement\ValueObjects\PurchaseRequestItemInput;
 use App\Enums\PurchaseRequestSource;

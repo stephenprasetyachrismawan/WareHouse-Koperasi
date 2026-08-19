@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Procurement;
 
+use App\Enums\PurchaseRequestSource;
 use App\Enums\PurchaseRequestStatus;
 use App\Enums\WarehouseRole;
 use App\Livewire\Procurement\ApprovalInbox;
@@ -73,6 +74,28 @@ class ProcurementLivewireTest extends TestCase
             ->set('items.0.item_id', $item->id)
             ->set('items.0.quantity', 5)
             ->assertSet('duplicateWarning', true);
+    }
+
+    public function test_create_component_save_creates_purchase_request()
+    {
+        $warehouse = Warehouse::first();
+        $user = $this->createAuthorizedUser(WarehouseRole::StaffAdmin, $warehouse);
+        $item = Item::factory()->create(['warehouse_id' => $warehouse->id]);
+
+        Livewire::actingAs($user)
+            ->test(Create::class)
+            ->set('items.0.item_id', $item->id)
+            ->set('items.0.quantity', 3)
+            ->set('urgency', 'NORMAL')
+            ->call('save')
+            ->assertRedirect(route('procurement.index'));
+
+        $this->assertDatabaseHas('purchase_requests', [
+            'warehouse_id' => $warehouse->id,
+            'created_by' => $user->id,
+            'source' => PurchaseRequestSource::ManualStaff->value,
+            'status' => PurchaseRequestStatus::WaitingApproval->value,
+        ]);
     }
 
     public function test_approval_inbox_can_approve()
