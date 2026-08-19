@@ -352,8 +352,12 @@ jobs:
           WEB_IMAGE: ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}@${{ needs.image-publish.outputs.web_digest }}
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_deploy
-          printf '%s' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
-          printf '%s' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          # GitHub Actions secrets have any trailing newline stripped on save, and
+          # the OpenSSH private key format requires one after the END marker line --
+          # without it ssh refuses to load the key ("invalid format"/"error in
+          # libcrypto"). printf '%s\n' restores it.
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           ssh -i ~/.ssh/id_deploy -o UserKnownHostsFile=~/.ssh/known_hosts \
             "$DEPLOY_USER@$DEPLOY_HOST" \
             "/srv/warehouse-koperasi/deploy/deploy-development.sh '$APP_IMAGE' '$WEB_IMAGE'"
