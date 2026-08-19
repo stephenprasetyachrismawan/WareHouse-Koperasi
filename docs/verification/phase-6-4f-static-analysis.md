@@ -1,8 +1,12 @@
 # Phase 6.4F-1 Static Analysis Closure — Evidence
 
 Date: 2026-08-19 UTC
-Branch: `fix/phase-6-4f-1-phpstan-closure` (15 commits, based on `main` at `9f2eb1a`)
+Branch: `fix/phase-6-4f-1-phpstan-closure` (16 commits, based on `main` at `9f2eb1a`)
 Baseline `main` at start of this phase: `9f2eb1a9c406734c77765674d13c7c3c13483931`
+
+Updated 2026-08-19 to add item 7 in section C (the Procurement approval-history follow-up fix) and
+refresh the final verification numbers in section F accordingly. Sections A–E are unchanged historical
+record of the original closure pass and are not rewritten.
 
 ## A. Initial state
 
@@ -92,6 +96,21 @@ regression test, not typed around.
    `SELECT COUNT(*) ... FOR UPDATE`, preserving the same row-locking semantics (verified against the
    existing `PurchaseOrderSecurityConcurrencyTest` and `GoodsReceiptSecurityConcurrencyTest` suites).
 
+7. **`resources/views/livewire/procurement/show.blade.php` — same class of bug as item 2, found by
+   pattern inspection and fixed as a deliberate follow-up before merge.** `$approval->user->name` and
+   `$approval->notes` don't exist on `Approval` (real fields are `approver()`/`requester()` and
+   `reason`), and `$approval->status === 'APPROVED'` compared the `ApprovalStatus` enum against a raw
+   string (always false, so the status color never applied). Every purchase request detail page with
+   any approval history threw `Attempt to read property "name" on null`. The Livewire component's
+   `mount()` already eager-loaded the correct `approvals.requester`/`approvals.approver` relations
+   (fixed earlier in this same phase, slice 6.4F-1B) — only the Blade view itself was still wrong.
+   Fixed to use `$approval->approver->name ?? 'System'` and `$approval->status->value`, matching the
+   Pickup Show fix. Regression test:
+   `ProcurementLivewireTest::test_show_page_renders_with_approval_history`, confirmed RED
+   (`Attempt to read property "name" on null`) before the fix, GREEN after. No presentation-only change
+   touched approval immutability, decision state, approver identity, `warehouse_id`, or the audit
+   trail — this was a read-only view/query correction.
+
 None of these were hidden behind a type annotation, a baseline, or a suppression — each got a
 root-cause fix and, where behavior could change, a test proving the fix.
 
@@ -134,54 +153,54 @@ across Actions, Query Objects, Seeders, and notification code that consumed thos
   in the migration, not just the relation method's own return type annotation. Several `?->`/`?? null`
   patterns that looked defensively necessary were, per the actual schema, unreachable.
 
-## F. Final verification (fresh, this session)
+## F. Final verification (fresh, after the procurement follow-up fix — supersedes any earlier numbers in this document)
 
-All gates run fresh against the final commit on this branch.
+All gates run fresh against the final commit on this branch (`751ab20`).
 
 ```
 vendor/bin/pint --test                    PASS
 composer types:check (PHPStan level 7)    PASS — 0 errors
-php artisan test --compact                PASS — 642 tests, 1579 assertions
+php artisan test --compact                PASS — 643 tests, 1580 assertions
 npm run build                             PASS (only the known optional "fontaine" font-fallback warning)
 composer audit                            PASS — no security vulnerability advisories found
 npm audit --audit-level=high              PASS — 0 vulnerabilities
 scripts/verification/secret-scan.sh .     NOT VERIFIED — gitleaks binary is not installed on this
                                            host (pre-existing environment gap, also recorded in the
-                                           6.4F design baseline; GitHub Actions CI runs gitleaks
-                                           separately)
+                                           6.4F design baseline). GitHub Actions must provide the
+                                           authoritative secret-scan result before merge; do not treat
+                                           this as a pass until that job is confirmed green.
 git diff --check main...HEAD              PASS — no whitespace errors
-composer test (config:clear + Pint +      PASS — completed in 34.9s wall time, confirming the
+composer test (config:clear + Pint +      PASS — completed in 34.3s wall time, confirming the
   PHPStan + full suite)                     previously recorded "300s timeout" was not a real
                                            performance ceiling once the underlying type errors
                                            were fixed
 ```
 
 Test count grew from the last recorded full-suite baseline of 606 passed / 1,458 assertions
-(`docs/PRODUCTION-READINESS.md`, PR #51 evidence) to 642 passed / 1,579 assertions — the +36 tests are
+(`docs/PRODUCTION-READINESS.md`, PR #51 evidence) to 643 passed / 1,580 assertions — the +37 tests are
 the regression tests added in slice 6.4F-1A (2 runtime-bug tests, 9 `CancellationRequestPolicyTest`
-cases, 1 Pickup Show crash-reproduction test) plus incidental coverage growth from other merged work
-on `main` since that baseline.
+cases, 1 Pickup Show crash-reproduction test), the 1 Procurement Show crash-reproduction test added in
+the follow-up fix (item C.7), plus incidental coverage growth from other merged work on `main` since
+that baseline.
 
 ### Resource usage (4 GB development VPS)
 
 `free -h` before this phase's PHPStan/test work: ~1.4Gi available, 0B swap.
-Throughout this phase (21 model files, 28 Livewire components, dozens of PHPStan re-runs, and a full
-642-test suite run): available RAM stayed in the 500Mi–1.2Gi range; swap usage never exceeded 180KiB
-(effectively unused). No OOM, no thrashing. A 2GB swapfile (`vm.swappiness=10`) was added before this
-phase as a safety net per the parent Phase 6.4F-0 design, but was not meaningfully drawn on.
+Throughout this phase (21 model files, 28 Livewire components, dozens of PHPStan re-runs, and multiple
+full-suite runs including the follow-up fix): available RAM stayed in the 460Mi–1.2Gi range; swap usage
+never exceeded 180KiB (effectively unused). No OOM, no thrashing. A 2GB swapfile (`vm.swappiness=10`)
+was added before this phase as a safety net per the parent Phase 6.4F-0 design, but was not
+meaningfully drawn on.
 
 ## G. Remaining risk / honestly unresolved
 
-- Secret scanning is not locally verified on this host (gitleaks unavailable). GitHub Actions CI is
-  expected to run it independently; this must be confirmed once CI is exercised.
-- This phase did not audit `Procurement/show.blade.php`'s approval-history block, which appears to
-  have the same class of bug as the Pickup Show fix (`$approval->user->name` and `$approval->notes`
-  don't exist on the `Approval` model — the real properties are `requester`/`approver` and `reason`).
-  It was discovered by pattern-matching during the Pickup Show investigation but was out of scope for
-  this PHPStan-closure pass (no PHPStan error pointed at it, and it's a different file than the one
-  under active repair). **Recommend a follow-up fix with its own regression test before this is
-  forgotten.**
+- Secret scanning is **not locally verified** on this host (gitleaks unavailable). GitHub Actions CI
+  must provide the authoritative secret-scan result before this branch is merged — treat this as an
+  open item, not a pass, until that specific job is observed green on the actual PR run.
 - No new tests were added purely for the ~390 mechanical typing-only findings (Livewire property
   types, Model/Factory generics, array shapes) per the task's own guidance that mechanical corrections
   may rely on PHPStan plus existing regression coverage when runtime behavior is unchanged — this
   was verified by running the full domain test suite after every batch, not skipped.
+- Verified via `grep -rn '\$approval->user\|\$approval->notes\|\$approval->type\b\|\$approval->actor'
+  resources/views` that no other Blade view carries this specific bug class beyond the Pickup and
+  Procurement views already fixed in this phase.
