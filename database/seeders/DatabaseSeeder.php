@@ -11,23 +11,17 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * `RoleAndPermissionSeeder` (core IAM) always runs and is safe for every
+     * environment. `DevelopmentSeeder` (demo companies/users/business data)
+     * guards itself and only seeds in local/testing or with an explicit
+     * `ALLOW_DEMO_SEEDING` opt-in — see `DevelopmentSeeder`.
      */
     public function run(): void
     {
         $this->call([
             RoleAndPermissionSeeder::class,
-            CompanyAndWarehouseSeeder::class,
-            UserAndMembershipSeeder::class,
-            MasterDataSeeder::class,
-            StockFoundationSeeder::class,
-            DemoPickupSeeder::class,
-            DemoProcurementSeeder::class,
-            DemoPurchaseOrderSeeder::class,
-            DemoGoodsReceiptSeeder::class,
-            DemoReturnSeeder::class,
-            DemoReturnDecisionSeeder::class,
-            DemoReturnReplacementSeeder::class,
-            DemoNotificationSeeder::class,
+            DevelopmentSeeder::class,
         ]);
     }
 }
