@@ -36,6 +36,8 @@ ALL REQUIRED CHECKS GREEN
 merge
 ```
 
+This is now technically enforced, not just documented policy: `main` is protected by a repository ruleset (Phase 6.4F-0C). Direct pushes and force-pushes to `main` are rejected, and a PR cannot merge until `quality`, `integration (PostgreSQL + Redis)`, and `image build (no publish)` all report `success` on an up-to-date branch — these are the exact GitHub Actions check-run context strings, verified against a real merged PR's check runs, not guessed. `image publish (GHCR)` and `deploy-development` are deliberately **not** required checks: both report `skipped` on a pull request (they only run on trusted `main` / manual dispatch), and requiring a check that's always skipped on PRs would permanently deadlock every merge. The ruleset has no configured bypass actors — `current_user_can_bypass` is `never` for every collaborator, including repository admins; the only way around it is editing or deleting the ruleset itself, which itself requires admin access and is auditable in the repository's rule-suite history.
+
 **LOCAL PASS DOES NOT AUTHORIZE MERGE.** A green run on a developer's machine or VPS proves nothing about what GitHub's runners see — different PHP/Node versions, different service availability, different filesystem/timing behavior, and (historically, in this repository) different bugs that only reproduce on GitHub's infrastructure (see the SSH-key trailing-newline bug in [CD.md §5](CD.md)). GitHub Actions is the authoritative merge gate. Every completion report in this repository states the actual workflow run ID and job results, not just "tests passed locally."
 
 ## 3. Current real jobs
