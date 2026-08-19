@@ -7,6 +7,9 @@ use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<PurchaseRequestGroup>
+ */
 class PurchaseRequestGroupFactory extends Factory
 {
     protected $model = PurchaseRequestGroup::class;

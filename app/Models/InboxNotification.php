@@ -42,21 +42,33 @@ class InboxNotification extends Model
         'read_at' => 'datetime',
     ];
 
+    /**
+     * @return array<int, string>
+     */
     public function uniqueIds(): array
     {
         return ['uuid'];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function recipient(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recipient_id');
     }
 
+    /**
+     * @return BelongsTo<Warehouse, $this>
+     */
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }
 
+    /**
+     * @return MorphTo<Model, $this>
+     */
     public function subject(): MorphTo
     {
         return $this->morphTo(__FUNCTION__, 'subject_type', 'subject_id');
@@ -67,11 +79,19 @@ class InboxNotification extends Model
         return $this->read_at === null;
     }
 
+    /**
+     * @param  Builder<InboxNotification>  $query
+     * @return Builder<InboxNotification>
+     */
     public function scopeForRecipient(Builder $query, int $userId): Builder
     {
         return $query->where('recipient_id', $userId);
     }
 
+    /**
+     * @param  Builder<InboxNotification>  $query
+     * @return Builder<InboxNotification>
+     */
     public function scopeUnread(Builder $query): Builder
     {
         return $query->whereNull('read_at');

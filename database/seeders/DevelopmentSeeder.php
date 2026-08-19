@@ -20,7 +20,7 @@ class DevelopmentSeeder extends Seeder
     public function run(): void
     {
         if (! $this->demoSeedingAllowed()) {
-            $this->command?->warn(
+            $this->command->warn(
                 'Skipping demo/development seed data: APP_ENV is not local/testing and '
                 .'ALLOW_DEMO_SEEDING is not enabled. Set ALLOW_DEMO_SEEDING=true to opt in explicitly.'
             );

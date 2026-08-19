@@ -10,6 +10,9 @@ use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<ReturnDisposal>
+ */
 class ReturnDisposalFactory extends Factory
 {
     protected $model = ReturnDisposal::class;

@@ -34,31 +34,49 @@ class ReturnDisposal extends Model
         'disposed_at' => 'datetime',
     ];
 
+    /**
+     * @return array<int, string>
+     */
     public function uniqueIds(): array
     {
         return ['uuid'];
     }
 
+    /**
+     * @return BelongsTo<ReturnRequest, $this>
+     */
     public function returnRequest(): BelongsTo
     {
         return $this->belongsTo(ReturnRequest::class);
     }
 
+    /**
+     * @return BelongsTo<ReturnRequestItem, $this>
+     */
     public function returnRequestItem(): BelongsTo
     {
         return $this->belongsTo(ReturnRequestItem::class);
     }
 
+    /**
+     * @return BelongsTo<Warehouse, $this>
+     */
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }
 
+    /**
+     * @return BelongsTo<Item, $this>
+     */
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function disposedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'disposed_by');

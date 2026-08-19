@@ -5,6 +5,8 @@ namespace Tests\Feature\Pickup;
 use App\Enums\PickupRequestStatus;
 use App\Livewire\Pickup\Create;
 use App\Livewire\Pickup\MyRequests;
+use App\Livewire\Pickup\Show;
+use App\Models\Approval;
 use App\Models\Item;
 use App\Models\PickupRequest;
 use App\Models\User;
@@ -90,5 +92,25 @@ class PickupLivewireTest extends TestCase
         Livewire::actingAs($this->user)
             ->test(MyRequests::class)
             ->assertSee($request->request_number);
+    }
+
+    public function test_show_page_renders_with_approval_history()
+    {
+        $request = PickupRequest::factory()->create([
+            'user_id' => $this->user->id,
+            'warehouse_id' => $this->warehouse->id,
+            'status' => PickupRequestStatus::Approved,
+        ]);
+
+        Approval::factory()->create([
+            'warehouse_id' => $this->warehouse->id,
+            'approvable_type' => PickupRequest::class,
+            'approvable_id' => $request->id,
+            'requested_by' => $this->user->id,
+        ]);
+
+        Livewire::actingAs($this->user)
+            ->test(Show::class, ['pickupRequest' => $request])
+            ->assertOk();
     }
 }

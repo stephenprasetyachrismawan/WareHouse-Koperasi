@@ -3,19 +3,19 @@
 namespace App\Domain\Procurement\Queries;
 
 use App\Models\PurchaseOrder;
-use Illuminate\Support\Collection;
+use App\Models\PurchaseOrderItem;
 
 class PurchaseOrderReceivingProgressQuery
 {
     /**
-     * @return Collection<int, array{item_name: string, ordered_quantity: int, received_quantity: ?int, qc_result: ?string, stock_in: bool}>
+     * @return array<int, array{item_name: string, ordered_quantity: int, received_quantity: int|null, qc_result: string|null, stock_in: bool}>
      */
-    public function execute(PurchaseOrder $purchaseOrder): Collection
+    public function execute(PurchaseOrder $purchaseOrder): array
     {
         return $purchaseOrder->items()
             ->with(['item', 'goodsReceiptItem.inspection'])
             ->get()
-            ->map(function ($poItem) {
+            ->map(function (PurchaseOrderItem $poItem): array {
                 $receiptItem = $poItem->goodsReceiptItem;
                 $inspection = $receiptItem?->inspection;
 
@@ -26,6 +26,7 @@ class PurchaseOrderReceivingProgressQuery
                     'qc_result' => $inspection?->result?->label(),
                     'stock_in' => $inspection !== null && $inspection->isPass(),
                 ];
-            });
+            })
+            ->all();
     }
 }

@@ -40,16 +40,25 @@ class NotificationDelivery extends Model
         'failed_at' => 'datetime',
     ];
 
+    /**
+     * @return array<int, string>
+     */
     public function uniqueIds(): array
     {
         return ['uuid'];
     }
 
+    /**
+     * @return BelongsTo<InboxNotification, $this>
+     */
     public function inboxNotification(): BelongsTo
     {
         return $this->belongsTo(InboxNotification::class);
     }
 
+    /**
+     * @return BelongsTo<DeviceToken, $this>
+     */
     public function deviceToken(): BelongsTo
     {
         return $this->belongsTo(DeviceToken::class);

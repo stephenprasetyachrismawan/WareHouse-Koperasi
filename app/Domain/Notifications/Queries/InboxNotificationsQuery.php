@@ -12,6 +12,9 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
  */
 class InboxNotificationsQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, InboxNotification>
+     */
     public function execute(
         int $userId,
         ?int $warehouseId,

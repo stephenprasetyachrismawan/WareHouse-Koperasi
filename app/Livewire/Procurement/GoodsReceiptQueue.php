@@ -4,6 +4,7 @@ namespace App\Livewire\Procurement;
 
 use App\Domain\Procurement\Queries\ReceivablePurchaseOrdersQuery;
 use App\Models\GoodsReceipt;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,7 +13,7 @@ class GoodsReceiptQueue extends Component
 {
     use WithPagination;
 
-    public function render(ReceivablePurchaseOrdersQuery $receivableQuery)
+    public function render(ReceivablePurchaseOrdersQuery $receivableQuery): View
     {
         $this->authorize('viewAny', GoodsReceipt::class);
 

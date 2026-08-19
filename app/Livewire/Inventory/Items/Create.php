@@ -34,6 +34,9 @@ class Create extends Component
         $this->authorize('create', Item::class);
     }
 
+    /**
+     * @return array<string, string|array<int, mixed>>
+     */
     public function rules(): array
     {
         /** @var User $actor */

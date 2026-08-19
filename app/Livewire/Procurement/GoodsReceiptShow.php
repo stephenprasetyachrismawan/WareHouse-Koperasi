@@ -9,8 +9,10 @@ use App\Enums\QualityInspectionResult;
 use App\Models\GoodsReceipt;
 use App\Models\GoodsReceiptItem;
 use App\Models\QualityInspection;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 class GoodsReceiptShow extends Component
@@ -29,7 +31,7 @@ class GoodsReceiptShow extends Component
 
     public string $qcNotes = '';
 
-    public $evidence = null;
+    public ?TemporaryUploadedFile $evidence = null;
 
     public function mount(GoodsReceipt $goodsReceipt): void
     {
@@ -76,7 +78,15 @@ class GoodsReceiptShow extends Component
         $evidenceMime = null;
 
         if ($this->evidence) {
-            $evidencePath = $this->evidence->store("qc-evidence/{$goodsReceiptItem->warehouse_id}/{$goodsReceiptItem->id}", 'private');
+            $storedPath = $this->evidence->store("qc-evidence/{$goodsReceiptItem->warehouse_id}/{$goodsReceiptItem->id}", 'private');
+
+            if ($storedPath === false) {
+                $this->addError('evidence', 'Gagal mengunggah bukti QC. Silakan coba lagi.');
+
+                return;
+            }
+
+            $evidencePath = $storedPath;
             $evidenceMime = $this->evidence->getMimeType();
         }
 
@@ -98,7 +108,7 @@ class GoodsReceiptShow extends Component
         $this->goodsReceipt->refresh()->load(['items.inspection.inspector', 'purchaseOrder']);
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.procurement.goods-receipt-show');
     }

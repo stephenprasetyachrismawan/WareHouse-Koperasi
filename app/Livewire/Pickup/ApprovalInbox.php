@@ -5,6 +5,7 @@ namespace App\Livewire\Pickup;
 use App\Actions\Pickup\ApprovePickupRequestAction;
 use App\Actions\Pickup\RejectPickupRequestAction;
 use App\Models\PickupRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -13,13 +14,13 @@ class ApprovalInbox extends Component
 {
     use WithPagination;
 
-    public $rejectReason = '';
+    public string $rejectReason = '';
 
-    public $selectedRequestId = null;
+    public int|string|null $selectedRequestId = null;
 
-    public $showRejectModal = false;
+    public bool $showRejectModal = false;
 
-    public function approve($id, ApprovePickupRequestAction $action)
+    public function approve(int|string $id, ApprovePickupRequestAction $action): void
     {
         $request = PickupRequest::findOrFail($id);
         $this->authorize('approve', $request);
@@ -32,20 +33,20 @@ class ApprovalInbox extends Component
         }
     }
 
-    public function openRejectModal($id)
+    public function openRejectModal(int|string $id): void
     {
         $this->selectedRequestId = $id;
         $this->rejectReason = '';
         $this->showRejectModal = true;
     }
 
-    public function closeRejectModal()
+    public function closeRejectModal(): void
     {
         $this->showRejectModal = false;
         $this->selectedRequestId = null;
     }
 
-    public function confirmReject(RejectPickupRequestAction $action)
+    public function confirmReject(RejectPickupRequestAction $action): void
     {
         $this->validate(['rejectReason' => 'required|string|min:3']);
 
@@ -61,7 +62,7 @@ class ApprovalInbox extends Component
         }
     }
 
-    public function render()
+    public function render(): View
     {
         $requests = PickupRequest::whereIn('status', ['WAITING_APPROVAL', 'BACKORDERED'])
             ->with(['user', 'items.item'])

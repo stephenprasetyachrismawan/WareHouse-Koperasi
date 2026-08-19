@@ -3,6 +3,7 @@
 namespace App\Livewire\Returns;
 
 use App\Models\ReturnRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,7 +17,7 @@ class MyReturns extends Component
         $this->authorize('viewAny', ReturnRequest::class);
     }
 
-    public function render()
+    public function render(): View
     {
         $membershipId = Auth::user()->activeMembership()?->id;
 

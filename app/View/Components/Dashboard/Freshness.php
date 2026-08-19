@@ -17,7 +17,7 @@ class Freshness extends Component
 
     public function displayTime(): string
     {
-        $timezone = $this->warehouse?->timezone ?? config('app.timezone');
+        $timezone = $this->warehouse->timezone ?? config('app.timezone');
 
         return $this->updatedAt->clone()->timezone($timezone)->translatedFormat('d M Y, H.i');
     }

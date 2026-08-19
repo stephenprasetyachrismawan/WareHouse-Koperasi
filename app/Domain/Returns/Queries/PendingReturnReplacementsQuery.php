@@ -12,6 +12,9 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
  */
 class PendingReturnReplacementsQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, ReturnRequest>
+     */
     public function execute(int $warehouseId, int $perPage = 10): LengthAwarePaginator
     {
         return ReturnRequest::forWarehouse($warehouseId)

@@ -7,6 +7,9 @@ use App\Models\PurchaseRequest;
 use App\Models\PurchaseRequestItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<PurchaseRequestItem>
+ */
 class PurchaseRequestItemFactory extends Factory
 {
     protected $model = PurchaseRequestItem::class;

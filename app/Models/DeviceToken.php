@@ -48,11 +48,17 @@ class DeviceToken extends Model
         'revoked_at' => 'datetime',
     ];
 
+    /**
+     * @return array<int, string>
+     */
     public function uniqueIds(): array
     {
         return ['uuid'];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -63,11 +69,19 @@ class DeviceToken extends Model
         return $this->revoked_at === null;
     }
 
+    /**
+     * @param  Builder<DeviceToken>  $query
+     * @return Builder<DeviceToken>
+     */
     public function scopeActive(Builder $query): Builder
     {
         return $query->whereNull('revoked_at');
     }
 
+    /**
+     * @param  Builder<DeviceToken>  $query
+     * @return Builder<DeviceToken>
+     */
     public function scopeForUser(Builder $query, int $userId): Builder
     {
         return $query->where('user_id', $userId);

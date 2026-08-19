@@ -4,6 +4,7 @@ namespace App\Livewire\Pickup;
 
 use App\Actions\Pickup\CancelPickupRequestAction;
 use App\Models\PickupRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -12,7 +13,7 @@ class MyRequests extends Component
 {
     use WithPagination;
 
-    public function cancelRequest($id, CancelPickupRequestAction $cancelAction)
+    public function cancelRequest(int|string $id, CancelPickupRequestAction $cancelAction): void
     {
         $request = PickupRequest::where('user_id', Auth::id())->findOrFail($id);
 
@@ -24,7 +25,7 @@ class MyRequests extends Component
         }
     }
 
-    public function render()
+    public function render(): View
     {
         $requests = PickupRequest::where('user_id', Auth::id())
             ->latest()

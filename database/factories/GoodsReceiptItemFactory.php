@@ -9,6 +9,9 @@ use App\Models\PurchaseOrderItem;
 use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<GoodsReceiptItem>
+ */
 class GoodsReceiptItemFactory extends Factory
 {
     protected $model = GoodsReceiptItem::class;

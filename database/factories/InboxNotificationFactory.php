@@ -8,6 +8,9 @@ use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<InboxNotification>
+ */
 class InboxNotificationFactory extends Factory
 {
     protected $model = InboxNotification::class;

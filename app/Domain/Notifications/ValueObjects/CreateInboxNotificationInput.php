@@ -6,6 +6,9 @@ use App\Enums\NotificationType;
 
 readonly class CreateInboxNotificationInput
 {
+    /**
+     * @param  array<string, mixed>|null  $metadata
+     */
     public function __construct(
         public int $recipientId,
         public ?int $warehouseId,

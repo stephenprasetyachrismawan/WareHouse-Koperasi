@@ -9,6 +9,9 @@ use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<CancellationRequest>
+ */
 class CancellationRequestFactory extends Factory
 {
     protected $model = CancellationRequest::class;

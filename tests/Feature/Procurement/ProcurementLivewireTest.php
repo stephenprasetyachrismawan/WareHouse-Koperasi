@@ -2,11 +2,14 @@
 
 namespace Tests\Feature\Procurement;
 
+use App\Enums\PurchaseRequestSource;
 use App\Enums\PurchaseRequestStatus;
 use App\Enums\WarehouseRole;
 use App\Livewire\Procurement\ApprovalInbox;
 use App\Livewire\Procurement\Create;
 use App\Livewire\Procurement\Index;
+use App\Livewire\Procurement\Show;
+use App\Models\Approval;
 use App\Models\Item;
 use App\Models\PurchaseRequest;
 use App\Models\User;
@@ -73,6 +76,52 @@ class ProcurementLivewireTest extends TestCase
             ->set('items.0.item_id', $item->id)
             ->set('items.0.quantity', 5)
             ->assertSet('duplicateWarning', true);
+    }
+
+    public function test_create_component_save_creates_purchase_request()
+    {
+        $warehouse = Warehouse::first();
+        $user = $this->createAuthorizedUser(WarehouseRole::StaffAdmin, $warehouse);
+        $item = Item::factory()->create(['warehouse_id' => $warehouse->id]);
+
+        Livewire::actingAs($user)
+            ->test(Create::class)
+            ->set('items.0.item_id', $item->id)
+            ->set('items.0.quantity', 3)
+            ->set('urgency', 'NORMAL')
+            ->call('save')
+            ->assertRedirect(route('procurement.index'));
+
+        $this->assertDatabaseHas('purchase_requests', [
+            'warehouse_id' => $warehouse->id,
+            'created_by' => $user->id,
+            'source' => PurchaseRequestSource::ManualStaff->value,
+            'status' => PurchaseRequestStatus::WaitingApproval->value,
+        ]);
+    }
+
+    public function test_show_page_renders_with_approval_history()
+    {
+        $warehouse = Warehouse::first();
+        $user = $this->createAuthorizedUser(WarehouseRole::KepalaGudang, $warehouse);
+        $approver = $this->createAuthorizedUser(WarehouseRole::KepalaGudang, $warehouse);
+
+        $pr = PurchaseRequest::factory()->create([
+            'warehouse_id' => $warehouse->id,
+            'status' => PurchaseRequestStatus::Approved,
+        ]);
+
+        Approval::factory()->create([
+            'warehouse_id' => $warehouse->id,
+            'approvable_type' => PurchaseRequest::class,
+            'approvable_id' => $pr->id,
+            'requested_by' => $user->id,
+            'approver_id' => $approver->id,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(Show::class, ['purchaseRequest' => $pr])
+            ->assertOk();
     }
 
     public function test_approval_inbox_can_approve()

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\PickupRequestSource;
 use App\Enums\PickupRequestStatus;
+use Database\Factories\PickupRequestFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,6 +20,7 @@ use Illuminate\Support\Str;
  */
 class PickupRequest extends Model
 {
+    /** @use HasFactory<PickupRequestFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -55,26 +57,41 @@ class PickupRequest extends Model
         });
     }
 
+    /**
+     * @return BelongsTo<Warehouse, $this>
+     */
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return HasMany<PickupRequestItem, $this>
+     */
     public function items(): HasMany
     {
         return $this->hasMany(PickupRequestItem::class);
     }
 
+    /**
+     * @return MorphMany<Approval, $this>
+     */
     public function approvals(): MorphMany
     {
         return $this->morphMany(Approval::class, 'approvable');
     }
 
+    /**
+     * @return HasOne<ReturnRequest, $this>
+     */
     public function originatingReturn(): HasOne
     {
         return $this->hasOne(ReturnRequest::class, 'replacement_pickup_request_id');
@@ -85,6 +102,10 @@ class PickupRequest extends Model
         return $this->status->isTerminal();
     }
 
+    /**
+     * @param  Builder<PickupRequest>  $query
+     * @return Builder<PickupRequest>
+     */
     public function scopeForWarehouse(Builder $query, int $warehouseId): Builder
     {
         return $query->where('warehouse_id', $warehouseId);

@@ -6,6 +6,7 @@ use App\Actions\Notifications\MarkAllNotificationsReadAction;
 use App\Actions\Notifications\MarkNotificationReadAction;
 use App\Domain\Notifications\Queries\InboxNotificationsQuery;
 use App\Models\InboxNotification;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -50,19 +51,19 @@ class Inbox extends Component
         $action->execute(Auth::user(), $warehouseId);
     }
 
-    public function render(InboxNotificationsQuery $query)
+    public function render(InboxNotificationsQuery $query): View
     {
         $warehouseId = Auth::user()->activeWarehouse()?->id;
 
         $notifications = $query->execute(
-            userId: Auth::id(),
+            userId: Auth::user()->id,
             warehouseId: $warehouseId,
             unreadOnly: $this->filter === 'unread',
         );
 
         return view('livewire.notifications.inbox', [
             'notifications' => $notifications,
-            'unreadCount' => $query->unreadCount(Auth::id(), $warehouseId),
+            'unreadCount' => $query->unreadCount(Auth::user()->id, $warehouseId),
         ]);
     }
 }

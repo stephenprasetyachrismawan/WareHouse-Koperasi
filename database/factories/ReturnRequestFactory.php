@@ -13,6 +13,9 @@ use App\Models\Warehouse;
 use App\Models\WarehouseMembership;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<ReturnRequest>
+ */
 class ReturnRequestFactory extends Factory
 {
     protected $model = ReturnRequest::class;

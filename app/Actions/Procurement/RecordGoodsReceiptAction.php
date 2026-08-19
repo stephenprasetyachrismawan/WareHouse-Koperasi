@@ -116,7 +116,6 @@ class RecordGoodsReceiptAction
         $sequence = GoodsReceipt::forWarehouse($warehouseId)
             ->where('receipt_number', 'like', "GR-{$date}-%")
             ->lockForUpdate()
-            ->get()
             ->count() + 1;
 
         return sprintf('GR-%s-%04d', $date, $sequence);

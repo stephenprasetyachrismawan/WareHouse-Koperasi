@@ -42,7 +42,7 @@ class ReturnRequestPolicy
         // A Koperasi membership may only see its own returns; staff/managerial
         // roles that hold return.view see every return in their warehouse.
         if ($user->activeMembership()?->hasPermission(Permission::ReturnCreate)
-            && ! $user->activeMembership()?->hasPermission(Permission::ReturnVerify)) {
+            && ! $user->activeMembership()->hasPermission(Permission::ReturnVerify)) {
             return $this->isOwnReturn($user, $returnRequest);
         }
 

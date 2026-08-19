@@ -8,6 +8,9 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ReceivablePurchaseOrdersQuery
 {
+    /**
+     * @return LengthAwarePaginator<int, PurchaseOrder>
+     */
     public function execute(int $warehouseId, int $perPage = 10): LengthAwarePaginator
     {
         return PurchaseOrder::forWarehouse($warehouseId)

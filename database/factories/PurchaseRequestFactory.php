@@ -10,6 +10,9 @@ use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
+/**
+ * @extends Factory<PurchaseRequest>
+ */
 class PurchaseRequestFactory extends Factory
 {
     protected $model = PurchaseRequest::class;

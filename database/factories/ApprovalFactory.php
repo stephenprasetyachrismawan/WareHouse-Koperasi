@@ -8,6 +8,9 @@ use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
+/**
+ * @extends Factory<Approval>
+ */
 class ApprovalFactory extends Factory
 {
     protected $model = Approval::class;

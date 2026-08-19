@@ -12,6 +12,7 @@ use App\Enums\PurchaseRequestStatus;
 use App\Models\Item;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
+use App\Models\PurchaseRequestGroup;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -119,7 +120,7 @@ class DemoPurchaseOrderSeeder extends Seeder
     /**
      * @param  Collection<int, Item>  $items
      */
-    private function createApprovedGroup(Warehouse $warehouse, User $user, $items, string $notes, string $prNumberPrefix)
+    private function createApprovedGroup(Warehouse $warehouse, User $user, Collection $items, string $notes, string $prNumberPrefix): PurchaseRequestGroup
     {
         $purchaseRequest = PurchaseRequest::create([
             'warehouse_id' => $warehouse->id,

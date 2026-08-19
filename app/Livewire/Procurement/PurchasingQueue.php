@@ -3,6 +3,7 @@
 namespace App\Livewire\Procurement;
 
 use App\Models\PurchaseRequest;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -11,7 +12,7 @@ class PurchasingQueue extends Component
 {
     use WithPagination;
 
-    public function render()
+    public function render(): View
     {
         $this->authorize('viewAny', PurchaseRequest::class);
 

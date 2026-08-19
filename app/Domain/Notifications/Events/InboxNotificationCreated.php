@@ -51,6 +51,9 @@ class InboxNotificationCreated implements ShouldBroadcastNow
      * already decided was safe to persist. No metadata, no raw evidence
      * paths, no fault-attribution internals.
      */
+    /**
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
         $notification = InboxNotification::find($this->inboxNotificationId);

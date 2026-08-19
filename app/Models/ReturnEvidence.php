@@ -28,21 +28,33 @@ class ReturnEvidence extends Model
         'purpose' => ReturnEvidencePurpose::class,
     ];
 
+    /**
+     * @return array<int, string>
+     */
     public function uniqueIds(): array
     {
         return ['uuid'];
     }
 
+    /**
+     * @return BelongsTo<ReturnRequest, $this>
+     */
     public function returnRequest(): BelongsTo
     {
         return $this->belongsTo(ReturnRequest::class);
     }
 
+    /**
+     * @return BelongsTo<Warehouse, $this>
+     */
     public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
