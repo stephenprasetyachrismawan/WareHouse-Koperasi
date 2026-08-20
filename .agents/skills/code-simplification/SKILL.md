@@ -13,4 +13,4 @@ After achieving a green test state, perform targeted simplification on modified 
 3. **Simplify Conditionals**: Convert deeply nested `if/else` statements into early guard returns.
 4. **Preserve Security & Tenant Scope**: Never remove or simplify `warehouse_id` checks, Policy/Gate checks, or audit trail logging.
 5. **Avoid Over-Engineering**: Prefer simple, clear Laravel idioms over complex custom abstractions.
-6. **Re-test**: Always rerun `./automation/warehouse-orchestrator/agent-tools/agent-test-focused --filter <TestName>` after simplification.
+6. **Re-test**: Always rerun `php artisan test --filter <TestName>` after simplification.

@@ -23,7 +23,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
-automation/warehouse-orchestrator/node_modules
 .agent-runtime/
 .claude/worktrees/
 .gemini/
