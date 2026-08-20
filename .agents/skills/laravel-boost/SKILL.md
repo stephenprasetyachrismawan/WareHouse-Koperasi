@@ -14,8 +14,8 @@ When implementing Laravel code in this repository, follow these core conventions
 
 ## 2. Testing & Quality Tools
 - Use Pest / PHPUnit for all tests (`tests/Feature/` and `tests/Unit/`).
-- Use Laravel Pint for code formatting (`./automation/warehouse-orchestrator/agent-tools/agent-format`).
-- Use PHPStan for static analysis (`./automation/warehouse-orchestrator/agent-tools/agent-static-analysis`).
+- Use Laravel Pint for code formatting (`vendor/bin/pint`).
+- Use PHPStan for static analysis (`vendor/bin/phpstan analyse`).
 
 ## 3. Database & Security
 - Use backed Enums for status fields.

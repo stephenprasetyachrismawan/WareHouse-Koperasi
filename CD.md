@@ -128,8 +128,8 @@ The Cloudflare Tunnel for `wh.stevewithcode.net` is **remotely managed** (token-
 
 There are two distinct rollback classes. Do not conflate them.
 
-### A. First-cutover legacy fallback
-Before the first Docker deployment, no previous Docker digest existed to roll back to. The proven fallback was the pre-Docker legacy runtime (`composer dev`, supervised by `automation/warehouse-orchestrator/scripts/dev-supervisor.sh`). This was exercised as a full drill during the first cutover: Docker stopped → legacy restarted (`.env`/`APP_KEY` confirmed untouched) → served real traffic and real data → legacy stopped deterministically → Docker restarted and reverified. This drill is **not** part of the normal deployment flow; it only applies while Docker is new enough that a legacy fallback is still kept around (see §8, legacy retirement).
+### A. First-cutover legacy fallback (historical, retired)
+Before the first Docker deployment, no previous Docker digest existed to roll back to. The proven fallback at the time was the pre-Docker legacy `composer dev` runtime. This was exercised as a full drill during the first cutover: Docker stopped → legacy restarted (`.env`/`APP_KEY` confirmed untouched) → served real traffic and real data → legacy stopped deterministically → Docker restarted and reverified. That drill was never part of the normal deployment flow, and the legacy runtime and its supervising tooling have since been fully removed from this repository — this subsection is kept only as a historical record of the first cutover, not a currently available fallback.
 
 ### B. Normal Docker-to-Docker rollback
 `deploy/rollback-development.sh` — invoked automatically by `deploy-development.sh` on any post-backup failure, or manually with a reason string:
