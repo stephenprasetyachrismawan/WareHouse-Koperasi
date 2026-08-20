@@ -19,12 +19,18 @@
         <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             @php
                 $quickNav = [
-                    ['icon' => 'magnifying-glass', 'label' => 'Login & Akun', 'href' => '#akun', 'color' => 'indigo'],
-                    ['icon' => 'home', 'label' => 'Dashboard', 'href' => '#dashboard', 'color' => 'blue'],
-                    ['icon' => 'users', 'label' => 'Role & Akses', 'href' => '#roles', 'color' => 'purple'],
+                    ['icon' => 'information-circle', 'label' => 'Pendahuluan', 'href' => '#pendahuluan', 'color' => 'indigo'],
+                    ['icon' => 'key', 'label' => 'Login & Akun', 'href' => '#akun', 'color' => 'blue'],
+                    ['icon' => 'home', 'label' => 'Dashboard', 'href' => '#dashboard', 'color' => 'emerald'],
+                    ['icon' => 'shield-check', 'label' => 'Role & Akses', 'href' => '#roles', 'color' => 'purple'],
+                    ['icon' => 'users', 'label' => 'Manajemen Pengguna', 'href' => '#users', 'color' => 'pink'],
                     ['icon' => 'cube', 'label' => 'Inventaris', 'href' => '#inventory', 'color' => 'emerald'],
                     ['icon' => 'shopping-cart', 'label' => 'Pickup', 'href' => '#pickup', 'color' => 'amber'],
                     ['icon' => 'document-duplicate', 'label' => 'Pengadaan', 'href' => '#procurement', 'color' => 'rose'],
+                    ['icon' => 'arrow-uturn-left', 'label' => 'Retur', 'href' => '#returns', 'color' => 'violet'],
+                    ['icon' => 'chart-bar', 'label' => 'Laporan', 'href' => '#reports', 'color' => 'cyan'],
+                    ['icon' => 'bell', 'label' => 'Notifikasi', 'href' => '#notifications', 'color' => 'indigo'],
+                    ['icon' => 'cog-6-tooth', 'label' => 'Pengaturan', 'href' => '#settings', 'color' => 'slate'],
                 ];
             @endphp
             @foreach($quickNav as $nav)
@@ -136,7 +142,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-semibold text-blue-900 dark:text-blue-300">Catatan Penting</p>
-                            <p class="mt-1 text-xs text-blue-700 dark:text-blue-400">Tidak ada pendaftaran publik. Akun baru dibuat melalui Google Sign-In atau diundang oleh administrator.</p>
+                            <p class="mt-1 text-xs text-blue-700 dark:text-blue-400">Tidak ada pendaftaran publik. Akun pertama sebuah warehouse dibuat lewat Google Sign-In, akun berikutnya dibuatkan langsung oleh App Admin/Super Admin (nama, email, dan password) di menu Manajemen Pengguna.</p>
                         </div>
                     </div>
                 </div>
@@ -150,6 +156,19 @@
                         <div>
                             <p class="text-sm font-semibold text-zinc-900 dark:text-white">Multi-Warehouse</p>
                             <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Jika Anda tergabung di beberapa warehouse, setelah login Anda akan diminta memilih warehouse yang ingin digunakan.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Sesi Login Kedaluwarsa --}}
+                <div class="mt-6 rounded-xl border border-zinc-100 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
+                    <div class="flex items-start gap-3">
+                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-zinc-200 dark:bg-zinc-700">
+                            <flux:icon name="clock" class="h-4 w-4 text-zinc-600 dark:text-zinc-400" />
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-zinc-900 dark:text-white">Sesi Login Google Kedaluwarsa</p>
+                            <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Jika muncul pesan sesi tidak valid setelah klik "Sign in with Google", cukup ulangi klik tombolnya. Ini bisa terjadi jika halaman login sudah terbuka lama sebelum tombolnya diklik.</p>
                         </div>
                     </div>
                 </div>
@@ -208,7 +227,7 @@
             </div>
 
             <div class="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-700 dark:bg-zinc-800">
-                <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-300">Sistem memiliki 6 role dengan hierarki sebagai berikut:</p>
+                <p class="mb-6 text-sm text-zinc-600 dark:text-zinc-300">Sistem memiliki 5 role per-warehouse, ditambah 1 hak akses khusus admin platform (Super Admin) yang berlaku lintas warehouse:</p>
 
                 {{-- Role Cards --}}
                 <div class="space-y-3">
@@ -237,6 +256,7 @@
                         </div>
                     @endforeach
                 </div>
+                <p class="mt-3 text-[11px] italic text-zinc-400 dark:text-zinc-500">Catatan: Super Admin bukan bagian dari 5 role per-warehouse di atas &mdash; statusnya adalah hak akses platform yang terpisah dari keanggotaan warehouse manapun, sedangkan 5 role lainnya selalu melekat pada satu warehouse tertentu.</p>
 
                 {{-- Permission Matrix --}}
                 <h3 class="mt-8 mb-4 text-lg font-bold text-zinc-900 dark:text-white">Ringkasan Hak Akses per Modul</h3>
@@ -482,12 +502,12 @@
                             @if(!$loop->last)
                                 <svg class="h-4 w-4 shrink-0 text-amber-300 dark:text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                             @endif
-                        @endforeach
-                    </div>
-                    @endphp
+                        </div>
+                    @endforeach
+                </div>
 
                 <div class="mb-6 rounded-lg border border-amber-100 bg-amber-50 p-3 dark:border-amber-900/30 dark:bg-amber-900/10">
-                    <p class="text-xs text-amber-700 dark:text-amber-400"><strong>Catatan:</strong> Status bisa berubah menjadi <strong>BACKORDERED</strong> jika stok tidak tersedia, atau <strong>REJECTED</strong> jika ditolak.</p>
+                    <p class="text-xs text-amber-700 dark:text-amber-400"><strong>Catatan:</strong> Status bisa berubah menjadi <strong>BACKORDERED</strong> jika stok tidak tersedia, <strong>REJECTED</strong> jika ditolak, atau <strong>CANCELLED</strong> jika dibatalkan sebelum selesai.</p>
                 </div>
 
                 {{-- Steps per role --}}
@@ -562,9 +582,9 @@
                             @if(!$loop->last)
                                 <svg class="h-4 w-4 shrink-0 text-rose-300 dark:text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                             @endif
-                        @endforeach
-                    </div>
-                    @endphp
+                        </div>
+                    @endforeach
+                </div>
 
                 {{-- Steps per role --}}
                 <div class="space-y-4">
@@ -624,6 +644,19 @@
                             <li>5. Jika <strong>FAIL</strong>: stok tidak masuk, barang perlu ditindaklanjuti</li>
                         </ol>
                     </div>
+
+                    {{-- Cancellation Request --}}
+                    <div class="rounded-xl border-l-4 border-rose-400 bg-rose-50/50 p-4 dark:border-rose-500 dark:bg-rose-950/30">
+                        <h4 class="mb-2 flex items-center gap-2 text-sm font-bold text-rose-900 dark:text-rose-200">
+                            <span class="flex h-5 w-5 items-center justify-center rounded bg-rose-200/50 dark:bg-rose-800/40"><flux:icon name="x-circle" class="h-3 w-3 text-rose-700 dark:text-rose-300" /></span>
+                            Pembatalan Purchase Request (Cancellation Request)
+                        </h4>
+                        <ol class="ml-5 space-y-1 text-xs text-rose-800 dark:text-rose-300/80">
+                            <li>1. Selama PO belum dikirim ke supplier, pembuat request bisa membuka halaman detail purchase request dan klik <strong>"Request Cancellation"</strong></li>
+                            <li>2. Kepala Gudang meninjau permintaan pembatalan di tab <strong>"Cancellations"</strong> pada menu <strong>"Approval Procurement"</strong></li>
+                            <li>3. Klik <strong>"Approve"</strong> untuk membatalkan purchase request, atau <strong>"Reject"</strong> agar prosesnya tetap lanjut</li>
+                        </ol>
+                    </div>
                 </div>
 
                 <div class="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-900/30 dark:bg-red-900/10">
@@ -633,7 +666,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-semibold text-red-900 dark:text-red-300">Perhatian</p>
-                            <p class="mt-1 text-xs text-red-700 dark:text-red-400">Setelah PO dikirim ke supplier, purchase request tidak dapat dibatalkan lagi.</p>
+                            <p class="mt-1 text-xs text-red-700 dark:text-red-400">Setelah PO dikirim ke supplier, purchase request tidak dapat diajukan pembatalan lagi &mdash; sebelum itu, pembatalan tetap memerlukan persetujuan Kepala Gudang.</p>
                         </div>
                     </div>
                 </div>
@@ -665,9 +698,9 @@
                             @if(!$loop->last)
                                 <svg class="h-4 w-4 shrink-0 text-violet-300 dark:text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                             @endif
-                        @endforeach
-                    </div>
-                    @endphp
+                        </div>
+                    @endforeach
+                </div>
 
                 <div class="mb-6 rounded-lg border border-violet-100 bg-violet-50 p-3 dark:border-violet-900/30 dark:bg-violet-900/10">
                     <p class="text-xs text-violet-700 dark:text-violet-400"><strong>Catatan:</strong> Status bisa berubah menjadi <strong>REJECTED</strong> jika ditolak oleh Kepala Gudang.</p>
@@ -783,7 +816,7 @@
                         <li>2. Pilih jenis laporan dari dropdown</li>
                         <li>3. Atur filter yang tersedia (status, sumber, barang, rentang tanggal)</li>
                         <li>4. Data akan dimuat secara otomatis</li>
-                        <li>5. Klik <strong>"Export"</strong> untuk mengunduh laporan dalam format file</li>
+                        <li>5. Klik <strong>"Export"</strong> untuk membuat file laporan dalam format CSV &mdash; prosesnya berjalan di background, status berubah dari "Pending" ke "Completed" sebelum file bisa diunduh</li>
                     </ol>
                 </div>
             </div>
@@ -847,6 +880,10 @@
                             </li>
                         @endforeach
                     </ul>
+                </div>
+
+                <div class="sm:col-span-2 rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 dark:border-indigo-900/30 dark:bg-indigo-900/10">
+                    <p class="text-xs text-indigo-700 dark:text-indigo-400"><strong>Tip:</strong> Klik notifikasinya (baik di Kotak Masuk maupun push notification) untuk langsung membuka halaman detail yang relevan &mdash; misalnya detail retur, purchase request, atau pickup terkait.</p>
                 </div>
             </div>
         </section>
