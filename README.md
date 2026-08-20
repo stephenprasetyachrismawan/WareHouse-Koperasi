@@ -64,8 +64,8 @@ Bagian ini untuk developer yang ingin menjalankan, memodifikasi, atau berkontrib
 | `UI-RULES.md` | Aturan antarmuka, responsivitas, aksesibilitas, pola layar, komponen, status, formulir, pemindaian barcode, dan UX per role. |
 | `BATASAN.md` | Ruang lingkup, di luar lingkup, batas fase, asumsi, keputusan yang tidak boleh diubah diam-diam, serta daftar pertanyaan terbuka. |
 | `AGENTS.md` | Instruksi wajib untuk developer dan AI coding agent. |
-| `CI.md` | Kontrak continuous integration — gate merge yang aktif di GitHub Actions. |
-| `CD.md` | Kontrak continuous delivery/deployment — alur deployment development yang aktif. |
+| [`CI.md`](CI.md) | Kontrak continuous integration — gate merge yang aktif di GitHub Actions. |
+| [`CD.md`](CD.md) | Kontrak continuous delivery/deployment — alur deployment development yang aktif. |
 | `.agent/README.md` | Entry point aturan agent di repositori. |
 | `.agent/WORKFLOW.md` | Workflow implementasi, TDD, review, dan quality gate. |
 | `.ai/gudelines/warehouse-project.md` | Custom guideline yang dapat digabungkan oleh Laravel Boost. |
@@ -222,9 +222,32 @@ npm run build
 npm run lint
 ```
 
-Gate lengkap yang benar-benar aktif di GitHub Actions (PHPStan level 7, security regression suite, dependency audit, Gitleaks, kompatibilitas PostgreSQL/Redis, Docker image build) didokumentasikan di `CI.md`. `main` diproteksi oleh GitHub ruleset — PR wajib lolos check tersebut sebelum bisa di-merge.
+Gate lengkap yang benar-benar aktif di GitHub Actions (PHPStan level 7, security regression suite, dependency audit, Gitleaks, kompatibilitas PostgreSQL/Redis, Docker image build) didokumentasikan di [`CI.md`](CI.md). `main` diproteksi oleh GitHub ruleset — PR wajib lolos check tersebut sebelum bisa di-merge.
 
 Prinsip implementasi inti, konvensi branch/pull request, dan urutan roadmap fase ada di `PRD.md`. Baca `PRD.md`, `SECURITY-RULES.md`, dan `ARCHITECTURE.md` sebelum menulis kode.
+
+## CI/CD
+
+Setiap pull request wajib lolos satu workflow GitHub Actions (`.github/workflows/ci-cd.yml`) sebelum bisa di-merge ke `main` — detail lengkapnya ada di [`CI.md`](CI.md) (integrasi) dan [`CD.md`](CD.md) (deployment).
+
+```text
+PR dibuka
+  → quality (Pint, PHPStan level 7, full test suite, security regression suite, dependency audit, Gitleaks)
+  → integration (PostgreSQL + Redis)
+  → image build (no publish) — build image runtime & web tanpa push
+  → ketiganya WAJIB hijau (GitHub ruleset di `main`, tanpa bypass) sebelum merge
+  → merge ke main
+  → image publish (GHCR) — build ulang & push image dengan digest immutable
+      ke ghcr.io/stephenprasetyachrismawan/warehouse-koperasi[-web]
+  → deploy manual: workflow_dispatch dengan run_deploy=true
+      → SSH ke VPS development → wh.stevewithcode.net
+```
+
+Poin penting:
+- `quality`, `integration (PostgreSQL + Redis)`, dan `image build (no publish)` adalah *required check* — nama persis yang dicek GitHub ruleset di `main`, tidak ada bypass actor sama sekali (termasuk admin repo).
+- `image publish (GHCR)` hanya berjalan di push ke `main` (bukan di PR), menghasilkan image dengan digest `sha256:...` yang immutable — bukan tag `latest`.
+- Deployment ke VPS development **tidak otomatis saat merge** — harus dipicu manual lewat `workflow_dispatch` dengan `run_deploy=true`, dan selalu memakai digest dari run yang sama (lihat [`CD.md`](CD.md) §3).
+- Rollback (kalau deploy gagal) otomatis lewat `deploy/rollback-development.sh` dan selalu melaporkan status apa adanya, tidak pernah mengklaim sukses kalau sebenarnya di-rollback.
 
 ## License
 
