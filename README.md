@@ -46,7 +46,7 @@ Masuk menggunakan **Google Sign-In** — tidak ada pendaftaran mandiri; akun dib
 
 ### Dokumentasi Lengkap
 
-Panduan penggunaan lengkap (login, dashboard, role & hak akses, inventaris, pickup, pengadaan, retur, laporan, notifikasi, pengaturan akun) tersedia langsung di dalam aplikasi pada halaman **[Dokumentasi](https://wh.stevewithcode.net/documentation)**.
+Panduan penggunaan lengkap (login, dashboard, role & hak akses, inventaris, pickup, pengadaan, retur, laporan, notifikasi, pengaturan akun) tersedia langsung di dalam aplikasi pada halaman **[Dokumentasi](https://wh.stevewithcode.net/documentation)**, dan dalam versi yang lebih lengkap di **[situs dokumentasi](https://stephenprasetyachrismawan.github.io/WareHouse-Koperasi/)** (Panduan Pengguna + Panduan Developer).
 
 ---
 
@@ -199,7 +199,7 @@ Perintah tersebut menulis lalu menghapus satu object sintetis pada disk `private
 jangan jalankan terhadap data bisnis production tanpa synthetic tenant/prosedur
 operasional yang disetujui. Status provisioning provider dan bukti executable
 Phase 6.4E dicatat di
-[`docs/verification/phase-6-4e-production-infrastructure.md`](docs/verification/phase-6-4e-production-infrastructure.md).
+[`docs/rekayasa-operasional/verification/phase-6-4e-production-infrastructure.md`](docs/rekayasa-operasional/verification/phase-6-4e-production-infrastructure.md).
 
 ## Database, Seeder, dan Dummy Data
 
@@ -248,6 +248,8 @@ Poin penting:
 - `image publish (GHCR)` hanya berjalan di push ke `main` (bukan di PR), menghasilkan image dengan digest `sha256:...` yang immutable — bukan tag `latest`.
 - Deployment ke VPS development **tidak otomatis saat merge** — harus dipicu manual lewat `workflow_dispatch` dengan `run_deploy=true`, dan selalu memakai digest dari run yang sama (lihat [`CD.md`](CD.md) §3).
 - Rollback (kalau deploy gagal) otomatis lewat `deploy/rollback-development.sh` dan selalu melaporkan status apa adanya, tidak pernah mengklaim sukses kalau sebenarnya di-rollback.
+
+Ada satu workflow terpisah, `.github/workflows/docs-pages.yml`, yang otomatis build & publish [situs dokumentasi](https://stephenprasetyachrismawan.github.io/WareHouse-Koperasi/) (folder `docs/` + `docs-site/`) ke GitHub Pages setiap ada perubahan yang di-merge ke `main` — tidak terikat pada gate merge `ci-cd.yml` di atas.
 
 ## License
 

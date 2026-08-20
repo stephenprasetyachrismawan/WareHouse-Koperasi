@@ -34,7 +34,7 @@ The VPS does **not**, during a normal deployment:
 - run PHPStan or the test suite
 - `docker build`
 
-All of that already happened on GitHub before an image reaches GHCR. Full detail, including the rollback model and its database-migration limitation, is in [`CD.md`](../../CD.md).
+All of that already happened on GitHub before an image reaches GHCR. Full detail, including the rollback model and its database-migration limitation, is in [`CD.md`](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/blob/main/CD.md).
 
 ## Future production target (not active)
 
