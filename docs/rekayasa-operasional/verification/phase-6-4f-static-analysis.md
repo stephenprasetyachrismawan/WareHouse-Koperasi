@@ -138,7 +138,7 @@ across Actions, Query Objects, Seeders, and notification code that consumed thos
   pre-existing test (`Items Edit can update item details`) that already exercises a barcode-less item
   through this exact code path.
 - **`Illuminate\Support\Collection`'s `TValue` generic is invariant**, not covariant (documented at
-  <https://phpstan.org/blog/whats-up-with-template-covariant>). A `Collection<int, array{...}>` return
+  [phpstan.org/blog/whats-up-with-template-covariant](https://phpstan.org/blog/whats-up-with-template-covariant)). A `Collection<int, array{...}>` return
   type can be genuinely unsatisfiable from a `.map()` chain even when the declared and actual shapes
   are semantically identical, because PHPStan compares the array-shape's exact internal structure
   (sealed/unsealed, and — as found here — literal-narrowed types like `App\Enums\X` vs `mixed`, or a

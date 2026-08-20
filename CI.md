@@ -12,7 +12,7 @@ CI answers exactly one question:
 
 > **Is this change safe to merge?**
 
-It does not answer "is this deployed" (see [CD.md](CD.md)) and it does not answer "is this production-ready" (see `docs/PRODUCTION-READINESS.md`).
+It does not answer "is this deployed" (see [CD.md](CD.md)) and it does not answer "is this production-ready" (see `docs/rekayasa-operasional/production-readiness.md`).
 
 ## 2. The merge lifecycle
 

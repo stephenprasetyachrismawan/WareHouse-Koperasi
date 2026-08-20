@@ -14,7 +14,7 @@ Phase 6.4D implementation merge: `7eb1d809280f3b9bac730aa43ca33df5360bf9d8` (PR 
 
 ## Phase 6.4F-0 — CI/CD and first development Docker cutover (2026-08-19)
 
-Full contracts: [`CI.md`](../CI.md), [`CD.md`](../CD.md).
+Full contracts: [`CI.md`](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/blob/main/CI.md), [`CD.md`](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/blob/main/CD.md).
 
 | Item | Status | Evidence |
 | --- | --- | --- |

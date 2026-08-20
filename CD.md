@@ -182,4 +182,4 @@ Development deployment is deliberately gated behind `workflow_dispatch` with `ru
 
 ## 10. Production
 
-Production CD does not exist yet: no production GitHub Environment, no production deployment path, no PostgreSQL/Redis/S3 migration for development, no production auto-CD. See `docs/PRODUCTION-READINESS.md` for the full, itemized list of what's still blocked before any production discussion is in scope.
+Production CD does not exist yet: no production GitHub Environment, no production deployment path, no PostgreSQL/Redis/S3 migration for development, no production auto-CD. See `docs/rekayasa-operasional/production-readiness.md` for the full, itemized list of what's still blocked before any production discussion is in scope.
