@@ -52,7 +52,7 @@ Panduan penggunaan lengkap (login, dashboard, role & hak akses, inventaris, pick
 
 ## Untuk Development
 
-Bagian ini untuk developer yang ingin menjalankan, memodifikasi, atau berkontribusi pada aplikasi ini secara lokal.
+Bagian ini untuk developer yang ingin menjalankan, memodifikasi, atau berkontribusi pada aplikasi ini secara lokal. Untuk panduan langkah-demi-langkah yang lebih lengkap (termasuk opsi Docker vs tanpa Docker, dan cara VPS development ini disiapkan dari nol), lihat **[situs dokumentasi § Panduan Developer](https://stephenprasetyachrismawan.github.io/WareHouse-Koperasi/docs/panduan-developer/pendahuluan)** dan **[GitHub Wiki](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/wiki)** repo ini — README ini hanya ringkasannya.
 
 ### Dokumen Utama
 
@@ -70,25 +70,43 @@ Bagian ini untuk developer yang ingin menjalankan, memodifikasi, atau berkontrib
 | `.agent/WORKFLOW.md` | Workflow implementasi, TDD, review, dan quality gate. |
 | `.ai/gudelines/warehouse-project.md` | Custom guideline yang dapat digabungkan oleh Laravel Boost. |
 
-### 1. Prasyarat
+Rujukan teknis yang lebih detail dan mudah dinavigasi (arsitektur, modul, role/permission, testing, deployment, security) ada di **[GitHub Wiki](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/wiki)** repo ini — dokumen di tabel atas tetap sumber yang mengikat, Wiki meringkasnya.
 
-Siapkan PHP `8.3–8.5`, Composer, Node.js versi LTS aktif, npm, PostgreSQL, dan Redis. Docker/Sail dapat dipakai agar lingkungan konsisten — lihat `CD.md` untuk alur deployment berbasis Docker yang aktif untuk lingkungan development.
+### 1. Fork atau clone
 
-Daftar lengkap dependency baseline (Laravel, Livewire, Fortify, Socialite, Reverb, dll.) beserta rasionalnya ada di `PRD.md` bagian "Baseline Teknologi". Versi final harus dikunci melalui `composer.lock` dan lockfile frontend — jangan mengandalkan versi global mesin developer.
-
-### 2. Clone dan install
+Kontributor eksternal fork dulu repo ini, lalu clone fork-nya; kolaborator bisa clone langsung:
 
 ```bash
-git clone https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi.git
+git clone https://github.com/<username-anda-atau-stephenprasetyachrismawan>/WareHouse-Koperasi.git
 cd WareHouse-Koperasi
+```
+
+### 2. Prasyarat & install — pilih salah satu jalur
+
+**Opsi A — Tanpa Docker (native):** PHP `8.3–8.5`, Composer, Node.js versi LTS aktif, npm, PostgreSQL & Redis (opsional — SQLite + database-backed cache/queue/session juga bisa untuk dev cepat).
+
+```bash
 composer install
 npm install
+cp .env.example .env && php artisan key:generate
+# isi .env (lihat panduan lengkap untuk contoh minimal), lalu:
+php artisan migrate --seed
+npm run build && composer run dev
 ```
 
+**Opsi B — Dengan Docker:** hanya butuh Docker + Docker Compose v2. Image dibuild lokal dari `Dockerfile` yang sama dengan yang dipakai deployment (lihat [CI/CD](#cicd)), lalu dijalankan lewat `deploy/compose.yaml` yang sama dengan topologi VPS.
+
 ```bash
-npm run build
-composer run dev
+cp .env.docker.example .env
+docker build --target runtime -t warehouse-koperasi-app .
+docker build --target web -t warehouse-koperasi-web .
+APP_IMAGE=warehouse-koperasi-app WEB_IMAGE=warehouse-koperasi-web \
+  docker compose --project-directory deploy up -d
 ```
+
+Langkah lengkap per opsi (generate `APP_KEY`, build ARG Reverb, seed, dst.) ada di **[Instalasi § Panduan Developer](https://stephenprasetyachrismawan.github.io/WareHouse-Koperasi/docs/panduan-developer/instalasi)**.
+
+Daftar lengkap dependency baseline (Laravel, Livewire, Fortify, Socialite, Reverb, dll.) beserta rasionalnya ada di `PRD.md` bagian "Baseline Teknologi". Versi final dikunci lewat `composer.lock` dan lockfile frontend — jangan mengandalkan versi global mesin developer.
 
 ### 3. Paket aplikasi
 
@@ -129,6 +147,10 @@ Pada installer, pilih skill yang diperlukan dan pastikan `setup-matt-pocock-skil
 ```
 
 Jangan memasang dua mekanisme yang menghasilkan duplikasi skill pada agent yang sama. File hasil installer boleh berbeda menurut agent; perubahan yang relevan terhadap repositori harus direview sebelum commit.
+
+### 6. Kerja dengan AI coding agent
+
+Ada prompt siap pakai yang merangkum semua aturan wajib repo ini (tenant isolation, alur approval, larangan keamanan, workflow branch/PR/CI) supaya agent tidak melanggarnya tanpa sadar — lihat **[Agent Prompt § Panduan Developer](https://stephenprasetyachrismawan.github.io/WareHouse-Koperasi/docs/panduan-developer/agent-prompt)** (juga tersedia di [Wiki](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/wiki/Agent-Prompt)).
 
 ## Konfigurasi Lingkungan
 
@@ -250,6 +272,8 @@ Poin penting:
 - Rollback (kalau deploy gagal) otomatis lewat `deploy/rollback-development.sh` dan selalu melaporkan status apa adanya, tidak pernah mengklaim sukses kalau sebenarnya di-rollback.
 
 Ada satu workflow terpisah, `.github/workflows/docs-pages.yml`, yang otomatis build & publish [situs dokumentasi](https://stephenprasetyachrismawan.github.io/WareHouse-Koperasi/) (folder `docs/` + `docs-site/`) ke GitHub Pages setiap ada perubahan yang di-merge ke `main` — tidak terikat pada gate merge `ci-cd.yml` di atas.
+
+Untuk apa saja yang harus disiapkan di VPS sendiri (Docker, user `deploy`, Cloudflare Tunnel, kredensial GitHub Environment) sampai deploy di atas benar-benar bisa berjalan, lihat **[Provisioning Server § Panduan Developer](https://stephenprasetyachrismawan.github.io/WareHouse-Koperasi/docs/panduan-developer/provisioning-server)** (juga di [Wiki](https://github.com/stephenprasetyachrismawan/WareHouse-Koperasi/wiki/Server-Provisioning)).
 
 ## License
 
