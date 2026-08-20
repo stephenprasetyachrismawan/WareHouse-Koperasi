@@ -47,7 +47,12 @@ class SocialiteController extends Controller
             return response()->noContent();
         }
 
-        return Socialite::driver('google')->redirect();
+        /** @var GoogleProvider $provider */
+        $provider = Socialite::driver('google');
+
+        return $provider
+            ->with(['prompt' => 'select_account'])
+            ->redirect();
     }
 
     /**
