@@ -72,6 +72,41 @@ class UserAndMembershipSeeder extends Seeder
 
         $koperasi4 = $this->makeUser('koperasi.unit4@koperasi.id', 'Koperasi Unit Konsumsi D');
         $this->createMembership($koperasi4, $whBarat, WarehouseRole::Koperasi);
+
+        $whJateng = Warehouse::where('code', 'WH-JATENG')->first();
+        if (! $whJateng) {
+            return;
+        }
+
+        // --- WH-JATENG (Gudang Koperasi Jateng, Semarang) — separate cooperative federation ---
+        $adminJateng = $this->makeUser('admin.jateng@koperasi.id', 'Bambang Kusumo (App Admin Gudang Jateng)');
+        $this->createMembership($adminJateng, $whJateng, WarehouseRole::AppAdmin);
+
+        $kepalaJateng = $this->makeUser('kepala.jateng@koperasi.id', 'Sri Wahyuni (Kepala Gudang Jateng)');
+        $this->createMembership($kepalaJateng, $whJateng, WarehouseRole::KepalaGudang);
+
+        $staffJateng = $this->makeUser('staff.jateng@koperasi.id', 'Agus Purnomo (Staff Admin Gudang Jateng)');
+        $this->createMembership($staffJateng, $whJateng, WarehouseRole::StaffAdmin);
+
+        $purchasingJateng = $this->makeUser('purchasing.jateng@koperasi.id', 'Dwi Kartika (Purchasing Staff Jateng)');
+        $this->createMembership($purchasingJateng, $whJateng, WarehouseRole::Purchasing);
+
+        $koperasiTani = $this->makeUser('koperasi.tani@koperasi.id', 'Koperasi Tani Makmur Boyolali');
+        $this->createMembership($koperasiTani, $whJateng, WarehouseRole::Koperasi);
+
+        $koperasiWanita = $this->makeUser('koperasi.wanita@koperasi.id', 'Koperasi Wanita Sejahtera Salatiga');
+        $this->createMembership($koperasiWanita, $whJateng, WarehouseRole::Koperasi);
+
+        $koperasiNelayan = $this->makeUser('koperasi.nelayan@koperasi.id', 'Koperasi Nelayan Bahari Pekalongan');
+        $this->createMembership($koperasiNelayan, $whJateng, WarehouseRole::Koperasi);
+
+        // WH-JATENG belongs to a different Company than WH-PUSAT/WH-BARAT, so
+        // (unlike before, when every warehouse shared one company_id) the
+        // spatie/permission "current team" left dangling by createMembership()
+        // above would otherwise point at the wrong company for anything that
+        // checks a role right after this seeder runs without setting its own
+        // team context first.
+        setPermissionsTeamId($company->id);
     }
 
     private function makeUser(string $email, string $name): User

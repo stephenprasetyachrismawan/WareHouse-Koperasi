@@ -72,6 +72,28 @@ class StockFoundationSeeder extends Seeder
                 'PLP-STD' => 12,
             ]);
         }
+
+        $whJateng = Warehouse::where('code', 'WH-JATENG')->first();
+        if ($whJateng) {
+            $this->seedWarehouseStock($whJateng, 'staff.jateng@koperasi.id', [
+                'PUP-UREA' => 120,
+                'PUP-NPK' => 90,
+                'BNH-PADI' => 35,
+                'BNH-JGG' => 8,    // Stok Kritis (< 15) — musim tanam jagung baru saja dimulai
+                'BR-25KG' => 60,
+                'GRM-KRS' => 25,
+                'IKN-ASIN' => 12,
+                'IKN-TERI' => 6,   // Stok Kritis (< 10)
+                'BMB-ANYM' => 22,
+                // PWR-ALAM intentionally omitted: zero-balance case, supplier belum kirim ulang.
+                'BM-1L' => 55,
+                'GL-1KG-J' => 40,
+                'IM-GRG-J' => 65,
+                'AQ-600-J' => 30,
+            ]);
+
+            $this->seedLedgerDepthJateng($whJateng);
+        }
     }
 
     /**
@@ -147,6 +169,43 @@ class StockFoundationSeeder extends Seeder
                     quantity: $adj['qty'],
                     performedBy: $staffUser->id,
                     idempotencyKey: "seed-ledger-depth-{$warehouse->id}-{$index}",
+                    reason: $adj['reason'],
+                ));
+            } catch (\Throwable $e) {
+                // Already seeded; safe to ignore.
+            }
+        }
+    }
+
+    private function seedLedgerDepthJateng(Warehouse $warehouse): void
+    {
+        $staffUser = User::where('email', 'staff.jateng@koperasi.id')->first();
+        if (! $staffUser) {
+            return;
+        }
+
+        $items = Item::where('warehouse_id', $warehouse->id)->get()->keyBy('code');
+        $action = new RecordStockMovementAction;
+
+        $adjustments = [
+            ['code' => 'IKN-ASIN', 'type' => MovementType::ManualAdjustmentOut, 'qty' => 2, 'reason' => 'Ikan asin lembab akibat kemasan robek, dikeluarkan dari stok jual'],
+            ['code' => 'BR-25KG', 'type' => MovementType::ManualAdjustmentIn, 'qty' => 5, 'reason' => 'Koreksi selisih hasil stock opname panen susulan dari petani anggota'],
+        ];
+
+        foreach ($adjustments as $index => $adj) {
+            $item = $items->get($adj['code']);
+            if (! $item) {
+                continue;
+            }
+
+            try {
+                $action->execute(new StockMovementInput(
+                    warehouseId: $warehouse->id,
+                    itemId: $item->id,
+                    movementType: $adj['type'],
+                    quantity: $adj['qty'],
+                    performedBy: $staffUser->id,
+                    idempotencyKey: "seed-ledger-depth-jateng-{$warehouse->id}-{$index}",
                     reason: $adj['reason'],
                 ));
             } catch (\Throwable $e) {

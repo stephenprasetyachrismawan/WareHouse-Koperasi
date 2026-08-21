@@ -39,5 +39,28 @@ class CompanyAndWarehouseSeeder extends Seeder
                 'status' => 'active',
             ]
         );
+
+        // A separate, self-contained cooperative federation in Central Java —
+        // its own Company, not a branch of Koperasi Karyawan Sejahtera Utama,
+        // so its demo data tells its own regional story end-to-end without
+        // touching WH-PUSAT/WH-BARAT.
+        $companyJateng = Company::firstOrCreate(
+            ['code' => 'KSU-JATENG'],
+            [
+                'uuid' => (string) Str::uuid(),
+                'name' => 'Koperasi Serba Usaha Makmur Jawa Tengah',
+                'status' => 'active',
+            ]
+        );
+
+        Warehouse::firstOrCreate(
+            ['code' => 'WH-JATENG', 'company_id' => $companyJateng->id],
+            [
+                'uuid' => (string) Str::uuid(),
+                'name' => 'Gudang Koperasi Jateng',
+                'address' => 'Jl. Diponegoro No. 88, Semarang, Jawa Tengah',
+                'status' => 'active',
+            ]
+        );
     }
 }

@@ -26,42 +26,31 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 
 /**
- * Demonstrates the full Phase 4.3 receiving/QC lifecycle with realistic
- * scenarios A-E from the design brief, for BOTH warehouses so tenant
- * isolation is visible in the demo data itself, not just in tests.
- * Idempotent: skips scenarios whose marker Purchase Order already exists
- * so re-running seeders is safe.
+ * Full receiving/QC lifecycle (scenarios A-E) for WH-JATENG. Deliberately
+ * orders the item query (unlike relying on default row order) so the same
+ * two items are always used for QC regardless of database engine — see the
+ * PostgreSQL-only flake this fixed in DemoGoodsReceiptSeeder.
  */
-class DemoGoodsReceiptSeeder extends Seeder
+class DemoJatengGoodsReceiptSeeder extends Seeder
 {
     public function run(): void
     {
         Gate::before(fn () => true);
 
-        $whPusat = Warehouse::where('code', 'WH-PUSAT')->first();
-        if ($whPusat) {
+        $warehouse = Warehouse::where('code', 'WH-JATENG')->first();
+        if ($warehouse) {
             $this->seedForWarehouse(
-                $whPusat,
-                receivedBy: User::where('email', 'purchasing@koperasi.id')->first(),
-                inspectedBy: User::where('email', 'staff.admin@koperasi.id')->first(),
-                tag: 'PUS',
-            );
-        }
-
-        $whBarat = Warehouse::where('code', 'WH-BARAT')->first();
-        if ($whBarat) {
-            $this->seedForWarehouse(
-                $whBarat,
-                receivedBy: User::where('email', 'purchasing.barat@koperasi.id')->first(),
-                inspectedBy: User::where('email', 'staff.barat@koperasi.id')->first(),
-                tag: 'BAR',
+                $warehouse,
+                receivedBy: User::where('email', 'purchasing.jateng@koperasi.id')->first(),
+                inspectedBy: User::where('email', 'staff.jateng@koperasi.id')->first(),
+                tag: 'JTG',
             );
         }
     }
 
     private function seedForWarehouse(Warehouse $warehouse, ?User $receivedBy, ?User $inspectedBy, string $tag): void
     {
-        $supplier = Supplier::forWarehouse($warehouse->id)->active()->first();
+        $supplier = Supplier::forWarehouse($warehouse->id)->active()->orderBy('id')->first();
         $items = Item::where('warehouse_id', $warehouse->id)->orderBy('id')->take(2)->get();
 
         if (! $receivedBy || ! $inspectedBy || ! $supplier || $items->count() < 2) {
@@ -129,7 +118,7 @@ class DemoGoodsReceiptSeeder extends Seeder
             warehouseId: $warehouse->id,
             result: QualityInspectionResult::Pass,
             condition: QualityInspectionCondition::Good,
-            notes: 'Barang sesuai pesanan, kemasan baik.',
+            notes: 'Pupuk sesuai pesanan, kemasan utuh dan kering.',
         ));
     }
 
@@ -155,7 +144,7 @@ class DemoGoodsReceiptSeeder extends Seeder
             warehouseId: $warehouse->id,
             result: QualityInspectionResult::Fail,
             condition: QualityInspectionCondition::Damaged,
-            notes: 'Kemasan basah dan sebagian barang rusak saat diperiksa.',
+            notes: 'Karung pupuk sobek dan sebagian tumpah saat bongkar muat.',
         ));
     }
 
@@ -193,7 +182,7 @@ class DemoGoodsReceiptSeeder extends Seeder
     {
         $purchaseRequest = PurchaseRequest::create([
             'warehouse_id' => $warehouse->id,
-            'request_number' => 'PR-'.now()->format('Ymd').'-'.random_int(10000, 99999),
+            'request_number' => 'PR-JTG-'.now()->format('Ymd').'-'.random_int(10000, 99999),
             'source' => 'MANUAL_STAFF',
             'urgency' => 'NORMAL',
             'status' => PurchaseRequestStatus::Approved->value,
@@ -223,7 +212,7 @@ class DemoGoodsReceiptSeeder extends Seeder
             groupId: $group->id,
             supplierId: $supplier->id,
             notes: $notes,
-            items: $items->map(fn (Item $item) => ['item_id' => $item->id, 'unit_cost' => 8000])->all(),
+            items: $items->map(fn (Item $item) => ['item_id' => $item->id, 'unit_cost' => 12000])->all(),
         ));
 
         return app(SendPurchaseOrderAction::class)->execute($actor, $po)->load('items');

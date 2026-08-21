@@ -18,6 +18,13 @@ class MasterDataSeeder extends Seeder
             $this->seedLocations($warehouse);
             $this->seedItems($warehouse);
         }
+
+        $whJateng = Warehouse::where('code', 'WH-JATENG')->first();
+        if ($whJateng) {
+            $this->seedSuppliersJateng($whJateng);
+            $this->seedLocationsJateng($whJateng);
+            $this->seedItemsJateng($whJateng);
+        }
     }
 
     private function seedSuppliers(Warehouse $warehouse): void
@@ -202,6 +209,148 @@ class MasterDataSeeder extends Seeder
                     'barcode' => $bc,
                 ], [
                     'is_primary' => $index === 0,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * WH-JATENG serves three very different member cooperatives (a farmer
+     * group, a women's craft/food group, and a fishing group), so its
+     * supplier list leans agricultural/fishery instead of the pure
+     * urban-sembako list above.
+     */
+    private function seedSuppliersJateng(Warehouse $warehouse): void
+    {
+        $suppliersData = [
+            [
+                'name' => 'PT Pupuk Sriwidjaja Palembang (Distributor Jateng)',
+                'contact_name' => 'Slamet Riyadi',
+                'email' => 'distribusi.jateng@pusri.co.id',
+                'phone' => '081611223344',
+                'address' => 'Jl. Ki Mangunsarkoro No. 12, Semarang',
+                'is_active' => true,
+                'notes' => 'Distributor resmi pupuk bersubsidi untuk wilayah Jawa Tengah',
+            ],
+            [
+                'name' => 'CV Benih Unggul Boyolali',
+                'contact_name' => 'Marto Wijoyo',
+                'email' => 'order@benihboyolali.co.id',
+                'phone' => '081722334455',
+                'address' => 'Jl. Pandanaran No. 5, Boyolali',
+                'is_active' => true,
+                'notes' => 'Supplier benih padi dan sayuran bersertifikat',
+            ],
+            [
+                'name' => 'PT Garam Rebus Pekalongan',
+                'contact_name' => 'Wahyu Setiadi',
+                'email' => 'sales@garampekalongan.co.id',
+                'phone' => '081833445566',
+                'address' => 'Jl. Pantai Sari No. 21, Pekalongan',
+                'is_active' => true,
+                'notes' => 'Supplier garam krosok dan ikan asin untuk koperasi nelayan',
+            ],
+            [
+                'name' => 'PT Indofood Sukses Makmur Tbk (Cabang Semarang)',
+                'contact_name' => 'Ratna Kumala',
+                'email' => 'semarang@indofood.co.id',
+                'phone' => '081944556677',
+                'address' => 'Jl. Kaligawe Raya Km 4, Semarang',
+                'is_active' => true,
+                'notes' => 'Supplier sembako umum (mie instant, minyak goreng) untuk regional Jateng',
+            ],
+            [
+                'name' => 'CV Anyaman Mandiri Salatiga',
+                'contact_name' => 'Yuli Astuti',
+                'email' => 'produksi@anyamanmandiri.co.id',
+                'phone' => '081255667788',
+                'address' => 'Jl. Diponegoro No. 45, Salatiga',
+                'is_active' => true,
+                'notes' => 'Supplier bahan baku kerajinan anyaman untuk Koperasi Wanita Sejahtera',
+            ],
+            [
+                'name' => 'UD Alat Tani Sejahtera (Non-Aktif)',
+                'contact_name' => 'Karyo Utomo',
+                'email' => 'karyo@alattani.co.id',
+                'phone' => '081366778899',
+                'address' => 'Jl. Raya Solo-Boyolali Km 9',
+                'is_active' => false,
+                'notes' => 'Sudah tutup usaha sejak awal 2026, kontrak tidak diperpanjang',
+            ],
+        ];
+
+        foreach ($suppliersData as $supData) {
+            Supplier::firstOrCreate(
+                ['warehouse_id' => $warehouse->id, 'name' => $supData['name']],
+                array_merge(['uuid' => (string) Str::uuid()], $supData)
+            );
+        }
+    }
+
+    private function seedLocationsJateng(Warehouse $warehouse): void
+    {
+        $locationsData = [
+            ['code' => 'J-A-01', 'name' => 'Rak J-A-01 (Pupuk & Benih)', 'is_active' => true],
+            ['code' => 'J-A-02', 'name' => 'Rak J-A-02 (Hasil Tani Kering)', 'is_active' => true],
+            ['code' => 'J-B-01', 'name' => 'Rak J-B-01 (Garam & Ikan Asin)', 'is_active' => true],
+            ['code' => 'J-B-02', 'name' => 'Gudang Dingin J-B-02 (Produk Perikanan)', 'is_active' => true],
+            ['code' => 'J-C-01', 'name' => 'Rak J-C-01 (Sembako Umum)', 'is_active' => true],
+            ['code' => 'J-C-02', 'name' => 'Rak J-C-02 (Bahan Kerajinan)', 'is_active' => true],
+            ['code' => 'J-D-DOCK', 'name' => 'Area Bongkar Muat Gudang Jateng', 'is_active' => true],
+            ['code' => 'J-X-OLD', 'name' => 'Rak J-X (Ditutup, Renovasi Atap)', 'is_active' => false],
+        ];
+
+        foreach ($locationsData as $locData) {
+            WarehouseLocation::firstOrCreate(
+                ['warehouse_id' => $warehouse->id, 'code' => $locData['code']],
+                array_merge(['uuid' => (string) Str::uuid()], $locData)
+            );
+        }
+    }
+
+    private function seedItemsJateng(Warehouse $warehouse): void
+    {
+        $itemsData = [
+            // Pertanian — untuk Koperasi Tani Makmur Boyolali
+            ['code' => 'PUP-UREA', 'name' => 'Pupuk Urea Bersubsidi 50kg', 'unit' => 'karung', 'minimum_stock' => 40, 'description' => 'Pupuk urea granul bersubsidi pemerintah kemasan 50 kg', 'barcodes' => ['8992001000010']],
+            ['code' => 'PUP-NPK', 'name' => 'Pupuk NPK Phonska 50kg', 'unit' => 'karung', 'minimum_stock' => 30, 'description' => 'Pupuk majemuk NPK kemasan 50 kg', 'barcodes' => ['8992001000027']],
+            ['code' => 'BNH-PADI', 'name' => 'Benih Padi Ciherang Bersertifikat 5kg', 'unit' => 'sak', 'minimum_stock' => 20, 'description' => 'Benih padi unggul bersertifikat label biru', 'barcodes' => ['8992001000034']],
+            ['code' => 'BNH-JGG', 'name' => 'Benih Jagung Hibrida 1kg', 'unit' => 'pack', 'minimum_stock' => 15, 'description' => 'Benih jagung hibrida daya tumbuh tinggi', 'barcodes' => ['8992001000041']],
+            ['code' => 'BR-25KG', 'name' => 'Beras Hasil Panen Petani Boyolali 25kg', 'unit' => 'karung', 'minimum_stock' => 25, 'description' => 'Beras hasil panen anggota koperasi tani, karung 25 kg', 'barcodes' => ['8992001000058']],
+
+            // Perikanan — untuk Koperasi Nelayan Bahari Pekalongan
+            ['code' => 'GRM-KRS', 'name' => 'Garam Krosok 50kg', 'unit' => 'karung', 'minimum_stock' => 20, 'description' => 'Garam krosok untuk pengawetan ikan, karung 50 kg', 'barcodes' => ['8992001000065']],
+            ['code' => 'IKN-ASIN', 'name' => 'Ikan Asin Jambal Roti 10kg', 'unit' => 'peti', 'minimum_stock' => 10, 'description' => 'Ikan asin jambal roti kemasan peti 10 kg', 'barcodes' => ['8992001000072']],
+            ['code' => 'IKN-TERI', 'name' => 'Ikan Teri Nasi Kering 5kg', 'unit' => 'peti', 'minimum_stock' => 10, 'description' => 'Ikan teri nasi kering kemasan peti 5 kg', 'barcodes' => ['8992001000089']],
+
+            // Kerajinan — untuk Koperasi Wanita Sejahtera Salatiga
+            ['code' => 'BMB-ANYM', 'name' => 'Bambu Anyaman Siap Pakai (Ikat 20 lembar)', 'unit' => 'ikat', 'minimum_stock' => 15, 'description' => 'Bahan baku bambu untuk anyaman kerajinan, ikat isi 20 lembar', 'barcodes' => ['8992001000096']],
+            ['code' => 'PWR-ALAM', 'name' => 'Pewarna Alami Kerajinan 500g', 'unit' => 'pack', 'minimum_stock' => 10, 'description' => 'Pewarna alami untuk finishing produk anyaman', 'barcodes' => ['8992001000102']],
+
+            // Sembako umum (tetap ada, karena gudang ini juga melayani konsumsi harian anggota)
+            ['code' => 'BM-1L', 'name' => 'Minyak Goreng Bimoli Pouch 1 Liter', 'unit' => 'pouch', 'minimum_stock' => 30, 'description' => 'Minyak goreng kelapa sawit pouch 1 liter', 'barcodes' => ['8992001000119']],
+            ['code' => 'GL-1KG-J', 'name' => 'Gula Pasir Gulaku Premium 1 kg', 'unit' => 'pack', 'minimum_stock' => 25, 'description' => 'Gula pasir tebu kristal putih 1 kg', 'barcodes' => ['8992001000126']],
+            ['code' => 'IM-GRG-J', 'name' => 'Indomie Goreng Spesial (Dus 40 pcs)', 'unit' => 'dus', 'minimum_stock' => 30, 'description' => 'Mie goreng instant karton isi 40 bungkus', 'barcodes' => ['8992001000133']],
+            ['code' => 'AQ-600-J', 'name' => 'Air Mineral 600ml (Dus 24 botol)', 'unit' => 'dus', 'minimum_stock' => 20, 'description' => 'Air mineral kemasan botol 600ml isi 24', 'barcodes' => ['8992001000140']],
+        ];
+
+        foreach ($itemsData as $itemInfo) {
+            $barcodes = $itemInfo['barcodes'];
+            unset($itemInfo['barcodes']);
+
+            $item = Item::firstOrCreate(
+                ['warehouse_id' => $warehouse->id, 'code' => $itemInfo['code']],
+                array_merge(['uuid' => (string) Str::uuid(), 'is_active' => true], $itemInfo)
+            );
+
+            // Every WH-JATENG item has exactly one barcode (unlike some
+            // WH-PUSAT/WH-BARAT items above), so it's always the primary one.
+            foreach ($barcodes as $bc) {
+                $item->barcodes()->firstOrCreate([
+                    'warehouse_id' => $warehouse->id,
+                    'barcode' => $bc,
+                ], [
+                    'is_primary' => true,
                 ]);
             }
         }
