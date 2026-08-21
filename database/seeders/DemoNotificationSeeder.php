@@ -163,8 +163,25 @@ class DemoNotificationSeeder extends Seeder
             return;
         }
 
-        DeviceToken::factory()->for($head)->create([
+        // Built directly rather than via DeviceToken::factory(): factories
+        // need fakerphp/faker, a require-dev package the deployed image
+        // never ships (Dockerfile runs `composer install --no-dev`), so a
+        // factory call here fatals with "Call to a member function
+        // unique() on null" the moment this seeder runs against a real
+        // deployment instead of a local/testing environment.
+        $rawToken = 'fake-fcm-token-demo-'.$head->id;
+
+        DeviceToken::create([
+            'user_id' => $head->id,
+            'provider' => 'fcm',
+            'platform' => 'web',
+            'encrypted_token' => $rawToken,
+            'token_fingerprint' => hash('sha256', $rawToken),
             'device_name' => 'Demo Browser (Seeded)',
+            'browser' => 'Chrome',
+            'user_agent_summary' => 'Demo Browser (Seeded)',
+            'consented_at' => now(),
+            'last_seen_at' => now(),
         ]);
     }
 
