@@ -37,6 +37,7 @@ class DemoNotificationSeeder extends Seeder
     {
         $this->seedForWarehouse('WH-PUSAT');
         $this->seedForWarehouse('WH-BARAT');
+        $this->seedForWarehouse('WH-JATENG');
     }
 
     private function seedForWarehouse(string $code): void

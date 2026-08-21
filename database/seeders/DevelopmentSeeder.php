@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Warehouse;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Orchestrates the demo/development dataset: companies, warehouses, seeded
@@ -40,8 +42,34 @@ class DevelopmentSeeder extends Seeder
             DemoReturnSeeder::class,
             DemoReturnDecisionSeeder::class,
             DemoReturnReplacementSeeder::class,
+            DemoJatengPickupSeeder::class,
+            DemoJatengProcurementSeeder::class,
+            DemoJatengPurchaseOrderSeeder::class,
+            DemoJatengGoodsReceiptSeeder::class,
+            DemoJatengReturnSeeder::class,
+            DemoJatengReturnDecisionSeeder::class,
+            DemoJatengReturnReplacementSeeder::class,
+            // Runs last: backfills notifications for WH-PUSAT/WH-BARAT/WH-JATENG
+            // alike, so it must run after every warehouse's business-transaction
+            // data (including WH-JATENG's) already exists.
             DemoNotificationSeeder::class,
+            DemoJatengNotificationSeeder::class,
         ]);
+
+        // WarehouseMembership::hasPermission() sets the spatie/permission
+        // "current team" as a side effect (see its setPermissionsTeamId()
+        // call), and DemoNotificationSeeder's RecipientResolver lookups
+        // trigger it once per warehouse. With three warehouses now split
+        // across two different companies (WH-JATENG isn't in the same
+        // company as WH-PUSAT/WH-BARAT), whichever warehouse's company was
+        // checked last is left as the "current team" — reset it explicitly
+        // to the main company (matching the pre-WH-JATENG behavior, where
+        // every warehouse shared one company_id and this was never
+        // observable) so nothing that runs after seeding — including tests
+        // that call hasRole() without setting their own team context —
+        // silently checks roles against the wrong company.
+        $mainCompany = Warehouse::where('code', 'WH-PUSAT')->value('company_id');
+        app(PermissionRegistrar::class)->setPermissionsTeamId($mainCompany);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Seeders;
 
 use App\Models\Approval;
+use App\Models\CancellationRequest;
 use App\Models\GoodsReceipt;
 use App\Models\InboxNotification;
 use App\Models\Item;
@@ -27,7 +28,7 @@ class DatabaseSeederCompletenessTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertSame(2, Warehouse::count());
+        $this->assertSame(3, Warehouse::count());
         $this->assertGreaterThanOrEqual(10, User::count());
         $this->assertGreaterThan(0, Item::count());
         $this->assertGreaterThan(0, StockBalance::count());
@@ -38,11 +39,12 @@ class DatabaseSeederCompletenessTest extends TestCase
         $this->assertGreaterThan(0, GoodsReceipt::count());
         $this->assertGreaterThan(0, QualityInspection::count());
         $this->assertGreaterThan(0, ReturnRequest::count());
+        $this->assertGreaterThan(0, CancellationRequest::count());
         $this->assertGreaterThan(0, InboxNotification::count());
         $this->assertFalse(Approval::whereNull('uuid')->exists());
 
         $this->assertSame(
-            ['WH-BARAT', 'WH-PUSAT'],
+            ['WH-BARAT', 'WH-JATENG', 'WH-PUSAT'],
             Warehouse::query()->orderBy('code')->pluck('code')->all(),
         );
 
@@ -57,6 +59,7 @@ class DatabaseSeederCompletenessTest extends TestCase
             'goods_receipts' => GoodsReceipt::count(),
             'quality_inspections' => QualityInspection::count(),
             'returns' => ReturnRequest::count(),
+            'cancellation_requests' => CancellationRequest::count(),
             'notifications' => InboxNotification::count(),
         ];
 
@@ -73,6 +76,7 @@ class DatabaseSeederCompletenessTest extends TestCase
             'goods_receipts' => GoodsReceipt::count(),
             'quality_inspections' => QualityInspection::count(),
             'returns' => ReturnRequest::count(),
+            'cancellation_requests' => CancellationRequest::count(),
             'notifications' => InboxNotification::count(),
         ]);
     }
